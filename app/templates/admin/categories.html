@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "_form.html" import field %}
+{% block title %}Categories - Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin</h1>
+{% include "admin/_nav.html" %}
+
+<form method="post" class="row g-2 align-items-start mb-4" novalidate>
+  {{ form.hidden_tag() }}
+  <div class="col-md-5">
+    {{ form.name(class="form-control" ~ (" is-invalid" if form.name.errors else ""), placeholder="New category name", aria_label="New category name") }}
+    {% for e in form.name.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+  </div>
+  <div class="col-auto"><button class="btn btn-primary" type="submit">Add category</button></div>
+</form>
+
+<div class="table-responsive">
+<table class="table align-middle bg-white" style="max-width:720px">
+  <thead><tr><th>Name</th><th>Products</th><th></th></tr></thead>
+  <tbody>
+  {% for c, count in rows %}
+  <tr>
+    <td>
+      <form method="post" action="{{ url_for('admin.rename_category', category_id=c.id) }}" class="d-flex gap-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input class="form-control form-control-sm" aria-label="Category name" name="name" value="{{ c.name }}" minlength="2" maxlength="80" required>
+        <button class="btn btn-sm btn-outline-secondary" type="submit">Rename</button>
+      </form>
+    </td>
+    <td>{{ count }}</td>
+    <td class="text-end">
+      {% if count == 0 %}
+      <form method="post" action="{{ url_for('admin.delete_category', category_id=c.id) }}" data-confirm="Delete this category?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="3" class="text-muted text-center py-3">No categories yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

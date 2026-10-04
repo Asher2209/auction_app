@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_pagination.html" import pager %}
+{% block title %}Feedback - Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin</h1>
+{% include "admin/_nav.html" %}
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col"><input class="form-control" name="q" aria-label="Search feedback" value="{{ q }}" placeholder="Search message, name or email"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Search</button></div>
+</form>
+
+<div class="list-group bg-white mb-3">
+  {% for f in page.items %}
+  <div class="list-group-item d-flex justify-content-between align-items-start gap-3">
+    <div>
+      <div class="fw-semibold">{{ f.user.name }} <span class="text-muted fw-normal small">({{ f.user.email }}, {{ f.user.role }})</span></div>
+      <div style="white-space:pre-wrap">{{ f.message }}</div>
+      <div class="small text-muted">{{ f.created_at|utc }}</div>
+    </div>
+    <form method="post" action="{{ url_for('admin.delete_feedback', feedback_id=f.id) }}" data-confirm="Delete this feedback?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="list-group-item text-muted text-center py-4">No feedback yet.</div>
+  {% endfor %}
+</div>
+{{ pager(page, 'admin.feedback', q=q) }}
+{% endblock %}

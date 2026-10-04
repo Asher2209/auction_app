@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "_pagination.html" import pager %}
+{% block title %}Notifications - ChainBid{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">Notifications</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-sm {{ 'btn-outline-secondary' if only_unread else 'btn-secondary' }}" href="{{ url_for('notifications.index') }}">All</a>
+    <a class="btn btn-sm {{ 'btn-secondary' if only_unread else 'btn-outline-secondary' }}" href="{{ url_for('notifications.index', filter='unread') }}">Unread</a>
+    <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-sm btn-outline-primary" type="submit">Mark all read</button>
+    </form>
+  </div>
+</div>
+
+<div class="list-group bg-white">
+  {% for n in page.items %}
+  <div class="list-group-item d-flex justify-content-between align-items-start gap-3 {{ '' if n.is_read else 'list-group-item-primary' }}">
+    <div class="me-auto">
+      <div class="fw-semibold">
+        {% if n.url %}<a class="text-reset" href="{{ url_for('notifications.go', notification_id=n.id) }}">{{ n.title }}</a>{% else %}{{ n.title }}{% endif %}
+        {% if not n.is_read %}<span class="badge text-bg-primary ms-1">New</span>{% endif %}
+      </div>
+      <div>{{ n.message }}</div>
+      <div class="small text-muted">{{ n.created_at|utc }}</div>
+    </div>
+    {% if not n.is_read %}
+    <form method="post" action="{{ url_for('notifications.mark_read', notification_id=n.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if only_unread %}<input type="hidden" name="filter" value="unread">{% endif %}
+      <button class="btn btn-sm btn-outline-secondary text-nowrap" type="submit">Mark read</button>
+    </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="list-group-item text-muted text-center py-4">{{ 'No unread notifications.' if only_unread else 'No notifications yet.' }}</div>
+  {% endfor %}
+</div>
+<div class="mt-3">{{ pager(page, 'notifications.index', **({'filter': 'unread'} if only_unread else {})) }}</div>
+{% endblock %}

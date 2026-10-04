@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}{{ report.title }} - Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin</h1>
+{% include "admin/_nav.html" %}
+
+<a class="small" href="{{ url_for('admin.reports') }}">&larr; All reports</a>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-1 mb-3">
+  <div>
+    <h2 class="h4 mb-1">{{ report.title }}</h2>
+    <p class="text-muted small mb-0">{{ report.description }}</p>
+    <p class="small mb-0"><strong>{{ description }}</strong></p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-sm btn-primary" href="{{ url_for('admin.report_export_file', key=report.key, ext='pdf', **qs) }}">Download PDF</a>
+    <a class="btn btn-sm btn-success" href="{{ url_for('admin.report_export_file', key=report.key, ext='xlsx', **qs) }}">Download Excel</a>
+  </div>
+</div>
+
+{% for e in errors %}<div class="alert alert-warning py-2">{{ e }}</div>{% endfor %}
+
+{% if report.filter != 'none' or report.statuses %}
+<form class="card card-body mb-3" method="get">
+  <div class="row g-2 align-items-end">
+    {% if report.filter == 'day' %}
+    <div class="col-auto"><label class="form-label small mb-0" for="day">Day</label><input class="form-control form-control-sm" type="date" id="day" name="day" value="{{ day_value }}"></div>
+    {% elif report.filter == 'range' %}
+    <div class="col-auto"><label class="form-label small mb-0" for="from">From</label><input class="form-control form-control-sm" type="date" id="from" name="from" value="{{ from_value }}"></div>
+    <div class="col-auto"><label class="form-label small mb-0" for="to">To</label><input class="form-control form-control-sm" type="date" id="to" name="to" value="{{ to_value }}"></div>
+    {% endif %}
+    {% if report.statuses %}
+    <div class="col-auto"><label class="form-label small mb-0" for="status">Status</label>
+      <select class="form-select form-select-sm" id="status" name="status">
+        {% for s in status_choices %}<option value="{{ s }}" {{ 'selected' if s == params.status }}>{{ s|capitalize }}</option>{% endfor %}
+      </select></div>
+    {% endif %}
+    <div class="col-auto"><button class="btn btn-sm btn-outline-primary" type="submit">Apply</button></div>
+    {% if report.filter == 'range' %}
+    <div class="col-12 small">
+      {% for label, link in presets %}<a class="me-3" href="{{ link }}">{{ label }}</a>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</form>
+{% endif %}
+
+{% if data.summary %}
+<div class="row g-2 mb-3">
+  {% for label, value, kind in data.summary %}
+  <div class="col-6 col-md-4 col-xl-2"><div class="viz-tile"><div class="viz-tile-label">{{ label }}</div>
+    <div class="viz-tile-value fs-5">{{ fmt(kind, value) }}</div></div></div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="table-responsive">
+<table class="table table-sm table-hover align-middle bg-white">
+  <thead class="table-dark"><tr>
+    {% for c in report.columns %}<th scope="col" class="{{ 'text-end' if c.kind in ('int', 'money', 'eth', 'rating', 'pct') }}">{{ c.label }}</th>{% endfor %}
+  </tr></thead>
+  <tbody>
+  {% for row in shown %}
+    <tr>
+      {% for c in report.columns %}
+      <td class="{{ 'text-end' if c.kind in ('int', 'money', 'eth', 'rating', 'pct') }} {{ 'font-monospace small text-break' if c.kind == 'mono' }}">{{ fmt(c.kind, row[loop.index0]) }}</td>
+      {% endfor %}
+    </tr>
+  {% else %}
+    <tr><td colspan="{{ report.columns|length }}" class="text-center text-muted py-4">No data for these filters.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% if data.rows|length > html_rows %}<p class="small text-muted">Showing the first {{ html_rows }} of {{ data.rows|length }}{{ '+' if data.truncated }} rows. Download the PDF or Excel file for all of them.</p>{% endif %}
+{% if data.truncated %}<p class="small text-danger">This report is capped at {{ data.rows|length }} rows. Narrow the date range to see the rest.</p>{% endif %}
+{% endblock %}

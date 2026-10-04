@@ -1,0 +1,13 @@
+{% macro pager(page, endpoint) %}
+{% if page.pages > 1 %}
+<nav><ul class="pagination pagination-sm">
+  {% for p in page.iter_pages() %}
+    {% if p %}
+      <li class="page-item {{ 'active' if p == page.page }}">
+        <a class="page-link" href="{{ url_for(endpoint, page=p, **kwargs) }}">{{ p }}</a>
+      </li>
+    {% else %}<li class="page-item disabled"><span class="page-link">&hellip;</span></li>{% endif %}
+  {% endfor %}
+</ul></nav>
+{% endif %}
+{% endmacro %}

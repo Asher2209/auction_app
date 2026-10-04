@@ -1,0 +1,101 @@
+{
+  "contractName": "AuctionPayment",
+  "solc": "0.8.24",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "auctionId",
+          "type": "uint256"
+        }
+      ],
+      "name": "AlreadyPaid",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidSeller",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NothingSent",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "TransferFailed",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "auctionId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "buyer",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "seller",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "PaymentMade",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "paid",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "auctionId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address payable",
+          "name": "seller",
+          "type": "address"
+        }
+      ],
+      "name": "pay",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561000f575f80fd5b5061025d8061001d5f395ff3fe608060405260043610610028575f3560e01c806331cbf5e31461002c578063efa51cda14610041575b5f80fd5b61003f61003a3660046101d7565b610083565b005b34801561004c575f80fd5b5061006f61005b366004610210565b5f6020819052908152604090205460ff1681565b604051901515815260200160405180910390f35b345f036100a357604051634454fc5b60e01b815260040160405180910390fd5b6001600160a01b0381166100ca5760405163bab7ca3560e01b815260040160405180910390fd5b5f8281526020819052604090205460ff161561010057604051630c25d88760e31b81526004810183905260240160405180910390fd5b5f82815260208190526040808220805460ff19166001179055516001600160a01b0383169034908381818185875af1925050503d805f811461015d576040519150601f19603f3d011682016040523d82523d5f602084013e610162565b606091505b5050905080610184576040516312171d8360e31b815260040160405180910390fd5b816001600160a01b0316336001600160a01b0316847fd51bb0381ff8d9476c9493a30eafdb1966dca4b0c0db1a2d4e244a3a8b16ffb8346040516101ca91815260200190565b60405180910390a4505050565b5f80604083850312156101e8575f80fd5b8235915060208301356001600160a01b0381168114610205575f80fd5b809150509250929050565b5f60208284031215610220575f80fd5b503591905056fea2646970667358221220a8ebe4d6b09b008322546930cfa111376707199fb7c20c5358884d5bc3a3d56464736f6c63430008180033"
+}

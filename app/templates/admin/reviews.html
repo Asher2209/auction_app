@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_pagination.html" import pager %}
+{% block title %}Reviews - Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin</h1>
+{% include "admin/_nav.html" %}
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto">
+    <select class="form-select" name="status" aria-label="Review status" data-autosubmit>
+      {% for f in filters %}<option value="{{ f }}" {{ 'selected' if f == status }}>{{ f|capitalize }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col"><input class="form-control" name="q" aria-label="Search reviews" value="{{ q }}" placeholder="Search product, reviewer or text"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Search</button></div>
+</form>
+
+{% for r in page.items %}
+<div class="card mb-2 {{ 'border-warning' if r.is_hidden }}">
+  <div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <div>
+        <span class="text-warning">{{ r.rating|stars }}</span>
+        <a class="fw-semibold ms-1" href="{{ url_for('admin.product_review', product_id=r.product_id) }}">{{ r.product.title }}</a>
+        {% if r.is_hidden %}<span class="badge text-bg-warning ms-1">Hidden</span>{% endif %}
+        <div class="small text-muted">by {{ r.buyer.name }} ({{ r.buyer.email }}) &middot; {{ r.created_at|utc }}</div>
+      </div>
+      <div class="d-flex gap-2 align-items-start">
+        {% if r.is_hidden %}
+        <form method="post" action="{{ url_for('admin.unhide_review', review_id=r.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-success" type="submit">Restore</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('admin.delete_review', review_id=r.id) }}" data-confirm="Delete this review permanently?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% if r.comment %}<p class="mt-2 mb-1" style="white-space:pre-wrap">{{ r.comment }}</p>{% else %}<p class="mt-2 mb-1 text-muted fst-italic">No written review.</p>{% endif %}
+    {% if r.is_hidden %}
+      <div class="small text-muted">Hidden because: {{ r.hidden_reason }}</div>
+    {% else %}
+      <form method="post" action="{{ url_for('admin.hide_review', review_id=r.id) }}" class="d-flex gap-2 mt-2">
+        {{ form.hidden_tag() }}
+        <input class="form-control form-control-sm" aria-label="Reason for hiding this review" name="reason" placeholder="Reason for hiding (shown to the author)" required minlength="5" maxlength="300">
+        <button class="btn btn-sm btn-outline-warning text-nowrap" type="submit">Hide</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<p class="text-muted text-center py-4">No reviews match.</p>
+{% endfor %}
+{{ pager(page, 'admin.reviews', status=status, q=q) }}
+{% endblock %}

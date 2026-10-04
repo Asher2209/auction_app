@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Review {{ product.title }} - Admin{% endblock %}
+{% block content %}
+<a class="small" href="{{ url_for('admin.products') }}">&larr; Products</a>
+<h1 class="h3 mt-2">{{ product.title }}
+  <span class="badge text-bg-secondary fs-6">{{ product.approval_status|capitalize }}</span>
+  {% if auction %}<span class="badge text-bg-primary fs-6">Auction: {{ auction.status }}</span>{% endif %}
+</h1>
+
+{% if product.rejection_reason %}
+<div class="alert alert-danger"><strong>Reason on record:</strong> {{ product.rejection_reason }}</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="d-flex flex-wrap gap-2">
+      {% for img in product.images %}
+      <a href="{{ url_for('static', filename='uploads/' ~ img.path) }}" target="_blank">
+        <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" alt="Photo {{ loop.index }} of {{ product.title }}" class="rounded border" style="width:160px;height:160px;object-fit:cover">
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <p style="white-space:pre-wrap">{{ product.description }}</p>
+    <dl class="row mb-0">
+      <dt class="col-5">Seller</dt><dd class="col-7">{{ product.seller.name }} ({{ product.seller.email }})</dd>
+      <dt class="col-5">Category</dt><dd class="col-7">{{ product.category.name }}</dd>
+      <dt class="col-5">Starting price</dt><dd class="col-7">{{ product.starting_price|money }}</dd>
+      <dt class="col-5">Requested start</dt><dd class="col-7">{{ product.auction_start|utc }}</dd>
+      <dt class="col-5">Requested end</dt><dd class="col-7">{{ product.auction_end|utc }}</dd>
+      {% if auction %}
+      <dt class="col-5">Bids</dt><dd class="col-7">{{ auction.bids|length }}{% if auction.bids %} (highest {{ auction.current_bid|money }}){% endif %}</dd>
+      {% endif %}
+    </dl>
+  </div>
+</div>
+
+<hr>
+{% if product.approval_status == 'pending' %}
+<div class="d-flex flex-wrap gap-3 align-items-start">
+  <form method="post" action="{{ url_for('admin.approve_product', product_id=product.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-success" type="submit">Approve &amp; create auction</button>
+  </form>
+  <form method="post" action="{{ url_for('admin.reject_product', product_id=product.id) }}" class="flex-grow-1" style="max-width:480px">
+    {{ form.hidden_tag() }}
+    <textarea class="form-control mb-2" aria-label="Reason for rejection" name="reason" rows="2" placeholder="Reason for rejection (shown to the seller)" required minlength="5" maxlength="500"></textarea>
+    <button class="btn btn-outline-danger" type="submit">Reject</button>
+  </form>
+</div>
+{% endif %}
+
+{% if not auction or auction.status != 'closed' %}
+{% if product.approval_status == 'approved' %}
+<form method="post" action="{{ url_for('admin.remove_product', product_id=product.id) }}" style="max-width:480px"
+      data-confirm="Remove this listing? A live auction will be cancelled.">
+  {{ form.hidden_tag() }}
+  <label class="form-label" for="remove-reason">Remove listing (fake or inappropriate)</label>
+  <textarea class="form-control mb-2" id="remove-reason" name="reason" rows="2" required minlength="5" maxlength="500"></textarea>
+  <button class="btn btn-danger" type="submit">Remove listing</button>
+</form>
+{% endif %}
+{% else %}
+<p class="text-muted">Completed auctions cannot be removed.</p>
+{% endif %}
+{% endblock %}

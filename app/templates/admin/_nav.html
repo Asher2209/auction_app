@@ -1,0 +1,5 @@
+<ul class="nav nav-tabs mb-4">
+  {% for label, ep in [('Overview', 'admin.dashboard'), ('Analytics', 'admin.analytics'), ('Reports', 'admin.reports'), ('Products', 'admin.products'), ('Users', 'admin.users'), ('Categories', 'admin.categories'), ('Reviews', 'admin.reviews'), ('Feedback', 'admin.feedback')] %}
+  <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == ep or (ep == 'admin.reports' and request.endpoint in ('admin.report_view',)) }}" href="{{ url_for(ep) }}">{{ label }}</a></li>
+  {% endfor %}
+</ul>

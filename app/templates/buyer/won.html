@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Won auctions - ChainBid{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Won auctions</h1>
+{% include "buyer/_nav.html" %}
+<div class="table-responsive">
+<table class="table align-middle bg-white">
+  <thead><tr><th>Product</th><th>Seller</th><th>Winning bid</th><th>Won on</th><th>Payment</th><th></th></tr></thead>
+  <tbody>
+  {% for w in wins %}
+    {% set a = w.auction %}
+    <tr>
+      <td><a href="{{ url_for('auctions.detail', auction_id=a.id) }}">{{ a.product.title }}</a></td>
+      <td>{{ a.product.seller.name }}</td>
+      <td>{{ w.winning_amount|money }}</td>
+      <td>{{ w.winning_time|utc }}</td>
+      {% set pay = a.payment %}
+      <td>
+        {% if not pay %}<span class="badge text-bg-warning">Pending</span>
+        {% elif pay.processing %}<span class="badge text-bg-info">Processing</span>
+        {% else %}<span class="badge text-bg-{{ {'pending': 'warning', 'successful': 'success', 'failed': 'danger'}[pay.payment_status] }}">{{ pay.payment_status|capitalize }}</span>{% endif %}
+      </td>
+      <td class="text-end">
+        {% if pay %}<a class="btn btn-sm {{ 'btn-primary' if pay.awaiting_payment else 'btn-outline-secondary' }}" href="{{ url_for('payments.pay_page', auction_id=a.id) }}">{{ 'Pay now' if pay.awaiting_payment else 'Details' }}</a>
+        {% if pay.payment_status == 'successful' %}<a class="btn btn-sm btn-outline-secondary" href="{{ url_for('auctions.detail', auction_id=a.id) }}#reviews">Review</a>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('invoices.download', auction_id=a.id) }}">Invoice</a>{% endif %}{% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="text-center text-muted py-4">You haven't won any auctions yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

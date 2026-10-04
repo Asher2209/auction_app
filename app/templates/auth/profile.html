@@ -1,0 +1,20 @@
+{% extends "auth/_card.html" %}
+{% from "_form.html" import field %}
+{% block title %}Profile - ChainBid{% endblock %}
+{% block heading %}Your profile{% endblock %}
+{% block form %}
+<p class="text-muted small">{{ current_user.email }} &middot; {{ current_user.role|capitalize }}</p>
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+  {{ field(form.name) }}
+  {{ field(form.phone) }}
+  {{ field(form.address, rows=3) }}
+  {{ field(form.wallet_address, placeholder="0x...") }}
+  <div class="form-text mb-3">
+    {% if current_user.role == 'seller' %}Sellers: this is where buyers' crypto payments are sent (a test-network address).{% else %}Optional. Your public address only.{% endif %}
+    <strong>Never enter a private key or seed phrase.</strong>
+  </div>
+  <button class="btn btn-primary" type="submit">Save</button>
+  <a class="btn btn-outline-secondary" href="{{ url_for('auth.change_password') }}">Change password</a>
+</form>
+{% endblock %}

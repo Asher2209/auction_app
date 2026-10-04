@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_pagination.html" import pager %}
+{% block title %}Products - Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin</h1>
+{% include "admin/_nav.html" %}
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto">
+    <select class="form-select" name="status" aria-label="Approval status" data-autosubmit>
+      {% for f in filters %}<option value="{{ f }}" {{ 'selected' if f == status }}>{{ f|capitalize }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col"><input class="form-control" name="q" aria-label="Search products" value="{{ q }}" placeholder="Search by title"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Search</button></div>
+</form>
+
+{% set badge = {'pending': 'warning', 'rejected': 'danger', 'approved': 'success'} %}
+<div class="table-responsive">
+<table class="table table-hover align-middle bg-white">
+  <thead><tr><th>Product</th><th>Seller</th><th>Category</th><th>Start price</th><th>Approval</th><th>Auction</th><th></th></tr></thead>
+  <tbody>
+  {% for p in page.items %}
+    <tr>
+      <td>{{ p.title }}</td><td>{{ p.seller.name }}</td><td>{{ p.category.name }}</td>
+      <td>{{ p.starting_price|money }}</td>
+      <td><span class="badge text-bg-{{ badge[p.approval_status] }}">{{ p.approval_status|capitalize }}</span></td>
+      <td>{{ p.auction.status|capitalize if p.auction else '—' }}</td>
+      <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.product_review', product_id=p.id) }}">Review</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="text-center text-muted py-4">No products match.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{{ pager(page, 'admin.products', status=status, q=q) }}
+{% endblock %}

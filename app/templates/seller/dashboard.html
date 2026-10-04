@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}My products - ChainBid{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">My products</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('seller.reviews') }}">Reviews</a>
+    <a class="btn btn-primary" href="{{ url_for('seller.create_product') }}">+ Add product</a>
+  </div>
+</div>
+
+<ul class="nav nav-pills mb-3">
+  {% for t in tabs %}
+  <li class="nav-item">
+    <a class="nav-link {{ 'active' if t == tab }}" href="{{ url_for('seller.dashboard', tab=t) }}">{{ t|capitalize }}</a>
+  </li>
+  {% endfor %}
+</ul>
+
+{% set badge = {'pending': 'warning', 'rejected': 'danger', 'approved': 'info', 'scheduled': 'info',
+                'active': 'success', 'closed': 'secondary', 'cancelled': 'dark'} %}
+<div class="table-responsive">
+<table class="table table-hover align-middle bg-white">
+  <thead><tr>
+    <th></th><th>Product</th><th>Status</th><th>Starting</th><th>Highest bid</th><th>Winner</th><th></th>
+  </tr></thead>
+  <tbody>
+  {% for p in products %}
+    {% set a = p.auction %}
+    <tr>
+      <td style="width:64px">
+        {% if p.images %}<img src="{{ url_for('static', filename='uploads/' ~ p.images[0].path) }}" alt="" class="rounded" style="width:56px;height:56px;object-fit:cover">{% endif %}
+      </td>
+      <td><a href="{{ url_for('seller.product_detail', product_id=p.id) }}">{{ p.title }}</a>
+          <div class="small text-muted">{{ p.category.name }}</div></td>
+      <td><span class="badge text-bg-{{ badge.get(p.display_status, 'secondary') }}">{{ p.display_status|capitalize }}</span></td>
+      <td>{{ p.starting_price|money }}</td>
+      <td>{% if a and a.bids %}{{ a.current_bid|money }} <span class="small text-muted">({{ a.bids|length }} bids)</span>{% else %}&mdash;{% endif %}</td>
+      <td>{% if a and a.winner %}{{ a.winner.buyer.name }}{% else %}&mdash;{% endif %}</td>
+      <td class="text-end text-nowrap">
+        {% if p.is_editable %}
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('seller.edit_product', product_id=p.id) }}">Edit</a>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="text-center text-muted py-4">No products here yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

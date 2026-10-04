@@ -1,0 +1,18 @@
+{% extends "auth/_card.html" %}
+{% from "_form.html" import field %}
+{% block title %}Register - ChainBid{% endblock %}
+{% block heading %}Create your account{% endblock %}
+{% block form %}
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+  {{ field(form.name) }}
+  {{ field(form.email) }}
+  {{ field(form.phone) }}
+  {{ field(form.address, rows=2) }}
+  {{ field(form.role) }}
+  {{ field(form.password) }}
+  {{ field(form.confirm) }}
+  <button class="btn btn-primary w-100" type="submit">Register</button>
+</form>
+<p class="mt-3 mb-0 small">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+{% endblock %}

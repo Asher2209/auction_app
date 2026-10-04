@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Demo wallet - ChainBid{% endblock %}
+{% block content %}
+<h1 class="h3">Demo wallet <span class="badge text-bg-warning align-middle fs-6">development only</span></h1>
+<p class="text-muted">An in-memory test chain (chain id {{ chain_id }}, block {{ block }}) with fake ETH. It replaces MetaMask for local demos.
+  Contract: <code class="text-break">{{ contract }}</code></p>
+<ol class="small">
+  <li>As a seller, paste the <strong>demo seller payout wallet</strong> address below into your profile.</li>
+  <li>As the winning buyer, open the pay page and use the Cryptocurrency tab: the demo wallet signs for you.</li>
+  <li>Each payment is mined at once; the server adds a block every few seconds while a payment waits (the confirmations), or use the button here.</li>
+</ol>
+<table class="table table-sm bg-white">
+  <thead><tr><th>Account</th><th>Address</th><th>Balance (ETH)</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr><td>{{ r.role or loop.index0 }}</td><td><code class="text-break">{{ r.address }}</code></td><td>{{ '%.4f'|format(r.eth) }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<button class="btn btn-outline-secondary" id="mine-btn" type="button">Mine a block</button>
+<span class="small text-muted ms-2" id="mine-out"></span>
+<script src="{{ url_for('static', filename='js/devwallet-page.js') }}"></script>
+{% endblock %}

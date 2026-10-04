@@ -1,0 +1,24 @@
+Flask>=3.0
+Flask-SQLAlchemy>=3.1
+Flask-Login>=0.6.3
+Flask-Migrate>=4.0
+Flask-WTF>=1.2
+Flask-Mail>=0.10
+Flask-SocketIO>=5.3
+simple-websocket>=1.0
+email-validator>=2.1
+Pillow>=10.3
+python-dotenv>=1.0
+PyMySQL>=1.1
+reportlab>=4.0
+openpyxl>=3.1
+qrcode[pil]>=7.4
+web3>=7
+py-solc-x>=2.0
+eth-tester>=0.13.0b1
+py-evm>=0.12.0b1
+pytest>=8.0
+pypdf>=4.0
+# test-only: render the invoice PDF and scan its QR code
+pypdfium2>=4.30
+zxing-cpp>=2.2

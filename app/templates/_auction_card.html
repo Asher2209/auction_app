@@ -1,0 +1,29 @@
+{% macro card(a, count, rating=None) %}
+{% set p = a.product %}
+<div class="col-12 col-sm-6 col-lg-3">
+  <a href="{{ url_for('auctions.detail', auction_id=a.id) }}" class="text-decoration-none text-reset">
+    <div class="card h-100">
+      {% if p.cover %}
+      <img src="{{ url_for('static', filename='uploads/' ~ p.cover) }}" alt="" class="card-img-top" style="height:180px;object-fit:cover">
+      {% else %}
+      <div class="card-img-top bg-secondary-subtle d-flex align-items-center justify-content-center text-muted" style="height:180px">No image</div>
+      {% endif %}
+      <div class="card-body">
+        <h5 class="card-title h6">{{ p.title }}</h5>
+        <p class="card-text text-muted small mb-2">{{ p.category.name }}
+          {% if rating %}&middot; <span class="text-warning">&#9733;</span> {{ rating[0] }} <span class="text-muted">({{ rating[1] }})</span>{% endif %}</p>
+        <div class="small text-muted">{{ 'Current bid' if count else 'Starting at' }}</div>
+        <div class="fw-semibold">{{ a.current_bid|money }}</div>
+      </div>
+      <div class="card-footer small text-muted d-flex justify-content-between">
+        <span>{{ count or 0 }} bid{{ '' if count == 1 else 's' }}</span>
+        <span>
+          {% if a.status == 'active' %}{{ a.end_time|time_left }} left
+          {% elif a.status == 'scheduled' %}Starts {{ a.start_time|utc }}
+          {% else %}Ended{% endif %}
+        </span>
+      </div>
+    </div>
+  </a>
+</div>
+{% endmacro %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ product.title }} - ChainBid{% endblock %}
+{% block content %}
+<a class="small" href="{{ url_for('seller.dashboard') }}">&larr; My products</a>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ product.title }}</h1>
+    <span class="badge text-bg-secondary">{{ product.category.name }}</span>
+    <span class="badge text-bg-primary">{{ product.display_status|capitalize }}</span>
+  </div>
+  {% if product.is_editable %}
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('seller.edit_product', product_id=product.id) }}">Edit</a>
+    <form method="post" action="{{ url_for('seller.delete_product', product_id=product.id) }}"
+          data-confirm="Delete this product permanently?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-danger" type="submit">Delete</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+{% if product.rejection_reason %}
+<div class="alert alert-danger"><strong>Rejected by administrator:</strong> {{ product.rejection_reason }}
+  {% if product.is_editable %}<div class="small mt-1">Edit the product and save to resubmit it for approval.</div>{% endif %}</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="d-flex flex-wrap gap-2">
+      {% for img in product.images %}
+        <a href="{{ url_for('static', filename='uploads/' ~ img.path) }}" target="_blank">
+          <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" alt="Photo {{ loop.index }} of {{ product.title }}" class="rounded border" style="width:160px;height:160px;object-fit:cover">
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <p style="white-space:pre-wrap">{{ product.description }}</p>
+    <dl class="row mb-0">
+      <dt class="col-5">Starting price</dt><dd class="col-7">{{ product.starting_price|money }}</dd>
+      <dt class="col-5">Starts</dt><dd class="col-7">{{ product.auction_start|utc }}</dd>
+      <dt class="col-5">Ends</dt><dd class="col-7">{{ (auction.end_time if auction else product.auction_end)|utc }}</dd>
+      <dt class="col-5">Approval</dt><dd class="col-7">{{ product.approval_status|capitalize }}</dd>
+      {% if auction %}
+      <dt class="col-5">Highest bid</dt>
+      <dd class="col-7">{% if auction.bids %}{{ auction.current_bid|money }}{% else %}No bids yet{% endif %}</dd>
+      {% if auction.winner %}
+      <dt class="col-5">Winner</dt>
+      <dd class="col-7">{{ auction.winner.buyer.name }} ({{ auction.winner.winning_amount|money }})</dd>
+      {% if auction.payment %}
+      <dt class="col-5">Payment</dt><dd class="col-7">{{ auction.payment.payment_status|capitalize }}
+        {% if auction.payment.payment_status == 'successful' %}&middot; <a href="{{ url_for('invoices.download', auction_id=auction.id) }}">Invoice (PDF)</a>{% endif %}</dd>
+      {% endif %}
+      {% endif %}
+      {% endif %}
+    </dl>
+  </div>
+</div>
+
+<h2 class="h5 mt-4">Reviews{% if stats %} <span class="text-warning">{{ stats[0]|stars }}</span> <span class="fs-6 text-muted">{{ stats[0] }} / 5 ({{ stats[1] }})</span>{% endif %}</h2>
+{% for r in reviews %}
+<div class="border-bottom py-2">
+  <span class="text-warning">{{ r.rating|stars }}</span> <span class="fw-semibold ms-1">{{ r.buyer.name }}</span>
+  {% if r.comment %}<div style="white-space:pre-wrap">{{ r.comment }}</div>{% endif %}
+  <div class="small text-muted">{{ r.created_at|utc }}</div>
+</div>
+{% else %}<p class="text-muted">No reviews yet.</p>{% endfor %}
+
+{% if bids %}
+<h2 class="h5 mt-4">Recent bids</h2>
+<table class="table table-sm bg-white" style="max-width:520px">
+  <thead><tr><th>Bidder</th><th>Amount</th><th>Time</th></tr></thead>
+  <tbody>{% for b in bids %}<tr><td>{{ b.buyer.name }}</td><td>{{ b.amount|money }}</td><td>{{ b.bid_time|utc }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+{% endblock %}

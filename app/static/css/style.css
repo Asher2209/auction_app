@@ -1,0 +1,30 @@
+body { background-color: #f8f9fa; }
+.card { transition: box-shadow .15s ease; }
+.card:hover { box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .12); }
+
+/* ---- analytics charts: palette validated with the dataviz validator (categorical slots 1-4) ---- */
+.viz-root {
+  --viz-surface: #fcfcfb; --viz-ink: #0b0b0b; --viz-ink-2: #52514e; --viz-muted: #898781;
+  --viz-grid: #e1e0d9; --viz-axis: #c3c2b7;
+  --viz-s1: #2a78d6; --viz-s2: #eb6834; --viz-s3: #1baf7a; --viz-s4: #eda100;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+[data-bs-theme="dark"] .viz-root {
+  --viz-surface: #1a1a19; --viz-ink: #ffffff; --viz-ink-2: #c3c2b7; --viz-muted: #898781;
+  --viz-grid: #2c2c2a; --viz-axis: #383835;
+  --viz-s1: #3987e5; --viz-s2: #d95926; --viz-s3: #199e70; --viz-s4: #c98500;
+}
+.viz-card { background: var(--viz-surface); border: 1px solid rgba(11, 11, 11, .10); border-radius: .5rem; padding: 1rem 1.1rem; margin: 0; height: 100%; }
+.viz-title { font-size: 1rem; font-weight: 600; color: var(--viz-ink); margin: 0; }
+.viz-sub { font-size: .8rem; color: var(--viz-ink-2); margin: .1rem 0 .6rem; }
+.viz-plot { position: relative; transition: opacity .15s ease; }
+.viz-root.loading .viz-plot { opacity: .5; }
+.viz-legend { display: flex; flex-wrap: wrap; gap: .25rem 1rem; margin: 0 0 .4rem; padding: 0; font-size: .8rem; color: var(--viz-ink-2); }
+.viz-legend li { display: inline-flex; align-items: center; gap: .35rem; }
+.viz-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.viz-legend b { color: var(--viz-ink); font-weight: 600; }
+.viz-empty { color: var(--viz-ink-2); font-size: .9rem; margin: 1rem 0; }
+.viz-table table { font-size: .8rem; color: var(--viz-ink); margin: .4rem 0 0; }
+.viz-tile { background: var(--viz-surface); border: 1px solid rgba(11, 11, 11, .10); border-radius: .5rem; padding: .7rem .85rem; height: 100%; }
+.viz-tile-label { font-size: .75rem; color: var(--viz-ink-2); }
+.viz-tile-value { font-size: 1.5rem; font-weight: 600; color: var(--viz-ink); line-height: 1.2; }

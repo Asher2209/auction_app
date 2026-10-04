@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Analytics - Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin</h1>
+{% include "admin/_nav.html" %}
+
+<div class="viz-root" id="analytics" data-url="{{ url_for('admin.analytics_data') }}" data-currency="{{ currency }}">
+
+  {# one filter row above everything it scopes #}
+  <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+    <label class="d-flex align-items-center gap-2 mb-0">
+      <span class="text-muted small">Time range for monthly charts</span>
+      <select class="form-select form-select-sm w-auto" id="months">
+        {% for m in allowed %}<option value="{{ m }}" {{ 'selected' if m == months }}>Last {{ m }} months</option>{% endfor %}
+      </select>
+    </label>
+    <span class="text-muted small" id="load-note" role="status"></span>
+  </div>
+
+  <div class="row g-3 mb-4" id="tiles">
+    {% for id, label in [('revenue', 'Revenue (paid)'), ('paid_sales', 'Paid sales'), ('average_sale', 'Average sale'),
+                         ('crypto_confirmed', 'Crypto payments confirmed'), ('eth_total', 'ETH received (test)'), ('crypto_rate', 'Crypto success rate')] %}
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="viz-tile"><div class="viz-tile-label">{{ label }}</div><div class="viz-tile-value" id="tile-{{ id }}">&ndash;</div></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="row g-3" id="charts">
+    {% macro card(id, title, sub, col='col-lg-6', height=260) %}
+    <div class="{{ col }}">
+      <figure class="viz-card" data-chart="{{ id }}">
+        <figcaption><h2 class="viz-title">{{ title }}</h2><p class="viz-sub">{{ sub }}</p></figcaption>
+        <ul class="viz-legend list-unstyled" aria-label="Legend"></ul>
+        <div class="viz-plot" style="height:{{ height }}px"><canvas role="img" aria-label="{{ title }}"></canvas></div>
+        <p class="viz-empty" hidden>No data yet for this period.</p>
+        <button class="btn btn-sm btn-link viz-toggle px-0" type="button" aria-pressed="false">View as table</button>
+        <div class="viz-table table-responsive" hidden></div>
+      </figure>
+    </div>
+    {% endmacro %}
+
+    {{ card('revenue', 'Monthly revenue', 'Successful payments by month, split by payment type (INR)', 'col-12', 280) }}
+    {{ card('auctions', 'Auctions started per month', 'Auctions that began in each month, cancelled ones excluded') }}
+    {{ card('status', 'Active vs completed auctions', 'All auctions by current state', 'col-lg-6', 120) }}
+    {{ card('categories', 'Most popular categories', 'Ranked by bids placed on their auctions') }}
+    {{ card('methods', 'Payment methods', 'Share of successful payments', 'col-lg-6', 120) }}
+    {{ card('products', 'Top-selling products', 'Highest-value paid sales (INR)') }}
+    {{ card('sellers', 'Top sellers', 'Paid sales value per seller (INR)') }}
+    {{ card('buyers', 'Most active buyers', 'Ranked by bids placed') }}
+    {{ card('eth', 'Cryptocurrency received per month', 'Confirmed ETH payments on the test network (ETH)') }}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

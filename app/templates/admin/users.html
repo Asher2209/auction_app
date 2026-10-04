@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_pagination.html" import pager %}
+{% block title %}Users - Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin</h1>
+{% include "admin/_nav.html" %}
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-auto">
+    <select class="form-select" name="role" aria-label="Role" data-autosubmit>
+      {% for r in roles %}<option value="{{ r }}" {{ 'selected' if r == role }}>{{ r|capitalize }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col"><input class="form-control" name="q" aria-label="Search users" value="{{ q }}" placeholder="Search name or email"></div>
+  <div class="col-auto"><button class="btn btn-outline-primary">Search</button></div>
+</form>
+
+<div class="table-responsive">
+<table class="table table-hover align-middle bg-white">
+  <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for u in page.items %}
+    <tr>
+      <td>{{ u.name }}</td><td>{{ u.email }}</td><td>{{ u.role|capitalize }}</td>
+      <td>{{ u.created_at|utc }}</td>
+      <td>{% if u.is_active_user %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Deactivated</span>{% endif %}</td>
+      <td class="text-end">
+        {% if u.id != current_user.id %}
+        <form method="post" action="{{ url_for('admin.toggle_user', user_id=u.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm {{ 'btn-outline-danger' if u.is_active_user else 'btn-outline-success' }}" type="submit">
+            {{ 'Deactivate' if u.is_active_user else 'Reactivate' }}
+          </button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="text-center text-muted py-4">No users match.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{{ pager(page, 'admin.users', role=role, q=q) }}
+{% endblock %}

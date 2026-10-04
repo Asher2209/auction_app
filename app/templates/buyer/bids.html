@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_pagination.html" import pager %}
+{% block title %}My bids - ChainBid{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">My bids</h1>
+{% include "buyer/_nav.html" %}
+<div class="table-responsive">
+<table class="table table-hover align-middle bg-white">
+  <thead><tr><th>Product</th><th>My bid</th><th>Highest bid</th><th>Status</th><th>Placed</th></tr></thead>
+  <tbody>
+  {% for b in page.items %}
+    {% set a = b.auction %}
+    {% if a.status == 'closed' %}
+      {% set won = a.winner and a.winner.buyer_id == current_user.id and a.winner.winning_amount == b.amount %}
+      {% set label = 'Won' if won else 'Ended' %}
+    {% elif a.status == 'cancelled' %}{% set label = 'Cancelled' %}
+    {% elif a.highest_bidder_id == current_user.id and a.current_bid == b.amount %}{% set label = 'Leading' %}
+    {% elif b.amount < a.current_bid %}{% set label = 'Outbid' %}
+    {% else %}{% set label = 'Active' %}{% endif %}
+    <tr>
+      <td>{% if a.status != 'cancelled' %}<a href="{{ url_for('auctions.detail', auction_id=a.id) }}">{{ a.product.title }}</a>{% else %}{{ a.product.title }}{% endif %}</td>
+      <td>{{ b.amount|money }}</td><td>{{ a.current_bid|money }}</td>
+      <td><span class="badge text-bg-{{ {'Won': 'success', 'Leading': 'success', 'Outbid': 'warning', 'Cancelled': 'dark'}.get(label, 'secondary') }}">{{ label }}</span></td>
+      <td>{{ b.bid_time|utc }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="text-center text-muted py-4">You haven't placed any bids yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{{ pager(page, 'buyer.bids') }}
+{% endblock %}

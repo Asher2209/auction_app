@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Admin - ChainBid{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin</h1>
+{% include "admin/_nav.html" %}
+
+<div class="row g-3 mb-4">
+  {% for label, value, href in [
+      ('Pending approvals', stats.pending, url_for('admin.products', status='pending')),
+      ('Users', stats.users, url_for('admin.users')),
+      ('Buyers', stats.buyers, url_for('admin.users', role='buyer')),
+      ('Sellers', stats.sellers, url_for('admin.users', role='seller')),
+      ('Products', stats.products, url_for('admin.products', status='all')),
+      ('Live / scheduled auctions', stats.active_auctions, none),
+      ('Completed auctions', stats.completed_auctions, none),
+      ('Total bids', stats.bids, none),
+      ('Crypto payments (confirmed)', stats.crypto_payments, none),
+      ('Pending payments', stats.pending_payments, none),
+      ('Revenue (paid)', stats.revenue|money, none)] %}
+  <div class="col-6 col-md-3">
+    <div class="card h-100"><div class="card-body">
+      <div class="text-muted small">{{ label }}</div>
+      <div class="fs-3 fw-semibold">{% if href %}<a class="text-decoration-none" href="{{ href }}">{{ value }}</a>{% else %}{{ value }}{% endif %}</div>
+    </div></div>
+  </div>
+  {% endfor %}
+</div>
+
+<h2 class="h5">Waiting for review</h2>
+<div class="list-group bg-white">
+  {% for p in pending %}
+  <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ url_for('admin.product_review', product_id=p.id) }}">
+    <span>{{ p.title }} <span class="text-muted small">by {{ p.seller.name }}</span></span>
+    <span class="text-muted small">{{ p.created_at|utc }}</span>
+  </a>
+  {% else %}
+  <div class="list-group-item text-muted">Nothing waiting.</div>
+  {% endfor %}
+</div>
+{% endblock %}

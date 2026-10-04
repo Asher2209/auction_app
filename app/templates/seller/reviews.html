@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}My reviews - ChainBid{% endblock %}
+{% block content %}
+<a class="small" href="{{ url_for('seller.dashboard') }}">&larr; My products</a>
+<div class="d-flex flex-wrap align-items-baseline gap-3 mt-2 mb-3">
+  <h1 class="h3 mb-0">Reviews on my products</h1>
+  {% if overall %}<span class="fs-5 text-warning">{{ overall[0]|stars }}</span><span class="fw-semibold">{{ overall[0] }} / 5</span>
+    <span class="text-muted small">{{ overall[1] }} review{{ '' if overall[1] == 1 else 's' }}</span>{% endif %}
+</div>
+{% for r in reviews %}
+<div class="border-bottom py-3">
+  <div><span class="text-warning">{{ r.rating|stars }}</span>
+    <a class="fw-semibold ms-2" href="{{ url_for('seller.product_detail', product_id=r.product_id) }}">{{ r.product.title }}</a></div>
+  {% if r.comment %}<p class="mb-1" style="white-space:pre-wrap">{{ r.comment }}</p>{% endif %}
+  <div class="small text-muted">{{ r.buyer.name }} &middot; {{ r.created_at|utc }}</div>
+</div>
+{% else %}
+<p class="text-muted">No reviews yet. Buyers can review an item once they have paid for it.</p>
+{% endfor %}
+{% endblock %}

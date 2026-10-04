@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}My account - ChainBid{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Hello, {{ current_user.name }}</h1>
+{% include "buyer/_nav.html" %}
+<div class="row g-3">
+  {% for label, value, ep in [('Auctions you are bidding on', stats.bidding_on, 'buyer.bids'), ('Currently leading', stats.leading, 'buyer.bids'),
+                              ('Watching', stats.watching, 'buyer.watchlist'), ('Auctions won', stats.won, 'buyer.won')] %}
+  <div class="col-6 col-md-3">
+    <a class="text-decoration-none" href="{{ url_for(ep) }}"><div class="card h-100"><div class="card-body">
+      <div class="text-muted small">{{ label }}</div><div class="fs-3 fw-semibold">{{ value }}</div>
+    </div></div></a>
+  </div>
+  {% endfor %}
+</div>
+<p class="mt-4"><a class="btn btn-primary" href="{{ url_for('auctions.browse') }}">Browse auctions</a></p>
+{% endblock %}

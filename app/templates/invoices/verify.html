@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Verify invoice {{ invoice.number }} - ChainBid{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-12 col-md-9 col-lg-7">
+  <div class="card shadow-sm"><div class="card-body p-4">
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <span class="badge text-bg-success fs-6">&#10003; Genuine invoice</span>
+      <span class="text-muted small">issued by ChainBid</span>
+    </div>
+    <h1 class="h4 mt-2">{{ invoice.number }}</h1>
+    <p class="text-muted small mb-3">Issued {{ invoice.created_at|utc }}. Names are partly hidden for privacy.</p>
+
+    <dl class="row mb-0">
+      <dt class="col-sm-4">Product</dt><dd class="col-sm-8">{{ product.title }}</dd>
+      <dt class="col-sm-4">Amount</dt><dd class="col-sm-8">{{ payment.amount|money }}</dd>
+      <dt class="col-sm-4">Auction ID</dt><dd class="col-sm-8">{{ auction.id }}</dd>
+      <dt class="col-sm-4">Payment ID</dt><dd class="col-sm-8">{{ payment.id }}</dd>
+      <dt class="col-sm-4">Status</dt><dd class="col-sm-8"><span class="badge text-bg-success">Paid</span> on {{ payment.payment_date|utc }}</dd>
+      <dt class="col-sm-4">Method</dt><dd class="col-sm-8">{{ method }}</dd>
+      <dt class="col-sm-4">Buyer</dt><dd class="col-sm-8">{{ payment.buyer.name|mask }}</dd>
+      <dt class="col-sm-4">Seller</dt><dd class="col-sm-8">{{ product.seller.name|mask }}</dd>
+    </dl>
+
+    {% if on_chain %}
+    <hr>
+    <h2 class="h6 text-success">&#10003; Blockchain verified when the payment was made</h2>
+    <dl class="row mb-2">
+      <dt class="col-sm-4">Network</dt><dd class="col-sm-8">{{ crypto.blockchain_network }} (test network)</dd>
+      <dt class="col-sm-4">Amount paid</dt><dd class="col-sm-8">{{ crypto.amount.normalize()|string }} ETH</dd>
+      <dt class="col-sm-4">Block</dt><dd class="col-sm-8">{{ crypto.block_number }} ({{ crypto.confirmations }} confirmations)</dd>
+      <dt class="col-sm-4">Transaction</dt>
+      <dd class="col-sm-8"><code class="text-break small">{{ crypto.transaction_hash }}</code>
+        {% if explorer %}<div><a href="{{ explorer }}" target="_blank" rel="noopener noreferrer">View on the block explorer</a></div>{% endif %}</dd>
+    </dl>
+    {% if checked %}
+      {% if result is none %}
+        <div class="alert alert-warning mb-0">The blockchain could not be reached right now. Please try again later.</div>
+      {% elif result.status == 'confirmed' %}
+        <div class="alert alert-success mb-0">Checked just now: the transaction is on the chain in block {{ result.block_number }}
+          with {{ result.confirmations }} confirmations, and it pays this auction's seller the agreed amount.</div>
+      {% elif result.status == 'pending' %}
+        <div class="alert alert-info mb-0">The chain is reachable but reports: {{ result.reason }}</div>
+      {% else %}
+        <div class="alert alert-danger mb-0">Warning: the chain does not confirm this payment ({{ result.reason }}).</div>
+      {% endif %}
+    {% else %}
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('invoices.verify', token=request.view_args.token, check=1) }}">Re-check on the blockchain now</a>
+    {% endif %}
+    {% else %}
+    <hr>
+    <p class="small text-muted mb-0">This was a simulated payment (no real money moved), so there is no blockchain record.</p>
+    {% endif %}
+  </div></div>
+</div></div>
+{% endblock %}

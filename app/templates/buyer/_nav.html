@@ -1,0 +1,5 @@
+<ul class="nav nav-tabs mb-4">
+  {% for label, ep in [('Overview', 'buyer.dashboard'), ('My bids', 'buyer.bids'), ('Watchlist', 'buyer.watchlist'), ('Won auctions', 'buyer.won')] %}
+  <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == ep }}" href="{{ url_for(ep) }}">{{ label }}</a></li>
+  {% endfor %}
+</ul>

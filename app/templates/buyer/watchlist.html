@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from "_auction_card.html" import card %}
+{% block title %}Watchlist - ChainBid{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Watchlist</h1>
+{% include "buyer/_nav.html" %}
+<div class="row g-3">
+  {% for a in auctions %}{{ card(a, counts.get(a.id), ratings.get(a.product_id)) }}
+  {% else %}<div class="col-12"><p class="text-muted">Nothing here yet. Use "Add to watchlist" on an auction page.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

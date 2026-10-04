@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}{{ product.title }} - ChainBid{% endblock %}
+{% block content %}
+<a class="small" href="{{ url_for('auctions.browse') }}">&larr; All auctions</a>
+<div class="row g-4 mt-1">
+  <div class="col-lg-7">
+    {% if product.images %}
+    <div id="gallery" class="carousel slide border rounded overflow-hidden bg-white">
+      <div class="carousel-inner">
+        {% for img in product.images %}
+        <div class="carousel-item {{ 'active' if loop.first }}">
+          <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" class="d-block w-100" alt="{{ product.title }}" style="max-height:440px;object-fit:contain">
+        </div>
+        {% endfor %}
+      </div>
+      {% if product.images|length > 1 %}
+      <button class="carousel-control-prev" type="button" data-bs-target="#gallery" data-bs-slide="prev"><span class="carousel-control-prev-icon bg-dark rounded"></span><span class="visually-hidden">Previous</span></button>
+      <button class="carousel-control-next" type="button" data-bs-target="#gallery" data-bs-slide="next"><span class="carousel-control-next-icon bg-dark rounded"></span><span class="visually-hidden">Next</span></button>
+      {% endif %}
+    </div>
+    {% endif %}
+    <h2 class="h5 mt-4">Description</h2>
+    <p style="white-space:pre-wrap">{{ product.description }}</p>
+  </div>
+
+  <div class="col-lg-5" id="auction-live"
+       data-auction-id="{{ auction.id }}" data-status="{{ state.status }}"
+       data-start="{{ state.start_time }}" data-end="{{ state.end_time }}" data-now="{{ state.server_now }}"
+       data-leading-id="{{ state.leading_bidder_id or '' }}"
+       data-user-id="{{ current_user.id if current_user.is_authenticated else '' }}"
+       data-currency="{{ currency }}">
+    <h1 class="h3">{{ product.title }}</h1>
+    <p>
+      <span class="badge text-bg-secondary">{{ product.category.name }}</span>
+      {% set sb = {'active': ('Live', 'text-bg-success'), 'scheduled': ('Upcoming', 'text-bg-info'), 'closed': ('Ended', 'text-bg-dark')}[auction.status] %}
+      <span id="status-badge" class="badge {{ sb[1] }}">{{ sb[0] }}</span>
+      <span id="live-indicator" class="badge text-bg-light border text-muted">connecting&hellip;</span>
+    </p>
+
+    <div id="notice" class="alert d-none" role="alert"></div>
+
+    <div class="card mb-3"><div class="card-body">
+      <div class="text-muted small" id="bid-label">{{ 'Current highest bid' if bid_total else 'Starting price' }}</div>
+      <div class="display-6 fw-semibold" id="current-bid">{{ auction.current_bid|money }}</div>
+
+      <div class="mt-3 p-2 bg-light rounded text-center">
+        <div class="text-muted small" id="countdown-label">{{ {'active': 'Time remaining', 'scheduled': 'Starts in', 'closed': ''}[auction.status] }}</div>
+        <div class="fs-3 font-monospace" id="countdown" aria-live="off">{{ (auction.start_time if auction.status == 'scheduled' else auction.end_time)|time_left }}</div>
+        <div class="text-muted small d-flex justify-content-center gap-4">
+          <span>days</span><span>hours</span><span>minutes</span><span>seconds</span>
+        </div>
+      </div>
+
+      <dl class="row mt-3 mb-0 small">
+        <dt class="col-6">Starting price</dt><dd class="col-6">{{ product.starting_price|money }}</dd>
+        <dt class="col-6">Number of bids</dt><dd class="col-6" id="bid-count">{{ bid_total }}</dd>
+        <dt class="col-6">Seller</dt><dd class="col-6">{{ product.seller.name }}</dd>
+        <dt class="col-6" id="end-label">{{ 'Ended' if auction.status == 'closed' else 'Ends' }}</dt>
+        <dd class="col-6" id="end-time">{{ auction.end_time|utc }}</dd>
+      </dl>
+    </div></div>
+
+    <div id="winner-box" class="alert alert-secondary {{ '' if auction.status == 'closed' and auction.winner else 'd-none' }}">
+      {% if auction.winner %}Won by {{ auction.winner.buyer.name|mask }} for {{ auction.winner.winning_amount|money }}.{% endif %}
+    </div>
+
+    {% if can_bid %}
+    <form id="bid-form" method="post" action="{{ url_for('auctions.place_bid', auction_id=auction.id) }}"
+          class="card card-body mb-3 {{ '' if auction.status == 'active' else 'd-none' }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="form-label" for="amount">Your bid ({{ currency }})</label>
+      <div class="input-group">
+        <input class="form-control" id="amount" name="amount" inputmode="decimal" autocomplete="off"
+               placeholder="{{ state.min_next_bid }}" required>
+        <button class="btn btn-success" type="submit" id="bid-btn">Place bid</button>
+      </div>
+      <div class="form-text">Minimum bid: <span id="min-bid">{{ currency }}{{ '{:,.2f}'.format(state.min_next_bid|float) }}</span>.
+        A bid in the last minute extends the auction by 2 minutes.</div>
+      <div class="text-danger small mt-1" id="bid-error" role="alert"></div>
+    </form>
+    <form method="post" action="{{ url_for('buyer.toggle_watch', auction_id=auction.id) }}" class="mb-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-primary w-100" type="submit">{{ 'Remove from watchlist' if watching else 'Add to watchlist' }}</button>
+    </form>
+    {% elif not current_user.is_authenticated %}
+    <p class="small"><a href="{{ url_for('auth.login', next=request.path) }}">Log in</a> as a buyer to bid or watch this auction.</p>
+    {% else %}
+    <p class="small text-muted">Only buyer accounts can bid.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% include "auctions/_reviews.html" %}
+
+<h2 class="h5 mt-4">Bid history</h2>
+<p class="text-muted {{ 'd-none' if bids }}" id="no-bids">No bids yet.</p>
+<table class="table table-sm bg-white {{ '' if bids else 'd-none' }}" style="max-width:560px" id="bid-table">
+  <thead><tr><th>Bidder</th><th>Amount</th><th>Time</th></tr></thead>
+  <tbody id="bid-rows">
+  {% for b in bids %}
+    <tr>
+      <td>{% if current_user.is_authenticated and b.buyer_id == current_user.id %}<strong>You</strong>{% else %}{{ b.buyer.name|mask }}{% endif %}</td>
+      <td>{{ b.amount|money }}</td><td>{{ b.bid_time|utc }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if bid_total > bids|length %}<p class="small text-muted">Showing the {{ bids|length }} highest of {{ bid_total }} bids.</p>{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if not current_user.is_authenticated %}{# signed-in pages already load the client in the base layout #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+{% endif %}
+<script src="{{ url_for('static', filename='js/auction.js') }}"></script>
+{% endblock %}
