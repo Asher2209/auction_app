@@ -1,13 +1,79 @@
 {% extends "base.html" %}
-{% block title %}My products - ChainBid{% endblock %}
+{% block title %}Seller Dashboard - ChainBid{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-  <h1 class="h3 mb-0">My products</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <h1 class="h3 mb-0"><span aria-hidden="true">📊</span> Seller Dashboard</h1>
   <div class="d-flex gap-2">
     <a class="btn btn-outline-secondary" href="{{ url_for('seller.reviews') }}">Reviews</a>
     <a class="btn btn-primary" href="{{ url_for('seller.create_product') }}">+ Add product</a>
   </div>
 </div>
+
+<!-- Summary Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card bg-white h-100">
+      <div class="card-body">
+        <div class="text-muted small">Active Auctions</div>
+        <div class="h3 mb-0" style="color:var(--primary)">{{ active_auctions_count }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-white h-100">
+      <div class="card-body">
+        <div class="text-muted small">Pending Payout</div>
+        <div class="h3 mb-0" style="color:var(--success)">{{ pending_payout|money }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-white h-100">
+      <div class="card-body">
+        <div class="text-muted small">Total Earnings</div>
+        <div class="h3 mb-0" style="color:var(--info)">{{ total_earnings|money }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-white h-100">
+      <div class="card-body">
+        <div class="text-muted small">Payout Wallet</div>
+        {% if payout_wallet %}
+        <div class="small font-monospace text-success">{{ payout_wallet[:6] }}...{{ payout_wallet[-4:] }}</div>
+        {% else %}
+        <div class="small text-warning">Not set</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Bids -->
+{% if recent_bids %}
+<div class="card mb-4">
+  <div class="card-header bg-white">
+    <h5 class="mb-0">Recent Bids</h5>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr>
+        <th>Item</th><th>Bidder</th><th>Amount</th><th>Time</th>
+      </tr></thead>
+      <tbody>
+      {% for bid in recent_bids %}
+        <tr>
+          <td><a href="{{ url_for('auctions.detail', auction_id=bid.auction.id) }}">{{ bid.auction.product.title }}</a></td>
+          <td>{{ bid.buyer.name }}</td>
+          <td>{{ bid.amount|money }}</td>
+          <td><small class="text-muted">{{ bid.bid_time|local }}</small></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
 
 <ul class="nav nav-pills mb-3">
   {% for t in tabs %}

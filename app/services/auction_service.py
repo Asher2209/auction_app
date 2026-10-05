@@ -157,6 +157,14 @@ def place_bid(auction_id, user, raw_amount, now=None):
                 notify(previous_bidder, "You have been outbid",
                        f'Someone placed a higher bid ({_money(amount)}) on "{title}".', url=page, email=True)
             notify(auction.product.seller_id, "New bid received", f'New bid of {_money(amount)} on "{title}".', url=seller_page)
+
+            # Notify watchers of this auction that a new bid was placed
+            from ..models import Watchlist
+            watchers = db.session.query(Watchlist.user_id).filter_by(product_id=auction.product_id).all()
+            for (watcher_id,) in watchers:
+                if watcher_id != user.id:  # don't notify the bidder themselves
+                    notify(watcher_id, "New bid on watched item",
+                           f'Someone bid {_money(amount)} on "{title}", now the highest bid.', url=page, email=True)
             db.session.commit()
             db.session.refresh(auction)
             return BidResult(auction.id, bid, previous_bidder, extended)
