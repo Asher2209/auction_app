@@ -10,6 +10,7 @@ def utcnow():
 
 from .user import User  # noqa: E402
 from .catalog import Category, Product, ProductImage, Watchlist  # noqa: E402
+from .product_details import ProductDetails  # noqa: E402
 from .auction import Auction, Bid, Winner  # noqa: E402
 from .payment import Payment, CryptoPayment, Invoice  # noqa: E402
 from .misc import Notification, NotificationPreference, Review, Feedback  # noqa: E402
@@ -24,7 +25,7 @@ def load_user(user_id):
 
 
 __all__ = [
-    "User", "Category", "Product", "ProductImage", "Watchlist",
+    "User", "Category", "Product", "ProductImage", "ProductDetails", "Watchlist",
     "Auction", "Bid", "Winner", "Payment", "CryptoPayment", "Invoice",
     "Notification", "NotificationPreference", "Review", "Feedback", "Message", "utcnow",
 ]

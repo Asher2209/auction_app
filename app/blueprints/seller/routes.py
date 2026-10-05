@@ -2,7 +2,7 @@ from flask import abort, current_app, flash, redirect, render_template, request,
 from flask_login import current_user
 
 from ...extensions import db
-from ...models import Auction, Category, Product, ProductImage, Review
+from ...models import Auction, Category, Product, ProductImage, ProductDetails, Review
 from ...services import review_service as rs
 from ...services import uploads
 from ...utils import role_required
@@ -75,6 +75,102 @@ def create_product():
             )
             try:
                 db.session.add(product)
+                db.session.commit()
+
+                # Create ProductDetails with form data
+                details = ProductDetails(product_id=product.id)
+
+                # Set common fields
+                if form.condition.data:
+                    details.condition = form.condition.data
+                if form.warranty.data:
+                    details.warranty = form.warranty.data
+                if form.shipping_weight.data:
+                    details.shipping_weight = form.shipping_weight.data
+                if form.shipping_info.data:
+                    details.shipping_info = form.shipping_info.data
+                if form.storage_info.data:
+                    details.storage_info = form.storage_info.data
+
+                # Set category-specific fields
+                if form.brand.data:
+                    details.brand = form.brand.data
+                if form.model.data:
+                    details.model = form.model.data
+                if form.color.data:
+                    details.color = form.color.data
+                if form.processor.data:
+                    details.processor = form.processor.data
+                if form.ram.data:
+                    details.ram = form.ram.data
+                if form.storage.data:
+                    details.storage = form.storage.data
+                if form.screen_size.data:
+                    details.screen_size = form.screen_size.data
+                if form.battery.data:
+                    details.battery = form.battery.data
+
+                # Collectibles
+                if form.artist_name.data:
+                    details.artist_name = form.artist_name.data
+                if form.edition.data:
+                    details.edition = form.edition.data
+                if form.authentication.data:
+                    details.authentication = form.authentication.data
+                if form.rarity.data:
+                    details.rarity = form.rarity.data
+                if form.provenance.data:
+                    details.provenance = form.provenance.data
+
+                # Fashion
+                if form.size.data:
+                    details.size = form.size.data
+                if form.fabric.data:
+                    details.fabric = form.fabric.data
+                if form.fit.data:
+                    details.fit = form.fit.data
+                if form.care_instructions.data:
+                    details.care_instructions = form.care_instructions.data
+                if form.designer.data:
+                    details.designer = form.designer.data
+
+                # Books
+                if form.author.data:
+                    details.author = form.author.data
+                if form.isbn.data:
+                    details.isbn = form.isbn.data
+                if form.publication_year.data:
+                    details.publication_year = form.publication_year.data
+                if form.publisher.data:
+                    details.publisher = form.publisher.data
+                if form.pages.data:
+                    details.pages = form.pages.data
+                if form.language.data:
+                    details.language = form.language.data
+                if form.binding.data:
+                    details.binding = form.binding.data
+
+                # Sports
+                if form.sport_type.data:
+                    details.sport_type = form.sport_type.data
+                if form.sport_brand.data:
+                    details.sport_brand = form.sport_brand.data
+                if form.size_sport.data:
+                    details.size_sport = form.size_sport.data
+                if form.material_sport.data:
+                    details.material_sport = form.material_sport.data
+
+                # Home & Garden
+                if form.furniture_type.data:
+                    details.furniture_type = form.furniture_type.data
+                if form.material_home.data:
+                    details.material_home = form.material_home.data
+                if form.dimensions_home.data:
+                    details.dimensions_home = form.dimensions_home.data
+                if form.assembly_required.data:
+                    details.assembly_required = form.assembly_required.data
+
+                db.session.add(details)
                 db.session.commit()
             except Exception:
                 db.session.rollback()
