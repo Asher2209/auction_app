@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% block title %}Verify Collectible - ChainBid{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h1 class="h3 mb-4">
+                        <i class="bi bi-shield-check"></i> Verify Your Collectible
+                    </h1>
+
+                    {% if existing %}
+                        <div class="alert alert-{{ 'success' if existing.verification_status == 'verified' else 'info' }}">
+                            <strong>Verification Status:</strong>
+                            {% if existing.verification_status == 'verified' %}
+                                ✓ Verified
+                            {% elif existing.verification_status == 'manual_review' %}
+                                ⏳ Pending manual review
+                            {% elif existing.verification_status == 'failed' %}
+                                ✗ Verification failed
+                            {% else %}
+                                {{ existing.verification_status }}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <p class="text-muted mb-4">
+                        Add grading certification to increase buyer confidence and value.
+                    </p>
+
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        {# Collectible Type #}
+                        <div class="mb-3">
+                            {{ form.collectible_type.label(class="form-label") }}
+                            {{ form.collectible_type(class="form-select" + (" is-invalid" if form.collectible_type.errors else "")) }}
+                            {% if form.collectible_type.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.collectible_type.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Select the type of collectible being listed</small>
+                        </div>
+
+                        {# Grader #}
+                        <div class="mb-3">
+                            {{ form.grader.label(class="form-label") }}
+                            {{ form.grader(class="form-select" + (" is-invalid" if form.grader.errors else "")) }}
+                            {% if form.grader.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.grader.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">The grading company that certified your item</small>
+                        </div>
+
+                        {# Certificate Number #}
+                        <div class="mb-3">
+                            {{ form.certificate_number.label(class="form-label") }}
+                            {{ form.certificate_number(class="form-control" + (" is-invalid" if form.certificate_number.errors else "")) }}
+                            {% if form.certificate_number.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.certificate_number.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">
+                                This is typically found on the slab/certificate itself
+                            </small>
+                        </div>
+
+                        {# Grade #}
+                        <div class="mb-3">
+                            {{ form.grade.label(class="form-label") }}
+                            {{ form.grade(class="form-control" + (" is-invalid" if form.grade.errors else "")) }}
+                            {% if form.grade.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.grade.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Optional: e.g., PSA 10, Gem MT 9, GEM MS65</small>
+                        </div>
+
+                        {# Year #}
+                        <div class="mb-3">
+                            {{ form.year.label(class="form-label") }}
+                            {{ form.year(class="form-control" + (" is-invalid" if form.year.errors else "")) }}
+                            {% if form.year.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.year.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Optional: Year of manufacture/issue</small>
+                        </div>
+
+                        {# Item Name #}
+                        <div class="mb-3">
+                            {{ form.grader_item_name.label(class="form-label") }}
+                            {{ form.grader_item_name(class="form-control" + (" is-invalid" if form.grader_item_name.errors else "")) }}
+                            {% if form.grader_item_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.grader_item_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">How the item is listed on the certificate</small>
+                        </div>
+
+                        {# Photos #}
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>Photos of Slab/Certificate</strong>
+                            </label>
+                            <div class="upload-area border-2 rounded p-4 text-center" id="uploadArea">
+                                <svg class="mb-2" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/>
+                                </svg>
+                                <p class="mb-2">
+                                    <strong>Upload clear photos</strong> of the certification slab/label
+                                </p>
+                                <p class="text-muted small mb-3">
+                                    Drag and drop images here, or click to browse
+                                </p>
+                                {{ form.slab_photos(class="form-control d-none", id="photoInput") }}
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                JPG, PNG or GIF • Maximum 5MB each • Show front and back of certificate
+                            </small>
+                            <div id="photoPreview" class="mt-3"></div>
+                        </div>
+
+                        {# Notes #}
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else "")) }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Any additional information about the item</small>
+                        </div>
+
+                        {# Confirm Accuracy #}
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.confirm_accuracy(class="form-check-input" + (" is-invalid" if form.confirm_accuracy.errors else "")) }}
+                                {{ form.confirm_accuracy.label(class="form-check-label") }}
+                                {% if form.confirm_accuracy.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.confirm_accuracy.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# Submit #}
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {# Sidebar #}
+        <div class="col-lg-4">
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-info-circle"></i> How It Works
+                    </h5>
+                    <ol class="small mb-0">
+                        <li class="mb-2">
+                            <strong>Enter details:</strong> Provide your certificate number and grader
+                        </li>
+                        <li class="mb-2">
+                            <strong>System verifies:</strong> We look up your certificate with the grader's database
+                        </li>
+                        <li class="mb-2">
+                            <strong>Photos reviewed:</strong> Our team verifies photos match the certificate
+                        </li>
+                        <li>
+                            <strong>Get verified badge:</strong> Increase buyer confidence and trust
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-check-circle"></i> Supported Graders
+                    </h5>
+                    <p class="small mb-2">
+                        <strong>Trading Cards:</strong><br>
+                        PSA, Beckett, CGC, SGC
+                    </p>
+                    <p class="small mb-2">
+                        <strong>Coins:</strong><br>
+                        PCGS, NGC
+                    </p>
+                    <p class="small mb-2">
+                        <strong>Autographs:</strong><br>
+                        PSA/DNA, JSA, Beckett
+                    </p>
+                    <p class="small mb-0">
+                        <strong>Other:</strong><br>
+                        PMG, CGC (Comics), WATA (Games)
+                    </p>
+                </div>
+            </div>
+
+            <div class="alert alert-info small">
+                <strong>Tip:</strong> Having a verified certificate increases your auction's credibility and can lead to higher bids.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// File upload handling
+const uploadArea = document.getElementById('uploadArea');
+const photoInput = document.getElementById('photoInput');
+const photoPreview = document.getElementById('photoPreview');
+
+uploadArea.addEventListener('click', () => photoInput.click());
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('border-primary', 'bg-light');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('border-primary', 'bg-light');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('border-primary', 'bg-light');
+    photoInput.files = e.dataTransfer.files;
+    updatePreview();
+});
+
+photoInput.addEventListener('change', updatePreview);
+
+function updatePreview() {
+    photoPreview.innerHTML = '';
+    const files = Array.from(photoInput.files);
+
+    if (files.length > 0) {
+        const preview = document.createElement('div');
+        preview.className = 'alert alert-success small';
+        preview.innerHTML = `<strong>✓ ${files.length} photo(s) selected:</strong><br>` +
+            files.map(f => f.name).join('<br>');
+        photoPreview.appendChild(preview);
+    }
+}
+</script>
+
+<style>
+#uploadArea {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+#uploadArea:hover {
+    background-color: #e9ecef;
+}
+
+.border-2 {
+    border: 2px dashed #dee2e6 !important;
+}
+</style>
+{% endblock %}

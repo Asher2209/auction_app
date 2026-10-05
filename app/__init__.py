@@ -42,6 +42,7 @@ def create_app(config_class=Config):
     from .blueprints.payments import bp as payments_bp
     from .blueprints.reviews import bp as reviews_bp
     from .blueprints.seller import bp as seller_bp
+    from .blueprints.collectibles import bp as collectibles_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -54,6 +55,7 @@ def create_app(config_class=Config):
     app.register_blueprint(payments_bp)
     app.register_blueprint(invoices_bp)
     app.register_blueprint(reviews_bp)
+    app.register_blueprint(collectibles_bp)
 
     from .security import init_security
     init_security(app)  # before anything is started: an unsafe production config must stop the app here
