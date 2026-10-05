@@ -65,3 +65,23 @@ def feedback():
             flash("Thank you! Your feedback was sent to the administrators.", "success")
             return redirect(url_for("main.feedback"))
     return render_template("feedback.html", form=form)
+
+
+@bp.route("/privacy-policy")
+def privacy_policy():
+    return render_template("legal/privacy_policy.html")
+
+
+@bp.route("/terms-of-service")
+def terms_of_service():
+    return render_template("legal/terms_of_service.html")
+
+
+@bp.route("/refund-policy")
+def refund_policy():
+    return render_template("legal/refund_policy.html")
+
+
+@bp.route("/cookie-policy")
+def cookie_policy():
+    return render_template("legal/cookie_policy.html")
