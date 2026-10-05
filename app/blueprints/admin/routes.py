@@ -1,11 +1,11 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from flask import Response, abort, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user
 from sqlalchemy import func
 
 from ...extensions import db
-from ...models import Auction, Bid, Category, CryptoPayment, Feedback, Product, Review, User, utcnow
+from ...models import Auction, Bid, Category, CryptoPayment, Feedback, Product, Review, User, utcnow, CollectibleVerification
 from ...services import analytics_service, payment_service, report_export, report_service
 from ...services import review_service
 from ...services.notifications import notify
@@ -400,3 +400,78 @@ def report_export_file(key, ext):
     return Response(render(report, data, params, now), mimetype=MIMETYPES[ext],
                     headers={"Content-Disposition": f'attachment; filename="{report_export.filename(report, ext, now)}"',
                              "Cache-Control": "private, no-store"})
+
+
+@bp.route("/collectibles/verify", methods=["GET"])
+@role_required("admin")
+def collectibles_dashboard():
+    """Admin dashboard for collectible verification"""
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status')
+    collectible_type = request.args.get('collectible_type')
+    grader = request.args.get('grader')
+    sort = request.args.get('sort', 'newest')
+
+    # Build base query
+    query = CollectibleVerification.query
+
+    # Apply status filter
+    if status and status in ('pending', 'verified', 'failed', 'manual_review'):
+        query = query.filter(CollectibleVerification.verification_status == status)
+
+    # Apply collectible type filter
+    if collectible_type:
+        query = query.filter(CollectibleVerification.collectible_type == collectible_type)
+
+    # Apply grader filter
+    if grader:
+        query = query.filter(CollectibleVerification.grader == grader)
+
+    # Apply sorting
+    if sort == 'oldest':
+        query = query.order_by(CollectibleVerification.created_at.asc())
+    elif sort == 'high_value':
+        query = query.join(Product).order_by(Product.estimated_value.desc())
+    else:  # newest (default)
+        query = query.order_by(CollectibleVerification.created_at.desc())
+
+    # Paginate
+    verifications = query.paginate(page=page, per_page=20)
+
+    # Calculate stats
+    all_verifications = CollectibleVerification.query
+    pending_count = all_verifications.filter(CollectibleVerification.verification_status.in_(('pending', 'manual_review'))).count()
+    verified_count = all_verifications.filter(CollectibleVerification.verification_status == 'verified').count()
+    failed_count = all_verifications.filter(CollectibleVerification.verification_status == 'failed').count()
+
+    # Verified this week
+    week_ago = utcnow() - timedelta(days=7)
+    verified_this_week = all_verifications.filter(
+        CollectibleVerification.verification_status == 'verified',
+        CollectibleVerification.verification_date >= week_ago
+    ).count()
+
+    # Verification rate
+    total_submissions = all_verifications.count()
+    verification_rate = round((verified_count / total_submissions * 100) if total_submissions > 0 else 0)
+
+    # Average review time (in minutes)
+    reviewed = all_verifications.filter(CollectibleVerification.verification_date.isnot(None)).all()
+    if reviewed:
+        total_time = sum((v.verification_date - v.created_at).total_seconds() for v in reviewed if v.verification_date)
+        avg_review_time = int(total_time / len(reviewed) / 60)  # convert to minutes
+    else:
+        avg_review_time = 0
+
+    now = utcnow()
+
+    return render_template('admin/collectibles_dashboard.html',
+                          verifications=verifications,
+                          pending_count=pending_count,
+                          verified_count=verified_count,
+                          failed_count=failed_count,
+                          verified_this_week=verified_this_week,
+                          verification_rate=verification_rate,
+                          avg_review_time=avg_review_time,
+                          status=status,
+                          now=now)
