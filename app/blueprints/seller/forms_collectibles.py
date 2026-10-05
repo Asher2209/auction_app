@@ -19,14 +19,19 @@ class CollectibleVerificationForm(FlaskForm):
             ('banknote', 'Graded Banknote (PMG, PCGS)'),
             ('video_game', 'Graded Video Game (WATA, CGC Games)'),
             ('jewelry', 'Hallmarked Jewelry (BIS HUID)'),
+            ('luxury_handbag', 'Luxury Handbag (Entrupy AI Auth)'),
+            ('luxury_accessory', 'Luxury Accessory (Entrupy AI Auth)'),
+            ('sneaker', 'Designer Sneaker (SneakerAuth)'),
+            ('wine', 'Wine/Spirits (WineAuth Provenance)'),
         ],
         validators=[DataRequired()]
     )
 
     # Which grading company certified it?
     grader = SelectField(
-        'Grading Company',
+        'Authentication Service',
         choices=[
+            # Tier 1: Graded collectibles
             ('PSA', 'PSA (Professional Sports Authenticator)'),
             ('Beckett', 'Beckett (BGS/BVG)'),
             ('CGC', 'CGC (Certified Guaranty Company)'),
@@ -40,6 +45,10 @@ class CollectibleVerificationForm(FlaskForm):
             ('WATA', 'WATA (Video Game Authentication)'),
             ('CGC Games', 'CGC Games (Video Game Grading)'),
             ('BIS', 'BIS (Bureau of Indian Standards - Jewelry)'),
+            # Tier 2: Luxury & modern collectibles
+            ('Entrupy', 'Entrupy (AI Luxury Authentication)'),
+            ('SneakerAuth', 'SneakerAuth (Sneaker Verification)'),
+            ('WineAuth', 'WineAuth (Wine Provenance)'),
         ],
         validators=[DataRequired()]
     )
@@ -153,6 +162,7 @@ class CollectibleFilterForm(FlaskForm):
         'Collectible Type',
         choices=[
             ('', 'All Types'),
+            # Tier 1
             ('trading_card', 'Trading Cards'),
             ('coin', 'Coins'),
             ('autograph', 'Autographs/Memorabilia'),
@@ -160,14 +170,20 @@ class CollectibleFilterForm(FlaskForm):
             ('banknote', 'Banknotes'),
             ('video_game', 'Video Games'),
             ('jewelry', 'Jewelry'),
+            # Tier 2
+            ('luxury_handbag', 'Luxury Handbags'),
+            ('luxury_accessory', 'Luxury Accessories'),
+            ('sneaker', 'Designer Sneakers'),
+            ('wine', 'Wine & Spirits'),
         ],
         validators=[Optional()]
     )
 
     grader = SelectField(
-        'Grading Company',
+        'Authentication Service',
         choices=[
-            ('', 'All Graders'),
+            ('', 'All Services'),
+            # Tier 1
             ('PSA', 'PSA'),
             ('Beckett', 'Beckett'),
             ('CGC', 'CGC'),
@@ -175,6 +191,10 @@ class CollectibleFilterForm(FlaskForm):
             ('NGC', 'NGC'),
             ('PSA/DNA', 'PSA/DNA'),
             ('JSA', 'JSA'),
+            # Tier 2
+            ('Entrupy', 'Entrupy'),
+            ('SneakerAuth', 'SneakerAuth'),
+            ('WineAuth', 'WineAuth'),
         ],
         validators=[Optional()]
     )

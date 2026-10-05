@@ -122,6 +122,97 @@ class BeckettAPIClient(GraderAPIClient):
             }
 
 
+class EntropyAPIClient(GraderAPIClient):
+    """Entrupy AI authentication API for luxury items"""
+
+    def __init__(self, api_key=None):
+        super().__init__('Entrupy', api_key)
+        self.base_url = "https://api.entrupy.com/v1"
+
+    def lookup_certificate(self, cert_number):
+        """Verify luxury item authenticity with Entrupy AI"""
+        try:
+            endpoint = f"{self.base_url}/authentication/{cert_number}"
+            headers = {'Authorization': f'Bearer {self.api_key}'} if self.api_key else {}
+
+            response = requests.get(endpoint, headers=headers, timeout=10)
+            response.raise_for_status()
+
+            data = response.json()
+            return {
+                'status': 'success',
+                'data': data,
+                'confidence': data.get('confidence_score', 0),
+                'url': f"https://www.entrupy.com/verify/{cert_number}"
+            }
+        except requests.exceptions.RequestException as e:
+            return {
+                'status': 'failed',
+                'error': str(e)
+            }
+
+
+class SneakerAuthAPIClient(GraderAPIClient):
+    """Sneaker authentication service client (StockX/GOAT model)"""
+
+    def __init__(self, api_key=None):
+        super().__init__('SneakerAuth', api_key)
+        self.base_url = "https://api.sneakerauth.com/v1"
+
+    def lookup_certificate(self, cert_number):
+        """Verify sneaker authenticity"""
+        try:
+            endpoint = f"{self.base_url}/verify"
+            headers = {'Authorization': f'Bearer {self.api_key}'} if self.api_key else {}
+            payload = {'certificate_id': cert_number}
+
+            response = requests.post(endpoint, json=payload, headers=headers, timeout=10)
+            response.raise_for_status()
+
+            data = response.json()
+            return {
+                'status': 'success',
+                'data': data,
+                'authentication': data.get('authentication_status', 'pending'),
+                'url': f"https://www.sneakerauth.com/cert/{cert_number}"
+            }
+        except requests.exceptions.RequestException as e:
+            return {
+                'status': 'failed',
+                'error': str(e)
+            }
+
+
+class WineAuthAPIClient(GraderAPIClient):
+    """Wine authentication and provenance verification client"""
+
+    def __init__(self, api_key=None):
+        super().__init__('WineAuth', api_key)
+        self.base_url = "https://api.wineauth.com/v1"
+
+    def lookup_certificate(self, cert_number):
+        """Verify wine authenticity and provenance"""
+        try:
+            endpoint = f"{self.base_url}/bottles/{cert_number}"
+            headers = {'Authorization': f'Bearer {self.api_key}'} if self.api_key else {}
+
+            response = requests.get(endpoint, headers=headers, timeout=10)
+            response.raise_for_status()
+
+            data = response.json()
+            return {
+                'status': 'success',
+                'data': data,
+                'provenance': data.get('provenance_verified', False),
+                'url': f"https://www.wineauth.com/bottle/{cert_number}"
+            }
+        except requests.exceptions.RequestException as e:
+            return {
+                'status': 'failed',
+                'error': str(e)
+            }
+
+
 # Mapping of graders to their API clients
 GRADER_CLIENTS = {
     'PSA': PSAAPIClient,
@@ -131,6 +222,9 @@ GRADER_CLIENTS = {
     'BGS': BeckettAPIClient,  # Beckett Grading Services
     'CGC': None,  # CGC API not yet implemented
     'SGC': None,  # SGC API not yet implemented
+    'Entrupy': EntropyAPIClient,  # Luxury handbag/accessory authentication
+    'SneakerAuth': SneakerAuthAPIClient,  # Sneaker authentication
+    'WineAuth': WineAuthAPIClient,  # Wine provenance verification
 }
 
 
@@ -141,6 +235,7 @@ class CollectibleVerificationService:
     def initialize_graders():
         """Initialize supported graders in database"""
         graders_data = [
+            # Tier 1: Graded collectibles
             {
                 'name': 'PSA',
                 'cert_types': json.dumps(['trading_card', 'autograph', 'comic']),
@@ -170,6 +265,25 @@ class CollectibleVerificationService:
                 'cert_types': json.dumps(['comic', 'trading_card']),
                 'lookup_method': 'cert_number',
                 'lookup_instructions': 'Enter CGC certification number'
+            },
+            # Tier 2: Luxury and modern collectibles
+            {
+                'name': 'Entrupy',
+                'cert_types': json.dumps(['luxury_handbag', 'luxury_accessory']),
+                'lookup_method': 'certificate_id',
+                'lookup_instructions': 'Enter Entrupy authentication certificate ID'
+            },
+            {
+                'name': 'SneakerAuth',
+                'cert_types': json.dumps(['sneaker']),
+                'lookup_method': 'certificate_id',
+                'lookup_instructions': 'Enter SneakerAuth verification certificate ID'
+            },
+            {
+                'name': 'WineAuth',
+                'cert_types': json.dumps(['wine', 'spirits']),
+                'lookup_method': 'certificate_id',
+                'lookup_instructions': 'Enter WineAuth provenance certificate ID'
             },
         ]
 
