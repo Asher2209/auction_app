@@ -1,0 +1,204 @@
+/* ChainBid theme: purple-to-blue gradient, Inter, glass cards, light and dark.
+   Every text/background pair below is checked for WCAG AA contrast by tests/test_theme.py, so keep the --cb-* tokens in this form. */
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../fonts/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Space Grotesk Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url("../fonts/space-grotesk-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("../fonts/instrument-serif-latin-400-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root, [data-bs-theme="light"] {
+  --cb-font-display: "Space Grotesk Variable", "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cb-font-accent: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --cb-violet: #6d28d9;
+  --cb-blue: #2563eb;
+  --cb-grad: linear-gradient(135deg, #6d28d9 0%, #2563eb 100%);
+  --cb-text: #1e1b2e;
+  --cb-muted: #4b4766;
+  --cb-bg: #f6f4ff;
+  --cb-surface: #ffffff;
+  --cb-link: #5b21b6;
+  --cb-on-accent: #ffffff;
+  --cb-gt-from: #6d28d9;
+  --cb-gt-to: #1d4ed8;
+  --cb-glass: rgba(255, 255, 255, .66);
+  --cb-glass-solid: #ffffff;
+  --cb-glass-border: rgba(255, 255, 255, .75);
+  --cb-glass-shadow: 0 8px 28px rgba(76, 29, 149, .10);
+  --cb-badge-bg: #ede9fe;
+  --cb-badge-text: #4c1d95;
+  --cb-bg-image:
+    radial-gradient(60rem 38rem at 8% -12%, rgba(109, 40, 217, .16), transparent 70%),
+    radial-gradient(52rem 34rem at 100% 0%, rgba(37, 99, 235, .16), transparent 70%);
+
+  --bs-body-font-family: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --bs-body-color: var(--cb-text);
+  --bs-body-bg: var(--cb-bg);
+  --bs-secondary-color: var(--cb-muted);
+  --bs-link-color: var(--cb-link);
+  --bs-link-color-rgb: 91, 33, 182;
+  --bs-link-hover-color: #4c1d95;
+  --bs-border-radius: .65rem;
+  --bs-border-radius-lg: 1rem;
+}
+
+[data-bs-theme="dark"] {
+  --cb-text: #ece9fb;
+  --cb-muted: #b9b4d6;
+  --cb-bg: #120f24;
+  --cb-surface: #1c1836;
+  --cb-link: #c4b5fd;
+  --cb-gt-from: #c4b5fd;
+  --cb-gt-to: #93c5fd;
+  --cb-glass: rgba(38, 32, 70, .62);
+  --cb-glass-solid: #261f46;
+  --cb-glass-border: rgba(196, 181, 253, .18);
+  --cb-glass-shadow: 0 8px 28px rgba(0, 0, 0, .35);
+  --cb-badge-bg: #2e2557;
+  --cb-badge-text: #ddd6fe;
+  --cb-bg-image:
+    radial-gradient(60rem 38rem at 8% -12%, rgba(124, 58, 237, .30), transparent 70%),
+    radial-gradient(52rem 34rem at 100% 0%, rgba(37, 99, 235, .26), transparent 70%);
+
+  --bs-body-color: var(--cb-text);
+  --bs-body-bg: var(--cb-bg);
+  --bs-secondary-color: var(--cb-muted);
+  --bs-link-color: var(--cb-link);
+  --bs-link-color-rgb: 196, 181, 253;
+  --bs-link-hover-color: #ddd6fe;
+  --bs-border-color: rgba(196, 181, 253, .22);
+}
+
+body { background: var(--cb-bg-image) fixed no-repeat, var(--cb-bg); font-optical-sizing: auto; }
+h1, h2, h3, h4, h5, h6, .navbar-brand, .btn, .nav-tabs .nav-link, .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 { font-family: var(--cb-font-display); }
+h1, h2, h3, h4, h5, h6 { letter-spacing: -.02em; }
+
+/* one serif italic word in a heading: <span class="accent">auctions</span>. The serif runs small for its size, so it is scaled up a little. */
+.accent { font-family: var(--cb-font-accent); font-style: italic; font-weight: 400; font-size: 1.14em; letter-spacing: 0; line-height: 1; }
+
+/* ---- navbar ---- */
+.navbar { background-image: url("../img/grain.svg"), var(--cb-grad); box-shadow: 0 2px 14px rgba(76, 29, 149, .25); }
+.navbar .nav-link, .navbar .navbar-brand { display: inline-flex; align-items: center; gap: .4rem; }
+.navbar .btn-link.nav-link { text-decoration: none; }
+.theme-toggle { background: none; border: 0; color: rgba(255, 255, 255, .85); padding: .5rem; border-radius: .5rem; line-height: 1; }
+.theme-toggle:hover { color: #fff; }
+.theme-toggle .when-dark, [data-bs-theme="dark"] .theme-toggle .when-light { display: none; }
+[data-bs-theme="dark"] .theme-toggle .when-dark { display: inline-block; }
+footer.bg-light { background: transparent !important; }
+
+/* ---- icons ---- */
+.icon { width: 1em; height: 1em; vertical-align: -.14em; flex: none; }
+.icon-box {
+  width: 3rem; height: 3rem; border-radius: .9rem; display: grid; place-items: center; flex: none;
+  color: var(--cb-on-accent); background-image: url("../img/grain.svg"), var(--cb-grad); background-color: var(--cb-violet);
+  box-shadow: 0 6px 16px rgba(76, 29, 149, .28);
+}
+.icon-box .icon { width: 1.4rem; height: 1.4rem; }
+
+/* ---- buttons: gradient primary, everything fades on hover ---- */
+.btn { transition: opacity .2s ease, box-shadow .2s ease, background-color .2s ease; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; }
+.btn:hover:not(:disabled):not(.disabled) { opacity: .82; }
+.btn:disabled, .btn.disabled { opacity: .55; }
+.btn-primary {
+  --bs-btn-bg: #6d28d9; --bs-btn-border-color: transparent; --bs-btn-color: #fff;
+  --bs-btn-hover-bg: #6d28d9; --bs-btn-hover-border-color: transparent; --bs-btn-hover-color: #fff;
+  --bs-btn-active-bg: #5b21b6; --bs-btn-active-border-color: transparent; --bs-btn-active-color: #fff;
+  --bs-btn-disabled-bg: #6d28d9; --bs-btn-disabled-border-color: transparent;
+  --bs-btn-focus-shadow-rgb: 109, 40, 217;
+  background-image: url("../img/grain.svg"), var(--cb-grad);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--cb-link); --bs-btn-border-color: var(--cb-link);
+  --bs-btn-hover-bg: transparent; --bs-btn-hover-color: var(--cb-link); --bs-btn-hover-border-color: var(--cb-link);
+  --bs-btn-active-bg: transparent; --bs-btn-active-color: var(--cb-link); --bs-btn-active-border-color: var(--cb-link);
+}
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link { background-image: var(--cb-grad); background-color: var(--cb-violet); color: #fff; }
+.nav-tabs .nav-link { color: var(--cb-link); }
+.nav-tabs .nav-link.active { color: var(--cb-text); background: var(--cb-glass); }
+.form-check-input:checked { background-color: var(--cb-violet); border-color: var(--cb-violet); }
+
+/* ---- glass ---- */
+.glass, .card {
+  background: var(--cb-glass);
+  border: 1px solid var(--cb-glass-border);
+  box-shadow: var(--cb-glass-shadow);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .card { background: var(--cb-glass-solid); }
+}
+.card { --bs-card-bg: transparent; --bs-card-cap-bg: transparent; --bs-card-border-color: var(--cb-glass-border); transition: box-shadow .2s ease, transform .2s ease; }
+.card:hover { box-shadow: 0 14px 34px rgba(76, 29, 149, .18); }
+.card-footer { border-top-color: var(--cb-glass-border); }
+.glass { border-radius: 1rem; }
+.table { --bs-table-bg: transparent; }
+.bg-white, .bg-light { background-color: var(--cb-surface) !important; }
+.bg-secondary-subtle { background-color: var(--cb-badge-bg) !important; }
+.modal-content, .dropdown-menu, .list-group-item, .toast { background-color: var(--cb-surface); color: var(--cb-text); }
+
+/* coloured left border: violet, blue, alternating down a grid */
+.card-accent { border-left: 4px solid var(--cb-violet); }
+.row > :nth-child(even) > .card-accent, .row > :nth-child(even) .card-accent { border-left-color: var(--cb-blue); }
+
+/* ---- hero ---- */
+.hero { position: relative; overflow: hidden; border-radius: 1.5rem; padding: clamp(1.5rem, 4vw, 3.25rem); isolation: isolate; }
+.hero::after {  /* soft colour blobs behind the glass, with film grain over them */
+  content: ""; position: absolute; inset: 0; z-index: -2;
+  background:
+    url("../img/grain.svg"),
+    radial-gradient(30rem 18rem at 85% 10%, rgba(37, 99, 235, .22), transparent 70%),
+    radial-gradient(28rem 18rem at 5% 100%, rgba(109, 40, 217, .22), transparent 70%);
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: .4rem; padding: .3rem .85rem; border-radius: 999px;
+  font-size: .8rem; font-weight: 600; color: var(--cb-badge-text); background: var(--cb-badge-bg);
+  border: 1px solid rgba(109, 40, 217, .25); margin-bottom: 1rem;
+}
+.gradient-text {
+  background-image: linear-gradient(90deg, var(--cb-gt-from), var(--cb-gt-to));
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: var(--cb-gt-from);
+}
+@media (forced-colors: active) { .gradient-text { background: none; -webkit-text-fill-color: currentColor; color: CanvasText; } }
+.hero-lead { max-width: 40rem; color: var(--cb-muted); }
+
+/* ---- the beam that follows the cursor (set by effects.js on [data-beam]) ---- */
+[data-beam] { position: relative; }
+[data-beam]::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 0%), rgba(124, 58, 237, .30), rgba(37, 99, 235, .16) 45%, transparent 70%);
+  opacity: var(--beam, 0); transition: opacity .35s ease;
+}
+@media (hover: none), (prefers-reduced-motion: reduce) { [data-beam]::before { display: none; } }
+
+/* ---- sections fade in as they scroll into view ---- */
+.js-reveal [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+.js-reveal [data-reveal].is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal [data-reveal] { opacity: 1; transform: none; transition: none; }
+  .btn, .card { transition: none; }
+}
+
+/* ---- misc ---- */
+.cookie-banner { background: var(--cb-glass-solid); color: var(--cb-text); }
+.viz-root { font-family: inherit; }

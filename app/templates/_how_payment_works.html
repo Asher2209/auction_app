@@ -1,0 +1,16 @@
+<details class="mt-4 small how-payment-works">
+  <summary class="fw-semibold">How the blockchain is used for this item</summary>
+  <div class="mt-2">
+    <p class="mb-2"><strong>The item itself is not on the blockchain.</strong> Its photos, description and the answers above are kept in the ChainBid database, and the highest bid and the winner are decided by the auction engine, not by a blockchain.</p>
+    <p class="mb-2">The blockchain is used for <strong>one thing: the payment</strong>, and only if the winner chooses to pay with test cryptocurrency.</p>
+    <ol class="mb-2">
+      <li>The seller adds a payout wallet address to their profile.</li>
+      <li>When the auction ends, the winner connects their own wallet. The server works out the price in test ETH and fixes that quote.</li>
+      <li>The winner approves one transaction in their wallet. It goes through a small contract that passes the money straight to the seller's wallet; the contract never holds funds.</li>
+      <li>The contract writes a public record naming this auction number, the buyer, the seller and the amount.</li>
+      <li>ChainBid then reads the blockchain itself and checks the network, contract, buyer, seller, auction, amount and confirmations. Only then is the item marked paid. Your browser's word is never enough.</li>
+      <li>The invoice shows "Blockchain Verified" with the transaction hash, which anyone can look up on the test network's explorer.</li>
+    </ol>
+    <p class="mb-0 text-muted">This uses a test network with valueless test ETH. A simulated card, UPI or wallet payment never touches the blockchain.</p>
+  </div>
+</details>

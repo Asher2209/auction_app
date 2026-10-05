@@ -14,6 +14,14 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
 
+class NotificationPreference(db.Model):
+    __tablename__ = "notification_preferences"
+
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    notify_outbid = db.Column(db.Boolean, nullable=False, default=True)
+    notify_ending_soon = db.Column(db.Boolean, nullable=False, default=True)
+
+
 class Review(db.Model):
     __tablename__ = "reviews"
     __table_args__ = (db.UniqueConstraint("product_id", "buyer_id"),)

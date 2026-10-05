@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Notification Preferences - ChainBid{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-6">
+    <h1 class="h3 mb-3"><span aria-hidden="true">🔔</span> Notification Preferences</h1>
+    
+    <div class="card">
+      <div class="card-body">
+        <p class="text-muted small mb-4">Control which emails you receive about auction activity.</p>
+        
+        <form method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          
+          <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="notify_outbid" id="notify_outbid" 
+                   {% if pref.notify_outbid %}checked{% endif %}>
+            <label class="form-check-label" for="notify_outbid">
+              <strong>Outbid alerts</strong>
+              <div class="small text-muted">Email me when someone places a higher bid on an auction I'm bidding on</div>
+            </label>
+          </div>
+          
+          <div class="mb-4 form-check">
+            <input class="form-check-input" type="checkbox" name="notify_ending_soon" id="notify_ending_soon"
+                   {% if pref.notify_ending_soon %}checked{% endif %}>
+            <label class="form-check-label" for="notify_ending_soon">
+              <strong>Ending soon reminders</strong>
+              <div class="small text-muted">Email me 1 hour before an auction I'm bidding on ends</div>
+            </label>
+          </div>
+          
+          <button class="btn btn-primary" type="submit">Save preferences</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

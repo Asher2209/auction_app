@@ -66,7 +66,7 @@
           <td><a href="{{ url_for('auctions.detail', auction_id=bid.auction.id) }}">{{ bid.auction.product.title }}</a></td>
           <td>{{ bid.buyer.name }}</td>
           <td>{{ bid.amount|money }}</td>
-          <td><small class="text-muted">{{ bid.bid_time|local }}</small></td>
+          <td><small class="text-muted">{{ bid.bid_time|utc }}</small></td>
         </tr>
       {% endfor %}
       </tbody>

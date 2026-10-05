@@ -78,10 +78,11 @@
         A bid in the last minute extends the auction by 2 minutes.</div>
       <div class="text-danger small mt-1" id="bid-error" role="alert"></div>
     </form>
-    <form method="post" action="{{ url_for('buyer.toggle_watch', auction_id=auction.id) }}" class="mb-3">
+    <form method="post" action="{{ url_for('buyer.toggle_watch', auction_id=auction.id) }}" class="mb-2">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button class="btn btn-outline-primary w-100" type="submit">{{ 'Remove from watchlist' if watching else 'Add to watchlist' }}</button>
     </form>
+    <a href="{{ url_for('messaging.send_message', product_id=product.id) }}" class="btn btn-outline-secondary w-100 mb-3">Message seller</a>
     {% elif not current_user.is_authenticated %}
     <p class="small"><a href="{{ url_for('auth.login', next=request.path) }}">Log in</a> as a buyer to bid or watch this auction.</p>
     {% else %}

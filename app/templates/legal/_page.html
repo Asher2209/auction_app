@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{% block page_title %}{% endblock %} - ChainBid{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-9 legal-page">
+    <h1 class="h3"><span aria-hidden="true">{% block page_emoji %}📄{% endblock %}</span> {{ self.page_title() }}</h1>
+    <p class="text-muted small mb-3">Version {{ policy_version }} &middot; last updated {{ policy_updated }}</p>
+    <div class="alert alert-secondary small" role="note">
+      ChainBid is an <strong>academic project</strong>. No real money is involved: card, UPI and wallet payments are simulated, and
+      cryptocurrency payments use valueless test ETH on a test network. This page describes what the software actually does. It is not legal
+      advice and has not been reviewed by a lawyer; anyone running ChainBid for real customers must have it checked for their country first.
+    </div>
+    {% block body %}{% endblock %}
+    <hr class="my-4">
+    <p class="small text-muted">
+      Questions? Write to <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>. Other policies:
+      <a href="{{ url_for('legal.terms') }}">Terms of Service</a> &middot;
+      <a href="{{ url_for('legal.privacy') }}">Privacy Policy</a> &middot;
+      <a href="{{ url_for('legal.refunds') }}">Refund Policy</a> &middot;
+      <a href="{{ url_for('legal.cookies') }}">Cookie Policy</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

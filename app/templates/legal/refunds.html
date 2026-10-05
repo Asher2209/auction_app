@@ -1,0 +1,32 @@
+{% extends "legal/_page.html" %}
+{% block page_emoji %}💸{% endblock %}
+{% block page_title %}Refund Policy{% endblock %}
+{% block body %}
+<h2 class="h5 mt-4">1. In short</h2>
+<p>ChainBid does not handle real money, so there is nothing real to refund. This policy explains what happens to each kind of payment and how to raise a problem.</p>
+
+<h2 class="h5 mt-4">2. Simulated payments (card, UPI, wallet)</h2>
+<ul>
+  <li>No money moves, so no refund is needed. A "successful" simulated payment is only a record in the system.</li>
+  <li>A failed or pending simulated payment never charges anything. You can retry a failed payment from the payment page.</li>
+  <li>There is no automatic refund feature. If a simulated payment was made by mistake, or the item was cancelled, ask an administrator (see section 5) to correct the record.</li>
+</ul>
+
+<h2 class="h5 mt-4">3. Cryptocurrency payments</h2>
+<ul>
+  <li>Payments are made in test ETH, which has no monetary value, straight from your wallet to the seller's wallet. ChainBid never holds the funds, so it cannot send them back.</li>
+  <li><strong>Blockchain transactions are final.</strong> Neither we nor anyone else can reverse one.</li>
+  <li>If you sent the wrong amount, the server will not accept the payment and will tell you why. If a payment you sent was not accepted, contact us with the transaction hash. Returning test ETH would be a voluntary transfer by the seller; the software does not do it for you.</li>
+  <li>Network fees (gas) go to the network, not to ChainBid, and are not refundable.</li>
+</ul>
+
+<h2 class="h5 mt-4">4. Bids, wins and cancelled auctions</h2>
+<ul>
+  <li>A bid is binding and cannot be withdrawn (see the <a href="{{ url_for('legal.terms') }}">Terms of Service</a>).</li>
+  <li>If an administrator cancels an auction, the buyer is notified and, if a payment had been recorded, the administrator will correct it on request.</li>
+  <li>There is no cooling-off or return window for an auction win in this academic version. An operator who sells real goods must publish their own returns terms in addition to this page, as the law of their country requires.</li>
+</ul>
+
+<h2 class="h5 mt-4">5. How to raise a problem</h2>
+<p>Email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> or use <em>Send feedback</em> when signed in. Include the auction number, the date, and for crypto payments the transaction hash. An administrator will look at the record and reply. There is no fixed response time.</p>
+{% endblock %}

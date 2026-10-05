@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Messages - ChainBid{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0"><span aria-hidden="true">💬</span> Messages</h1>
+  {% if unread %}<span class="badge text-bg-primary">{{ unread }} unread</span>{% endif %}
+</div>
+
+{% if messages.items %}
+<div class="table-responsive">
+  <table class="table table-hover align-middle bg-white">
+    <thead><tr>
+      <th>From/To</th><th>Product</th><th>Subject</th><th>Date</th><th>Status</th>
+    </tr></thead>
+    <tbody>
+    {% for msg in messages.items %}
+      {% set is_sent = msg.sender_id == current_user.id %}
+      <tr class="{{ '' if msg.is_read() or is_sent else 'fw-bold' }}">
+        <td>
+          {% if is_sent %}
+            <small class="text-muted">to</small> {{ msg.recipient.name }}
+          {% else %}
+            <strong>{{ msg.sender.name }}</strong>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{{ url_for('auctions.detail', auction_id=msg.product.auction.id if msg.product.auction else '#') }}">
+            {{ msg.product.title[:40] }}{% if msg.product.title|length > 40 %}...{% endif %}
+          </a>
+        </td>
+        <td>
+          <a href="{{ url_for('messaging.view_conversation', product_id=msg.product_id, user_id=msg.sender_id if is_sent else msg.recipient_id) }}" class="text-decoration-none">
+            {{ msg.subject }}
+          </a>
+        </td>
+        <td><small class="text-muted">{{ msg.sent_time|utc }}</small></td>
+        <td>
+          {% if is_sent %}
+            <span class="badge text-bg-secondary">Sent</span>
+          {% elif msg.is_read() %}
+            <span class="badge text-bg-success">Read</span>
+          {% else %}
+            <span class="badge text-bg-warning">Unread</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if messages.pages > 1 %}
+<nav>
+  <ul class="pagination">
+    {% if messages.has_prev %}
+    <li class="page-item"><a class="page-link" href="{{ url_for('messaging.inbox', page=messages.prev_num) }}">← Previous</a></li>
+    {% endif %}
+    <li class="page-item active"><span class="page-link">Page {{ messages.page }} of {{ messages.pages }}</span></li>
+    {% if messages.has_next %}
+    <li class="page-item"><a class="page-link" href="{{ url_for('messaging.inbox', page=messages.next_num) }}">Next →</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info">
+  No messages yet. <a href="{{ url_for('auctions.browse') }}">Browse auctions</a> to contact sellers.
+</div>
+{% endif %}
+{% endblock %}

@@ -36,6 +36,7 @@ def create_app(config_class=Config):
     from .blueprints.buyer import bp as buyer_bp
     from .blueprints.invoices import bp as invoices_bp
     from .blueprints.main import bp as main_bp
+    from .blueprints.messaging import bp as messaging_bp
     from .blueprints.notifications import bp as notifications_bp
     from .blueprints.payments import bp as payments_bp
     from .blueprints.reviews import bp as reviews_bp
@@ -48,6 +49,7 @@ def create_app(config_class=Config):
     app.register_blueprint(auctions_bp)
     app.register_blueprint(buyer_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(messaging_bp)
     app.register_blueprint(payments_bp)
     app.register_blueprint(invoices_bp)
     app.register_blueprint(reviews_bp)

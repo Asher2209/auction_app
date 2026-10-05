@@ -12,7 +12,8 @@ from .user import User  # noqa: E402
 from .catalog import Category, Product, ProductImage, Watchlist  # noqa: E402
 from .auction import Auction, Bid, Winner  # noqa: E402
 from .payment import Payment, CryptoPayment, Invoice  # noqa: E402
-from .misc import Notification, Review, Feedback  # noqa: E402
+from .misc import Notification, NotificationPreference, Review, Feedback  # noqa: E402
+from .messaging import Message  # noqa: E402
 
 
 @login_manager.user_loader
@@ -25,5 +26,5 @@ def load_user(user_id):
 __all__ = [
     "User", "Category", "Product", "ProductImage", "Watchlist",
     "Auction", "Bid", "Winner", "Payment", "CryptoPayment", "Invoice",
-    "Notification", "Review", "Feedback", "utcnow",
+    "Notification", "NotificationPreference", "Review", "Feedback", "Message", "utcnow",
 ]

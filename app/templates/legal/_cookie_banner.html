@@ -1,0 +1,14 @@
+<section class="cookie-banner border-top shadow" aria-label="Cookie notice" role="region">
+  <div class="container d-flex flex-column flex-md-row align-items-md-center gap-3 py-3">
+    <p class="mb-0 small flex-grow-1">
+      We use only the cookies needed to keep you signed in and to remember this choice. No advertising or tracking cookies.
+      <a href="{{ url_for('legal.cookies') }}">Cookie Policy</a> &middot; <a href="{{ url_for('legal.privacy') }}">Privacy Policy</a>
+    </p>
+    <form method="post" action="{{ url_for('legal.cookie_consent') }}" class="d-flex gap-2 flex-shrink-0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="next" value="{{ here }}">
+      <button class="btn btn-outline-secondary btn-sm" type="submit" name="choice" value="essential">Essential only</button>
+      <button class="btn btn-primary btn-sm" type="submit" name="choice" value="all">Accept all</button>
+    </form>
+  </div>
+</section>

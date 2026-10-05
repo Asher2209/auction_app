@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Send Message - ChainBid{% endblock %}
+{% block content %}
+<a class="small" href="{{ url_for('auctions.detail', auction_id=product.auction.id if product.auction else '#') }}">&larr; Back to listing</a>
+
+<div class="row mt-3">
+  <div class="col-lg-8">
+    <h1 class="h3 mb-1">Message seller</h1>
+    <p class="text-muted mb-4">Regarding: <strong>{{ product.title }}</strong></p>
+
+    <form method="post" class="card card-body" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="mb-3">
+        <label class="form-label" for="subject">Subject *</label>
+        <input class="form-control" id="subject" name="subject" type="text" required autofocus>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="body">Message *</label>
+        <textarea class="form-control" id="body" name="body" rows="6" required></textarea>
+        <div class="form-text">Be clear and concise. Include specific questions about the product.</div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Send message</button>
+        <a class="btn btn-secondary" href="{{ url_for('auctions.detail', auction_id=product.auction.id if product.auction else '#') }}">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">{{ product.title }}</h5>
+        {% if product.images %}
+        <img src="{{ url_for('static', filename='uploads/' ~ product.images[0].path) }}" alt="" class="img-fluid rounded mb-3" style="max-height:200px;object-fit:cover;width:100%">
+        {% endif %}
+        <dl class="small mb-0">
+          <dt>Seller</dt><dd>{{ product.seller.name }}</dd>
+          <dt>Starting price</dt><dd>{{ product.starting_price|money }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

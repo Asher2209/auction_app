@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_form.html" import field, consent %}
+{% block title %}Questions for {{ cat.name }} - Admin{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3"><span aria-hidden="true">🛠️</span> Admin</h1>
+{% include "admin/_nav.html" %}
+
+<a class="small" href="{{ url_for('admin.categories') }}">&larr; Categories</a>
+<h2 class="h4 mt-2">Questions for <span class="accent">{{ cat.name }}</span></h2>
+<p class="text-muted">Every seller listing an item in this category answers these. Removing a question does not change listings that already answered it.</p>
+
+<div class="table-responsive">
+<table class="table table-sm align-middle bg-white" style="max-width:860px">
+  <thead><tr><th scope="col">Question</th><th scope="col">Answer type</th><th scope="col">Required</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+  <tbody>
+  {% for q in cat.questions %}
+  <tr>
+    <td>{{ q.label }}{% if q.kind == 'choice' %}<div class="small text-muted">{{ q.choice_list|join(' · ') }}</div>{% endif %}{% if q.help %}<div class="small text-muted">{{ q.help }}</div>{% endif %}</td>
+    <td>{{ kinds[q.kind] }}</td>
+    <td>{{ 'Yes' if q.required else 'No' }}</td>
+    <td class="text-end">
+      <form method="post" action="{{ url_for('admin.delete_category_question', category_id=cat.id, question_id=q.id) }}" data-confirm="Remove this question?">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Remove question: {{ q.label }}">Remove</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4" class="text-muted text-center py-3">No questions. Add one below.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="card" style="max-width:860px"><div class="card-body">
+  <h3 class="h6">Add a question</h3>
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    {{ field(form.label) }}
+    <div class="row">
+      <div class="col-md-5">{{ field(form.kind) }}</div>
+      <div class="col-md-7">{{ field(form.help) }}</div>
+    </div>
+    {{ field(form.choices, rows=3) }}
+    <div class="mb-3 form-check">
+      {{ form.required(class="form-check-input") }}
+      <label class="form-check-label" for="{{ form.required.id }}">{{ form.required.label.text }}</label>
+    </div>
+    <button class="btn btn-primary" type="submit">{{ icon('plus') }} Add question</button>
+  </form>
+</div></div>
+{% endblock %}

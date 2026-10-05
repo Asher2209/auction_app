@@ -1,0 +1,4 @@
+Inter (inter-latin-wght-normal.woff2) from @fontsource-variable/inter 5.3.0, SIL Open Font License 1.1, (c) The Inter Project Authors (https://github.com/rsms/inter).
+Lucide icons (icons/lucide.svg) from lucide-static 1.51.0, ISC License, (c) Lucide Contributors (https://lucide.dev).
+Space Grotesk (space-grotesk-latin-wght-normal.woff2) from @fontsource-variable/space-grotesk 5.3.0, SIL Open Font License 1.1, (c) The Space Grotesk Project Authors (https://github.com/floriankarsten/space-grotesk).
+Instrument Serif Italic (instrument-serif-latin-400-italic.woff2) from @fontsource/instrument-serif 5.3.0, SIL Open Font License 1.1, (c) The Instrument Serif Project Authors (https://github.com/Instrument/instrument-serif).
