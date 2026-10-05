@@ -15,6 +15,7 @@ from .auction import Auction, Bid, Winner  # noqa: E402
 from .payment import Payment, CryptoPayment, Invoice  # noqa: E402
 from .misc import Notification, NotificationPreference, Review, Feedback  # noqa: E402
 from .messaging import Message  # noqa: E402
+from .collectible_verification import CollectibleVerification, VerificationLog, SupportedGrader  # noqa: E402
 
 
 @login_manager.user_loader
@@ -27,5 +28,6 @@ def load_user(user_id):
 __all__ = [
     "User", "Category", "Product", "ProductImage", "ProductDetails", "Watchlist",
     "Auction", "Bid", "Winner", "Payment", "CryptoPayment", "Invoice",
-    "Notification", "NotificationPreference", "Review", "Feedback", "Message", "utcnow",
+    "Notification", "NotificationPreference", "Review", "Feedback", "Message",
+    "CollectibleVerification", "VerificationLog", "SupportedGrader", "utcnow",
 ]
