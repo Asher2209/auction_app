@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% block title %}Browse Verified Collectibles - ChainBid{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 mb-3">
+                <i class="bi bi-shield-check"></i> Verified Collectibles
+            </h1>
+            <p class="lead text-muted">
+                Browse authentic, certified collectibles from trusted sellers. Every item has been verified through our certification system.
+            </p>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            {{ form.collectible_type.label(class="form-label") }}
+                            {{ form.collectible_type(class="form-select") }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.grader.label(class="form-label") }}
+                            {{ form.grader(class="form-select") }}
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Info -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="text-muted">
+                        Showing <strong>{{ collectibles.items|length }}</strong> of <strong>{{ collectibles.total }}</strong> verified collectibles
+                    </p>
+                </div>
+                <div>
+                    {% if collectibles.has_prev or collectibles.has_next %}
+                        <small class="text-muted">Page {{ collectibles.page }} of {{ collectibles.pages }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collectibles Grid -->
+    <div class="row mb-5">
+        {% if collectibles.items %}
+            {% for verification in collectibles.items %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm hover-shadow" style="transition: transform 0.2s, box-shadow 0.2s;">
+                    <!-- Product Image -->
+                    <div class="position-relative" style="height: 250px; overflow: hidden; background: #f0f0f0;">
+                        {% if verification.product.images %}
+                            <img src="{{ url_for('static', filename='uploads/' ~ verification.product.images[0]) }}"
+                                 class="card-img-top h-100" style="object-fit: cover;" alt="{{ verification.product.title }}">
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <i class="bi bi-image text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                            </div>
+                        {% endif %}
+
+                        <!-- Verification Badge -->
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-success px-3 py-2">
+                                <i class="bi bi-check-circle"></i> Verified
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        <!-- Product Title -->
+                        <h5 class="card-title mb-2">
+                            <a href="{{ url_for('seller.product_detail', product_id=verification.product_id) }}"
+                               class="text-decoration-none text-dark" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ verification.product.title }}
+                            </a>
+                        </h5>
+
+                        <!-- Collectible Info -->
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-light text-dark me-2">
+                                    {{ verification.collectible_type.replace('_', ' ').title() }}
+                                </span>
+                                {% if verification.grade %}
+                                    <span class="badge bg-light text-dark">
+                                        {{ verification.grade }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Grader Info -->
+                            <div class="d-flex align-items-center text-muted small">
+                                <i class="bi bi-patch-check me-2"></i>
+                                <span>Certified by {{ verification.grader }}</span>
+                            </div>
+
+                            {% if verification.grader_item_name %}
+                                <div class="text-muted small mt-1">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    {{ verification.grader_item_name }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Certificate Number -->
+                        <div class="bg-light p-2 rounded mb-3">
+                            <small class="text-muted">Certificate #</small><br>
+                            <code class="text-dark">{{ verification.certificate_number }}</code>
+                        </div>
+
+                        <!-- Seller Info -->
+                        <div class="d-flex align-items-center text-muted small mb-3">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <span>
+                                <a href="{{ url_for('admin.user_detail', user_id=verification.product.seller_id) }}"
+                                   class="text-muted text-decoration-none">
+                                    {{ verification.product.seller.name|mask }} (Seller)
+                                </a>
+                            </span>
+                        </div>
+
+                        <!-- Verified Date -->
+                        {% if verification.verification_date %}
+                            <div class="text-muted small mb-3">
+                                <i class="bi bi-calendar2-check me-1"></i>
+                                Verified {{ verification.verification_date|datetimeformat("%b %d, %Y") }}
+                            </div>
+                        {% endif %}
+
+                        <!-- Price Info -->
+                        {% if verification.product.starting_price %}
+                            <div class="mb-3">
+                                <small class="text-muted">Starting bid</small><br>
+                                <h6 class="mb-0">
+                                    {{ currency }}{{ verification.product.starting_price|round(2) }}
+                                </h6>
+                            </div>
+                        {% endif %}
+
+                        <!-- Action Button -->
+                        <a href="{{ url_for('seller.product_detail', product_id=verification.product_id) }}"
+                           class="btn btn-primary mt-auto">
+                            <i class="bi bi-eye"></i> View Details
+                        </a>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="card-footer bg-light border-top-0">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check"></i> Authenticity Verified
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="col-lg-8 mx-auto">
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #ddd; display: block; margin-bottom: 1rem;"></i>
+                    <h5 class="text-muted">No verified collectibles found</h5>
+                    <p class="text-muted mb-4">
+                        {% if form.collectible_type.data or form.grader.data %}
+                            Try adjusting your filters to see more results.
+                        {% else %}
+                            No verified collectibles are currently available for purchase.
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('collectibles.browse_collectibles') }}" class="btn btn-outline-primary">
+                        Clear Filters
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if collectibles.items and (collectibles.has_prev or collectibles.has_next) %}
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <nav aria-label="Page navigation" class="d-flex justify-content-center">
+                <ul class="pagination">
+                    {% if collectibles.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if form.collectible_type.data %}&collectible_type={{ form.collectible_type.data }}{% endif %}{% if form.grader.data %}&grader={{ form.grader.data }}{% endif %}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ collectibles.prev_num }}{% if form.collectible_type.data %}&collectible_type={{ form.collectible_type.data }}{% endif %}{% if form.grader.data %}&grader={{ form.grader.data }}{% endif %}">
+                                Previous
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for page_num in collectibles.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num == collectibles.page %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_num }}{% if form.collectible_type.data %}&collectible_type={{ form.collectible_type.data }}{% endif %}{% if form.grader.data %}&grader={{ form.grader.data }}{% endif %}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if collectibles.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ collectibles.next_num }}{% if form.collectible_type.data %}&collectible_type={{ form.collectible_type.data }}{% endif %}{% if form.grader.data %}&grader={{ form.grader.data }}{% endif %}">
+                                Next
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ collectibles.pages }}{% if form.collectible_type.data %}&collectible_type={{ form.collectible_type.data }}{% endif %}{% if form.grader.data %}&grader={{ form.grader.data }}{% endif %}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Trust Section -->
+    <div class="row mb-5 mt-5 pt-5 border-top">
+        <div class="col-lg-10 mx-auto">
+            <h4 class="mb-4">Why buy verified collectibles?</h4>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="bi bi-patch-check-fill text-success" style="font-size: 2rem;"></i>
+                        </div>
+                        <div>
+                            <h6>Authenticity Verified</h6>
+                            <p class="text-muted small">
+                                Each item is verified through official grading databases (PSA, PCGS, NGC, etc.)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="bi bi-shield-check" style="font-size: 2rem; color: #5b5bff;"></i>
+                        </div>
+                        <div>
+                            <h6>Buyer Protection</h6>
+                            <p class="text-muted small">
+                                Verified items come with certificate authentication and seller confidence score
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="bi bi-graph-up text-info" style="font-size: 2rem;"></i>
+                        </div>
+                        <div>
+                            <h6>Higher Value</h6>
+                            <p class="text-muted small">
+                                Verified collectibles typically command premium prices due to documented authenticity
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+.card {
+    border: 1px solid #e9ecef;
+}
+
+code {
+    background-color: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}
