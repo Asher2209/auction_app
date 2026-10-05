@@ -26,7 +26,7 @@ def notify(user_id, title, message, url=None, email=False):
     if email:
         user = db.session.get(User, user_id)
         item["email_to"] = user.email if user and user.is_active_user else None
-    db.session().info.setdefault(PENDING, []).append(item)
+    db.session.info.setdefault(PENDING, []).append(item)
 
 
 def _email_body(item):
