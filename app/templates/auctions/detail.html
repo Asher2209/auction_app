@@ -56,7 +56,7 @@
         <dt class="col-6">Number of bids</dt><dd class="col-6" id="bid-count">{{ bid_total }}</dd>
         <dt class="col-6">Seller</dt><dd class="col-6">{{ product.seller.name }}</dd>
         <dt class="col-6" id="end-label">{{ 'Ended' if auction.status == 'closed' else 'Ends' }}</dt>
-        <dd class="col-6" id="end-time">{{ auction.end_time|utc }}</dd>
+        <dd class="col-6" id="end-time">{{ auction.end_time|ist }}</dd>
       </dl>
     </div></div>
 
@@ -101,7 +101,7 @@
   {% for b in bids %}
     <tr>
       <td>{% if current_user.is_authenticated and b.buyer_id == current_user.id %}<strong>You</strong>{% else %}{{ b.buyer.name|mask }}{% endif %}</td>
-      <td>{{ b.amount|money }}</td><td>{{ b.bid_time|utc }}</td>
+      <td>{{ b.amount|money }}</td><td>{{ b.bid_time|ist }}</td>
     </tr>
   {% endfor %}
   </tbody>

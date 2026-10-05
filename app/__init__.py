@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, render_template
@@ -112,5 +113,12 @@ def create_app(config_class=Config):
     @app.template_filter("utc")
     def utc(value):
         return value.strftime("%d %b %Y %H:%M UTC") if value else ""
+
+    @app.template_filter("ist")
+    def ist(value):
+        if not value:
+            return ""
+        ist_time = value + timedelta(hours=5, minutes=30)
+        return ist_time.strftime("%d %b %Y %H:%M IST")
 
     return app
