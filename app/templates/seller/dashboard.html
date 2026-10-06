@@ -150,7 +150,7 @@
         <tr style="border-bottom: 1px solid var(--cb-border-light); transition: background-color 0.2s;">
           <td style="padding: 1rem;">
             {% if p.images %}
-            <img src="{{ url_for('static', filename='uploads/' ~ p.images[0].path) }}" alt="{{ p.title }}" style="width: 56px; height: 56px; object-fit: cover; border-radius: 0.75rem;">
+            <img src="{{ url_for('static', filename='uploads/' ~ p.images[0].path) }}" alt="{{ p.title }}" loading="lazy" style="width: 56px; height: 56px; object-fit: cover; border-radius: 0.75rem;">
             {% else %}
             <div style="width: 56px; height: 56px; background: var(--cb-surface-secondary); border-radius: 0.75rem;"></div>
             {% endif %}

@@ -19,7 +19,7 @@
       <div class="carousel-inner" style="background: var(--cb-surface-secondary);">
         {% for img in product.images %}
         <div class="carousel-item {{ 'active' if loop.first }}">
-          <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" class="d-block w-100" alt="{{ product.title }}" style="max-height:500px;object-fit:contain;padding:2rem;">
+          <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" class="d-block w-100" alt="{{ product.title }}" loading="lazy" style="max-height:500px;object-fit:contain;padding:2rem;">
         </div>
         {% endfor %}
       </div>
