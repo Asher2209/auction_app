@@ -16,6 +16,9 @@ from .payment import Payment, CryptoPayment, Invoice  # noqa: E402
 from .misc import Notification, NotificationPreference, Review, Feedback  # noqa: E402
 from .messaging import Message  # noqa: E402
 from .collectible_verification import CollectibleVerification, VerificationLog, SupportedGrader  # noqa: E402
+from .collectible_cards import (  # noqa: E402
+    CardType, CollectibleCard, CardImage, CardVerificationChecklist, CardVerificationHistory
+)
 
 
 @login_manager.user_loader
@@ -29,5 +32,7 @@ __all__ = [
     "User", "Category", "Product", "ProductImage", "ProductDetails", "Watchlist",
     "Auction", "Bid", "Winner", "Payment", "CryptoPayment", "Invoice",
     "Notification", "NotificationPreference", "Review", "Feedback", "Message",
-    "CollectibleVerification", "VerificationLog", "SupportedGrader", "utcnow",
+    "CollectibleVerification", "VerificationLog", "SupportedGrader",
+    "CardType", "CollectibleCard", "CardImage", "CardVerificationChecklist", "CardVerificationHistory",
+    "utcnow",
 ]
