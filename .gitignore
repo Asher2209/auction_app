@@ -5,3 +5,8 @@ __pycache__/
 instance/
 app/static/uploads/*
 !app/static/uploads/.gitkeep
+flask*.log
+*.output
+IMAGES_IMPLEMENTATION_REPORT.md
+IMAGE_AUDIT.md
+PROJECT_PLAN.md

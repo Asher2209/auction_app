@@ -16,22 +16,22 @@ def legal_context():
 
 @bp.route("/privacy")
 def privacy():
-    return render_template("legal/privacy.html")
+    return render_template("legal/privacy_policy.html")
 
 
 @bp.route("/terms")
 def terms():
-    return render_template("legal/terms.html")
+    return render_template("legal/terms_of_service.html")
 
 
 @bp.route("/refunds")
 def refunds():
-    return render_template("legal/refunds.html")
+    return render_template("legal/refund_policy.html")
 
 
 @bp.route("/cookies")
 def cookies():
-    return render_template("legal/cookies.html")
+    return render_template("legal/cookie_policy.html")
 
 
 @bp.route("/cookies/consent", methods=["POST"])

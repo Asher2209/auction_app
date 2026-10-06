@@ -14,7 +14,6 @@ reportlab>=4.0
 openpyxl>=3.1
 qrcode[pil]>=7.4
 web3>=7
-py-solc-x>=2.0
 eth-tester>=0.13.0b1
 py-evm>=0.12.0b1
 pytest>=8.0
