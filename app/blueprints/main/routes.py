@@ -85,3 +85,186 @@ def refund_policy():
 @bp.route("/cookie-policy")
 def cookie_policy():
     return render_template("legal/cookie_policy.html")
+
+
+@bp.route("/cards/search", methods=["GET"])
+def search_cards():
+    """Search and filter collectible cards"""
+    from sqlalchemy import or_, and_
+    
+    page = request.args.get('page', 1, type=int)
+    q = request.args.get('q', '').strip()
+    card_type = request.args.get('type')
+    condition = request.args.get('condition')
+    graded = request.args.get('graded')
+    grader = request.args.get('grader')
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
+    sort = request.args.get('sort', 'newest')
+    
+    query = CollectibleCard.query.join(Product).filter(
+        Product.approval_status == 'approved'
+    )
+    
+    if q:
+        search_term = f"%{q}%"
+        query = query.filter(
+            or_(
+                CollectibleCard.card_name.ilike(search_term),
+                CollectibleCard.set_name.ilike(search_term),
+                CollectibleCard.manufacturer.ilike(search_term),
+            )
+        )
+    
+    if card_type:
+        try:
+            card_type_id = int(card_type)
+            query = query.filter(CollectibleCard.card_type_id == card_type_id)
+        except (ValueError, TypeError):
+            pass
+    
+    conditions_list = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent', 'Near Mint', 'Mint']
+    if condition and condition in conditions_list:
+        query = query.filter(CollectibleCard.condition == condition)
+    
+    if graded == 'true':
+        query = query.filter(CollectibleCard.is_graded == True)
+    elif graded == 'false':
+        query = query.filter(CollectibleCard.is_graded == False)
+    
+    graders_list = ['PSA', 'Beckett', 'CGC']
+    if grader and grader in graders_list:
+        query = query.filter(CollectibleCard.grading_company == grader)
+    
+    if min_price is not None:
+        query = query.filter(CollectibleCard.estimated_value >= min_price)
+    if max_price is not None:
+        query = query.filter(CollectibleCard.estimated_value <= max_price)
+    
+    if sort == 'price_low':
+        query = query.order_by(CollectibleCard.estimated_value.asc())
+    elif sort == 'price_high':
+        query = query.order_by(CollectibleCard.estimated_value.desc())
+    elif sort == 'rarity':
+        query = query.order_by(CollectibleCard.rarity.desc())
+    elif sort == 'oldest':
+        query = query.order_by(CollectibleCard.created_at.asc())
+    else:
+        query = query.order_by(CollectibleCard.created_at.desc())
+    
+    cards = query.paginate(page=page, per_page=12)
+    card_types = CardType.query.order_by(CardType.name).all()
+    
+    return render_template(
+        'cards/search_results.html',
+        cards=cards,
+        q=q,
+        card_type=card_type,
+        condition=condition,
+        graded=graded,
+        grader=grader,
+        min_price=min_price,
+        max_price=max_price,
+        sort=sort,
+        card_types=card_types,
+        conditions=conditions_list,
+        graders=graders_list
+    )
+
+
+@bp.route("/cards/browse", methods=["GET"])
+def browse_cards():
+    """Browse cards by type"""
+    page = request.args.get('page', 1, type=int)
+    sort = request.args.get('sort', 'newest')
+    card_type_slug = request.args.get('type')
+    
+    card_type = None
+    if card_type_slug:
+        card_type = CardType.query.filter_by(slug=card_type_slug).first()
+        if not card_type:
+            abort(404)
+    
+    query = CollectibleCard.query.join(Product).filter(
+        Product.approval_status == 'approved'
+    )
+    
+    if card_type:
+        query = query.filter(CollectibleCard.card_type_id == card_type.id)
+    
+    if sort == 'price_low':
+        query = query.order_by(CollectibleCard.estimated_value.asc())
+    elif sort == 'price_high':
+        query = query.order_by(CollectibleCard.estimated_value.desc())
+    else:
+        query = query.order_by(CollectibleCard.created_at.desc())
+    
+    cards = query.paginate(page=page, per_page=12)
+    all_types = CardType.query.order_by(CardType.name).all()
+    
+    return render_template(
+        'cards/browse.html',
+        cards=cards,
+        card_type=card_type,
+        all_types=all_types,
+        sort=sort
+    )
+
+
+@bp.route("/cards/<int:card_id>", methods=["GET"])
+def view_card(card_id):
+    """View a specific card listing"""
+    from sqlalchemy import or_, and_
+    
+    card = CollectibleCard.query.get_or_404(card_id)
+    product = card.product
+    
+    if product.approval_status != 'approved':
+        abort(404)
+    
+    seller = product.seller
+    images = card.images
+    
+    related = CollectibleCard.query.join(Product).filter(
+        and_(
+            CollectibleCard.card_type_id == card.card_type_id,
+            CollectibleCard.id != card.id,
+            Product.approval_status == 'approved'
+        )
+    ).limit(4).all()
+    
+    return render_template(
+        'cards/view_card.html',
+        card=card,
+        product=product,
+        seller=seller,
+        images=images,
+        related=related
+    )
+
+
+@bp.route("/api/cards/search", methods=["GET"])
+def api_search_cards():
+    """API endpoint for card search autocomplete"""
+    q = request.args.get('q', '').strip()
+    limit = request.args.get('limit', 10, type=int)
+    
+    if len(q) < 2:
+        return jsonify([])
+    
+    query = CollectibleCard.query.join(Product).filter(
+        Product.approval_status == 'approved'
+    )
+    
+    search_term = f"%{q}%"
+    results = query.filter(
+        CollectibleCard.card_name.ilike(search_term)
+    ).limit(limit).all()
+    
+    return jsonify([{
+        'id': card.id,
+        'name': card.card_name,
+        'type': card.card_type.name,
+        'set': card.set_name,
+        'value': float(card.estimated_value) if card.estimated_value else 0
+    } for card in results])
