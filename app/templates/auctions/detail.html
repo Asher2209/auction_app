@@ -109,7 +109,7 @@
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
           <span style="color: var(--dt-text-muted);">{{ 'Ended' if auction.status == 'closed' else 'Ends' }}</span>
-          <strong style="color: var(--dt-text-primary);">{{ auction.end_time|ist }}</strong>
+          <strong style="color: var(--dt-text-primary);">{{ auction.end_time|utc }}</strong>
         </div>
       </div>
       
@@ -189,7 +189,7 @@
         <tr>
           <td style="color: var(--dt-text-primary);">{{ bid.bidder.name if bid.bidder else 'Anonymous' }}</td>
           <td style="text-align: right; color: var(--dt-accent); font-weight: 600;">{{ bid.amount|money }}</td>
-          <td style="text-align: right; color: var(--dt-text-secondary); font-size: 0.9rem;">{{ bid.created_at|ist }}</td>
+          <td style="text-align: right; color: var(--dt-text-secondary); font-size: 0.9rem;">{{ bid.created_at|utc }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -234,7 +234,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   // Update countdown timer
   const countdownEl = document.getElementById('countdown');
-  const endTime = new Date('{{ auction.end_time|tojson }}').getTime();
+  const endTime = new Date('{{ auction.end_time.strftime('%Y-%m-%dT%H:%M:%S') }}').getTime();
   
   function updateCountdown() {
     const now = new Date().getTime();
