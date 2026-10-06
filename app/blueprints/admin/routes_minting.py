@@ -26,7 +26,7 @@ def mint_token(blockchain_asset_id):
                 flash("Minter wallet address required", "danger")
             else:
                 # Normalize wallet
-                minter_wallet = blockchain_service.normalize_wallet(minter_wallet)
+                minter_wallet = bc.normalize_wallet(minter_wallet)
                 
                 # Prepare mint transaction
                 tx_data = bm_service.initiate_mint(blockchain_asset, minter_wallet)
