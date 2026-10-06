@@ -1,0 +1,336 @@
+{% extends "seller/product_form.html" %}
+{% block title %}Create Trading Card - ChainBid{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="glass p-5" style="border-radius: 1.5rem; margin-bottom: 3rem;">
+      <h1 class="h3 mb-4">Create Trading Card Listing</h1>
+
+      <form method="POST" enctype="multipart/form-data" id="card-form" novalidate>
+        {{ form.hidden_tag() }}
+
+        <!-- Card Type Selection -->
+        <div class="mb-4">
+          <label class="form-label fw-600" for="card_type_id">Card Type *</label>
+          {{ form.card_type_id(class="form-select form-select-lg") }}
+          {% if form.card_type_id.errors %}
+            <div class="text-danger small mt-1">{{ form.card_type_id.errors[0] }}</div>
+          {% endif %}
+          <small class="text-muted d-block mt-1">Select the type of card you're selling</small>
+        </div>
+
+        <!-- Basic Card Information -->
+        <h5 class="h6 mb-3 mt-4">Card Information</h5>
+
+        <div class="mb-3">
+          <label class="form-label fw-600" for="card_name">Card Name *</label>
+          {{ form.card_name(class="form-control form-control-lg") }}
+          {% if form.card_name.errors %}
+            <div class="text-danger small mt-1">{{ form.card_name.errors[0] }}</div>
+          {% endif %}
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="manufacturer">Manufacturer</label>
+            {{ form.manufacturer(class="form-control") }}
+            {% if form.manufacturer.errors %}
+              <div class="text-danger small mt-1">{{ form.manufacturer.errors[0] }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="set_name">Set Name</label>
+            {{ form.set_name(class="form-control") }}
+            {% if form.set_name.errors %}
+              <div class="text-danger small mt-1">{{ form.set_name.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="set_code">Set Code</label>
+            {{ form.set_code(class="form-control") }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="release_year">Release Year</label>
+            {{ form.release_year(class="form-control", type="number") }}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="card_number">Card Number</label>
+            {{ form.card_number(class="form-control") }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="rarity">Rarity</label>
+            {{ form.rarity(class="form-control") }}
+          </div>
+        </div>
+
+        <!-- Condition -->
+        <h5 class="h6 mb-3 mt-4">Condition Assessment</h5>
+
+        <div class="mb-3">
+          <label class="form-label fw-600" for="condition">Condition *</label>
+          {{ form.condition(class="form-select form-select-lg") }}
+          {% if form.condition.errors %}
+            <div class="text-danger small mt-1">{{ form.condition.errors[0] }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-600" for="condition_notes">Condition Description</label>
+          {{ form.condition_notes(class="form-control", rows="4") }}
+          <small class="text-muted d-block mt-1">Be honest about any wear, damage, or special features</small>
+        </div>
+
+        <!-- Additional Info -->
+        <h5 class="h6 mb-3 mt-4">Additional Information</h5>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="language">Language</label>
+            {{ form.language(class="form-select") }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="country">Country/Region</label>
+            {{ form.country(class="form-control") }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-600" for="edition">Edition</label>
+          {{ form.edition(class="form-control") }}
+        </div>
+
+        <!-- Grading Information -->
+        <h5 class="h6 mb-3 mt-4">Professional Grading (Optional)</h5>
+
+        <div class="mb-3">
+          <div class="form-check">
+            {{ form.is_graded(class="form-check-input") }}
+            <label class="form-check-label" for="is_graded">
+              This card has been professionally graded
+            </label>
+          </div>
+        </div>
+
+        <div class="row" id="grading-fields" style="display: none;">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="grading_company">Grading Company</label>
+            {{ form.grading_company(class="form-select") }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="grade">Grade</label>
+            {{ form.grade(class="form-control") }}
+          </div>
+        </div>
+
+        <div class="row" id="cert-fields" style="display: none;">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="certification_number">Cert Number</label>
+            {{ form.certification_number(class="form-control") }}
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-600" for="certification_url">Cert URL</label>
+            {{ form.certification_url(class="form-control") }}
+          </div>
+        </div>
+
+        <!-- Estimated Value -->
+        <div class="mb-3">
+          <label class="form-label fw-600" for="estimated_value">Your Estimated Value (₹)</label>
+          {{ form.estimated_value(class="form-control", placeholder="For admin reference - not public") }}
+          <small class="text-muted d-block mt-1">Helps admins verify the card's legitimacy</small>
+        </div>
+
+        <!-- Type-Specific Fields -->
+        <div id="type-specific-fields">
+          <!-- Pokémon Fields -->
+          <div id="pokemon-fields" style="display: none;">
+            <h5 class="h6 mb-3 mt-4">Pokémon Card Details</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label" for="pokemon_name">Pokémon Name</label>
+                {{ form.pokemon_name(class="form-control") }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label" for="pokemon_hp">HP</label>
+                {{ form.pokemon_hp(class="form-control", type="number") }}
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="pokemon_holo_type">Holographic Type</label>
+              {{ form.pokemon_holo_type(class="form-select") }}
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                {{ form.pokemon_first_edition(class="form-check-input") }}
+                <label class="form-check-label" for="pokemon_first_edition">First Edition</label>
+              </div>
+              <div class="form-check">
+                {{ form.pokemon_shadowless(class="form-check-input") }}
+                <label class="form-check-label" for="pokemon_shadowless">Shadowless</label>
+              </div>
+              <div class="form-check">
+                {{ form.pokemon_promo(class="form-check-input") }}
+                <label class="form-check-label" for="pokemon_promo">Promo Card</label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="pokemon_illustrator">Illustrator</label>
+              {{ form.pokemon_illustrator(class="form-control") }}
+            </div>
+          </div>
+
+          <!-- Football Fields -->
+          <div id="football-fields" style="display: none;">
+            <h5 class="h6 mb-3 mt-4">Football Card Details</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label" for="football_player_name">Player Name</label>
+                {{ form.football_player_name(class="form-control") }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label" for="football_team">Club / Team</label>
+                {{ form.football_team(class="form-control") }}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label" for="football_national_team">National Team</label>
+                {{ form.football_national_team(class="form-control") }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label" for="football_league">League</label>
+                {{ form.football_league(class="form-control") }}
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="football_season">Season</label>
+              {{ form.football_season(class="form-control") }}
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                {{ form.football_is_rookie(class="form-check-input") }}
+                <label class="form-check-label" for="football_is_rookie">Rookie Card</label>
+              </div>
+              <div class="form-check">
+                {{ form.football_is_autograph(class="form-check-input") }}
+                <label class="form-check-label" for="football_is_autograph">Autograph Card</label>
+              </div>
+              <div class="form-check">
+                {{ form.football_is_relic(class="form-check-input") }}
+                <label class="form-check-label" for="football_is_relic">Relic / Memorabilia</label>
+              </div>
+              <div class="form-check">
+                {{ form.football_is_numbered(class="form-check-input") }}
+                <label class="form-check-label" for="football_is_numbered">Numbered Card</label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="football_serial_number">Serial Number</label>
+              {{ form.football_serial_number(class="form-control") }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Images -->
+        <h5 class="h6 mb-3 mt-4">Card Images *</h5>
+        <div class="mb-3">
+          {{ form.card_images(class="form-control form-control-lg") }}
+          {% if form.card_images.errors %}
+            <div class="text-danger small mt-1">{{ form.card_images.errors[0] }}</div>
+          {% endif %}
+          <small class="text-muted d-block mt-1">Upload clear photos of card front, back, and grading slab if applicable</small>
+        </div>
+
+        <!-- Confirmation -->
+        <div class="mb-4">
+          <div class="form-check">
+            {{ form.confirm_accuracy(class="form-check-input") }}
+            <label class="form-check-label" for="confirm_accuracy">
+              I confirm that all information above is accurate and complete
+            </label>
+          </div>
+          {% if form.confirm_accuracy.errors %}
+            <div class="text-danger small mt-1">{{ form.confirm_accuracy.errors[0] }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Submit -->
+        <div class="d-grid gap-2">
+          {{ form.submit(class="btn btn-primary btn-lg") }}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sidebar Info -->
+  <div class="col-lg-4">
+    <div class="glass p-4" style="border-radius: 1.5rem; border-left: 4px solid var(--cb-link); margin-bottom: 2rem;">
+      <h6 class="fw-600 mb-2">ℹ️ Getting Approved</h6>
+      <p class="small text-muted mb-0">
+        After you submit, our team will verify your card details and images. Verified cards can be auctioned immediately. This usually takes 1-2 days.
+      </p>
+    </div>
+
+    <div class="glass p-4" style="border-radius: 1.5rem; margin-bottom: 2rem;">
+      <h6 class="fw-600 mb-2">📸 Good Photos Matter</h6>
+      <p class="small text-muted mb-0">
+        Clear, well-lit images help us verify your card faster. Include front, back, and any grading slabs. Avoid watermarks.
+      </p>
+    </div>
+
+    <div class="glass p-4" style="border-radius: 1.5rem;">
+      <h6 class="fw-600 mb-2">✓ Graded Cards</h6>
+      <p class="small text-muted mb-0">
+        If your card is graded by PSA, Beckett, or CGC, include the certificate number so we can verify it.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/card-forms.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Show/hide grading fields based on checkbox
+  const isGradedCheckbox = document.getElementById('is_graded');
+  function toggleGradingFields() {
+    const gradingFields = document.getElementById('grading-fields');
+    const certFields = document.getElementById('cert-fields');
+    if (isGradedCheckbox.checked) {
+      gradingFields.style.display = 'grid';
+      certFields.style.display = 'grid';
+    } else {
+      gradingFields.style.display = 'none';
+      certFields.style.display = 'none';
+    }
+  }
+  isGradedCheckbox.addEventListener('change', toggleGradingFields);
+  toggleGradingFields();
+
+  // Show/hide type-specific fields
+  const cardTypeSelect = document.getElementById('card_type_id');
+  function toggleTypeFields() {
+    const typeId = cardTypeSelect.value;
+    const selectedOption = cardTypeSelect.querySelector(`option[value="${typeId}"]`);
+    const typeName = selectedOption ? selectedOption.textContent.toLowerCase() : '';
+
+    document.getElementById('pokemon-fields').style.display = 'none';
+    document.getElementById('football-fields').style.display = 'none';
+
+    if (typeName.includes('pokémon') || typeName.includes('pokemon')) {
+      document.getElementById('pokemon-fields').style.display = 'block';
+    } else if (typeName.includes('football') || typeName.includes('soccer')) {
+      document.getElementById('football-fields').style.display = 'block';
+    }
+  }
+  cardTypeSelect.addEventListener('change', toggleTypeFields);
+  toggleTypeFields();
+});
+</script>
+{% endblock %}

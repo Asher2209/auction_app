@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}{{ card.card_name }} - ChainBid{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col">
+    <h1 class="h2 mb-1">{{ card.card_name }}</h1>
+    <p class="lead text-muted">{{ card.card_type.name }} • {{ card.set_name or 'Unspecified Set' }}</p>
+  </div>
+  <div class="col-auto">
+    {% if product.seller_id == current_user.id %}
+      <a href="{{ url_for('seller.edit_card', card_id=card.id) }}" class="btn btn-outline-primary">Edit Card</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Images -->
+  <div class="col-lg-7">
+    {% if card_images %}
+    <div id="gallery" class="carousel slide glass mb-5" style="border-radius: 1.5rem; overflow: hidden;">
+      <div class="carousel-inner" style="background: var(--cb-surface-secondary);">
+        {% for image in card_images %}
+        <div class="carousel-item {{ 'active' if loop.first }}">
+          <img src="{{ url_for('static', filename='uploads/' ~ image.path) }}" class="d-block w-100" alt="{{ image.image_type }}" style="max-height:500px;object-fit:contain;padding:2rem;">
+        </div>
+        {% endfor %}
+      </div>
+      {% if card_images|length > 1 %}
+      <button class="carousel-control-prev" type="button" data-bs-target="#gallery" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#gallery" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+      </button>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="glass mb-5" style="border-radius: 1.5rem; padding: 4rem; text-align: center; background: var(--cb-surface-secondary);">
+      <p class="text-muted">No images uploaded</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Details -->
+  <div class="col-lg-5">
+    <!-- Status Badge -->
+    {% if verification %}
+    <div class="glass p-4 mb-4" style="border-radius: 1.25rem;">
+      {% set status_color = {
+        'pending': '#f59e0b',
+        'submitted': '#3b82f6',
+        'under_review': '#8b5cf6',
+        'more_info_needed': '#ef4444',
+        'verified': '#10b981',
+        'rejected': '#ef4444'
+      } %}
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: {{ status_color.get(verification.verification_status, '#6b7280') }};"></span>
+        <strong style="color: {{ status_color.get(verification.verification_status, '#6b7280') }};">
+          {% if verification.verification_status == 'pending' %}Pending Verification
+          {% elif verification.verification_status == 'submitted' %}Submitted
+          {% elif verification.verification_status == 'under_review' %}Under Review
+          {% elif verification.verification_status == 'more_info_needed' %}More Info Needed
+          {% elif verification.verification_status == 'verified' %}✓ Verified
+          {% elif verification.verification_status == 'rejected' %}✗ Rejected
+          {% endif %}
+        </strong>
+      </div>
+      {% if verification.rejection_reason %}
+      <p class="small text-muted mb-0">{{ verification.rejection_reason }}</p>
+      {% elif verification.admin_notes %}
+      <p class="small text-muted mb-0">{{ verification.admin_notes }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Card Info -->
+    <div class="glass p-4" style="border-radius: 1.25rem; margin-bottom: 2rem;">
+      <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Details</h6>
+
+      <div class="row mb-3">
+        <div class="col-6">
+          <div class="small text-muted mb-1">Card Type</div>
+          <strong>{{ card.card_type.name }}</strong>
+        </div>
+        <div class="col-6">
+          <div class="small text-muted mb-1">Condition</div>
+          <strong>{{ card.condition }}</strong>
+        </div>
+      </div>
+
+      {% if card.set_name %}
+      <div class="row mb-3">
+        <div class="col-6">
+          <div class="small text-muted mb-1">Set</div>
+          <strong>{{ card.set_name }}</strong>
+        </div>
+        <div class="col-6">
+          <div class="small text-muted mb-1">Release Year</div>
+          <strong>{{ card.release_year or 'N/A' }}</strong>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if card.card_number %}
+      <div class="row mb-3">
+        <div class="col-6">
+          <div class="small text-muted mb-1">Card Number</div>
+          <strong>{{ card.card_number }}</strong>
+        </div>
+        <div class="col-6">
+          <div class="small text-muted mb-1">Rarity</div>
+          <strong>{{ card.rarity or 'N/A' }}</strong>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if card.is_graded %}
+      <div class="row mb-3">
+        <div class="col-6">
+          <div class="small text-muted mb-1">Grading Company</div>
+          <strong>{{ card.grading_company }}</strong>
+        </div>
+        <div class="col-6">
+          <div class="small text-muted mb-1">Grade</div>
+          <strong>{{ card.grade }}</strong>
+        </div>
+      </div>
+      <div class="small text-muted">
+        Cert #: <strong>{{ card.certification_number }}</strong>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Condition Notes -->
+    {% if card.condition_notes %}
+    <div class="glass p-4" style="border-radius: 1.25rem;">
+      <h6 class="text-muted small text-uppercase fw-600 mb-2">Condition Notes</h6>
+      <p class="small mb-0">{{ card.condition_notes }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Type-Specific Details -->
+    {% if type_details and type_details|length > 0 %}
+    <div class="glass p-4" style="border-radius: 1.25rem; margin-top: 2rem;">
+      <h6 class="text-muted small text-uppercase fw-600 mb-3">{{ card.card_type.name }} Details</h6>
+      {% if card.card_type.slug == 'pokemon' %}
+        {% if type_details.pokemon_name %}
+        <div class="mb-2"><strong>Pokémon:</strong> {{ type_details.pokemon_name }}</div>
+        {% endif %}
+        {% if type_details.hp %}
+        <div class="mb-2"><strong>HP:</strong> {{ type_details.hp }}</div>
+        {% endif %}
+        {% if type_details.holo_type %}
+        <div class="mb-2"><strong>Holo Type:</strong> {{ type_details.holo_type }}</div>
+        {% endif %}
+        {% if type_details.first_edition %}
+        <div class="badge bg-success mb-2">First Edition</div>
+        {% endif %}
+        {% if type_details.shadowless %}
+        <div class="badge bg-info mb-2">Shadowless</div>
+        {% endif %}
+        {% if type_details.promo %}
+        <div class="badge bg-warning mb-2">Promo</div>
+        {% endif %}
+      {% elif card.card_type.slug == 'football' %}
+        {% if type_details.player_name %}
+        <div class="mb-2"><strong>Player:</strong> {{ type_details.player_name }}</div>
+        {% endif %}
+        {% if type_details.team %}
+        <div class="mb-2"><strong>Club:</strong> {{ type_details.team }}</div>
+        {% endif %}
+        {% if type_details.league %}
+        <div class="mb-2"><strong>League:</strong> {{ type_details.league }}</div>
+        {% endif %}
+        {% if type_details.is_rookie %}
+        <div class="badge bg-success mb-2">Rookie Card</div>
+        {% endif %}
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
