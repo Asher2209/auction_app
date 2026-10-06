@@ -123,4 +123,8 @@ def create_app(config_class=Config):
         ist_time = value + timedelta(hours=5, minutes=30)
         return ist_time.strftime("%d %b %Y %H:%M IST")
 
+    @app.template_filter("datetimeformat")
+    def datetimeformat(value, fmt="%d %b %Y"):
+        return value.strftime(fmt) if value else ""
+
     return app
