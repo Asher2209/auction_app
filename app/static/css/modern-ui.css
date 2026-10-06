@@ -1,400 +1,325 @@
-/* Modern UI Enhancements for ChainBid */
+/* Modern Premium UI Components for ChainBid 2026 */
 
-/* 1. Inter Font Everywhere */
-:root {
-  --font-inter: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "Fira Code", "Courier New", monospace;
+/* ========== PREMIUM SECTION LAYOUTS ========== */
+.premium-section {
+  padding: var(--cb-spacing-xl) 0;
 }
 
-* {
-  font-family: var(--font-inter);
-}
-
-/* 2. Gradient Hero Text */
-.hero-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradientShift 8s ease infinite;
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.hero-title {
-  font-size: 3.5rem;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  margin-bottom: 1rem;
-}
-
-/* 3. Colored Left-Border Cards */
-.card-colored {
-  border-left: 4px solid transparent;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.card-colored.blue {
-  border-left-color: #3b82f6;
-  --card-accent: #3b82f6;
-}
-
-.card-colored.purple {
-  border-left-color: #9333ea;
-  --card-accent: #9333ea;
-}
-
-.card-colored.pink {
-  border-left-color: #ec4899;
-  --card-accent: #ec4899;
-}
-
-.card-colored.green {
-  border-left-color: #10b981;
-  --card-accent: #10b981;
-}
-
-.card-colored.orange {
-  border-left-color: #f97316;
-  --card-accent: #f97316;
-}
-
-.card-colored:hover {
-  transform: translateX(4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-}
-
-/* 4. Glassmorphism Cards */
-.glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-}
-
-.glass-card:hover {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-}
-
-/* Dark mode glassmorphism */
-@media (prefers-color-scheme: dark) {
-  .glass-card {
-    background: rgba(20, 24, 82, 0.4);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .glass-card:hover {
-    background: rgba(20, 24, 82, 0.6);
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  }
-}
-
-/* 5. Badge Above Headline */
-.badge-headline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-}
-
-.badge-headline-icon {
-  font-size: 1rem;
-}
-
-/* 6. Icon Boxes (Three in a Row) */
-.icon-boxes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 2rem;
-  margin: 3rem 0;
-}
-
-.icon-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 2rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-}
-
-.icon-box:hover {
-  transform: translateY(-8px);
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-}
-
-.icon-box-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  display: inline-block;
-}
-
-.icon-box-title {
-  font-size: 1.25rem;
+.premium-section-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: var(--cb-spacing-lg);
+  color: var(--cb-text);
+}
+
+.premium-section-subtitle {
+  font-size: 1.1rem;
+  color: var(--cb-text-secondary);
+  margin-bottom: var(--cb-spacing-md);
+}
+
+/* ========== FEATURE CARDS (Premium) ========== */
+.feature-card {
+  padding: var(--cb-spacing-lg);
+  border-radius: 1.25rem;
+  background: var(--cb-glass);
+  border: 1px solid var(--cb-glass-border);
+  box-shadow: var(--cb-shadow-sm);
+  transition: all .3s ease;
+  text-align: center;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--cb-shadow-lg);
+  border-color: rgba(109, 40, 217, 0.25);
+}
+
+.feature-card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 1rem;
+  background: var(--cb-badge-bg);
+  color: var(--cb-badge-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin-bottom: var(--cb-spacing-md);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.feature-card h4 {
   margin-bottom: 0.5rem;
 }
 
-.icon-box-description {
-  color: #666;
+.feature-card p {
+  margin-bottom: 0;
   font-size: 0.95rem;
-  line-height: 1.6;
 }
 
-/* Dark mode icon boxes */
-@media (prefers-color-scheme: dark) {
-  .icon-box {
-    background: rgba(20, 24, 82, 0.3);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .icon-box:hover {
-    background: rgba(20, 24, 82, 0.5);
-  }
-
-  .icon-box-description {
-    color: #aaa;
-  }
-}
-
-/* 7. Low-Contrast Dark Mode */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #0f1419;
-    --color-bg-secondary: #161b22;
-    --color-border: #30363d;
-    --color-text: #e6edf3;
-    --color-text-secondary: #8b949e;
-  }
-
-  body {
-    background-color: var(--color-bg);
-    color: var(--color-text);
-  }
-
-  .card, .glass-card {
-    background: var(--color-bg-secondary);
-    border-color: var(--color-border);
-  }
-}
-
-/* 8. Scroll Fade-In Animation */
-.fade-in-section {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-.fade-in-section.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* 9. Cursor Beam Effect */
-.cursor-beam {
-  position: fixed;
-  width: 300px;
-  height: 300px;
-  pointer-events: none;
-  z-index: -1;
-  background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
-  filter: blur(80px);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-body:hover .cursor-beam {
-  opacity: 1;
-}
-
-/* 10. Button Hover Effects */
-.btn-hover-fade {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.btn-hover-fade::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  transition: left 0.3s ease;
-  z-index: -1;
-}
-
-.btn-hover-fade:hover::before {
-  left: 100%;
-}
-
-.btn-hover-fade:hover {
-  opacity: 0.8;
-  transform: translateY(-2px);
-}
-
-/* 11. Emojis in Headings */
-.heading-emoji {
-  margin-right: 0.5rem;
-  display: inline-block;
-  font-size: 1.2em;
-}
-
-/* 12. Section Headings with Emoji */
-h1 .heading-emoji,
-h2 .heading-emoji,
-h3 .heading-emoji {
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-/* 13. Hero Section Enhancements */
-.hero-section {
-  position: relative;
-  overflow: hidden;
-  padding: 5rem 2rem;
+/* ========== STAT TILES ========== */
+.stat-tile {
+  padding: var(--cb-spacing-lg);
+  border-radius: 1.25rem;
+  background: var(--cb-glass);
+  border: 1px solid var(--cb-glass-border);
   text-align: center;
 }
 
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(240, 147, 251, 0.1) 100%);
-  pointer-events: none;
+.stat-tile-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--cb-text);
+  margin-bottom: 0.25rem;
 }
 
-.hero-content {
+.stat-tile-label {
+  font-size: 0.95rem;
+  color: var(--cb-text-secondary);
+}
+
+/* ========== TESTIMONIAL CARDS ========== */
+.testimonial-card {
+  padding: var(--cb-spacing-lg);
+  border-radius: 1.25rem;
+  background: var(--cb-glass);
+  border: 1px solid var(--cb-glass-border);
   position: relative;
-  z-index: 1;
 }
 
-/* 14. Untouched shadcn Components Integration */
-.shad-card {
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: white;
-  padding: 1.5rem;
+.testimonial-card::before {
+  content: '"';
+  position: absolute;
+  top: var(--cb-spacing-md);
+  left: var(--cb-spacing-md);
+  font-size: 3rem;
+  color: var(--cb-link);
+  opacity: 0.2;
 }
 
-.shad-button {
+.testimonial-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: var(--cb-spacing-md);
+  color: var(--cb-text);
+  font-style: italic;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: var(--cb-spacing-sm);
+}
+
+.testimonial-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--cb-badge-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--cb-badge-text);
+}
+
+.testimonial-name {
+  font-weight: 600;
+  color: var(--cb-text);
+}
+
+.testimonial-role {
+  font-size: 0.85rem;
+  color: var(--cb-text-secondary);
+}
+
+/* ========== TRUST BADGES ========== */
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  background: var(--cb-badge-bg);
+  color: var(--cb-badge-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.trust-badge-icon {
+  width: 16px;
+  height: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  border: none;
 }
 
-.shad-button-primary {
-  background: #3b82f6;
-  color: white;
+/* ========== CTA SECTION ========== */
+.cta-section {
+  padding: var(--cb-spacing-2xl);
+  border-radius: 1.5rem;
+  background: var(--cb-glass);
+  border: 1px solid var(--cb-glass-border);
+  text-align: center;
+  box-shadow: var(--cb-shadow-md);
 }
 
-.shad-button-primary:hover {
-  background: #2563eb;
+.cta-section h2 {
+  margin-bottom: var(--cb-spacing-md);
 }
 
-.shad-button-secondary {
-  background: #e5e7eb;
-  color: #1f2937;
+.cta-section p {
+  margin-bottom: var(--cb-spacing-lg);
+  font-size: 1.1rem;
 }
 
-.shad-button-secondary:hover {
-  background: #d1d5db;
+/* ========== GRADIENT TEXT & ACCENTS ========== */
+.gradient-title {
+  background-image: var(--cb-grad);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
 }
 
-/* 15. Responsive Design */
+.accent-line {
+  height: 4px;
+  width: 60px;
+  background: var(--cb-grad);
+  border-radius: 2px;
+  display: inline-block;
+  margin: var(--cb-spacing-md) 0;
+}
+
+/* ========== HOVER EFFECTS ========== */
+.hover-lift {
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--cb-shadow-lg);
+}
+
+.hover-glow {
+  transition: all .3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 24px rgba(109, 40, 217, 0.25);
+}
+
+/* ========== ANIMATION CLASSES ========== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp .6s ease forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight .6s ease forwards;
+}
+
+/* Stagger animations */
+.animate-stagger > * {
+  opacity: 0;
+  animation: fadeInUp .6s ease forwards;
+}
+
+.animate-stagger > :nth-child(1) { animation-delay: 0.05s; }
+.animate-stagger > :nth-child(2) { animation-delay: 0.1s; }
+.animate-stagger > :nth-child(3) { animation-delay: 0.15s; }
+.animate-stagger > :nth-child(4) { animation-delay: 0.2s; }
+.animate-stagger > :nth-child(5) { animation-delay: 0.25s; }
+
+/* ========== PREMIUM BADGES ========== */
+.badge-premium {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--cb-badge-bg);
+  color: var(--cb-badge-text);
+  border: 1px solid rgba(109, 40, 217, 0.25);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+  background: rgba(217, 119, 6, 0.1);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+/* ========== RESPONSIVE ADJUSTMENTS ========== */
 @media (max-width: 768px) {
-  .hero-title {
-    font-size: 2rem;
+  .premium-section {
+    padding: var(--cb-spacing-lg) 0;
   }
 
-  .icon-boxes {
-    grid-template-columns: 1fr;
+  .premium-section-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
   }
 
-  .icon-box {
-    padding: 1.5rem;
+  .cta-section {
+    padding: var(--cb-spacing-lg);
+  }
+
+  .feature-card-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
   }
 }
 
-/* 16. Animation Performance */
+/* ========== REDUCED MOTION ========== */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
 
-/* 17. Text Contrast */
-.text-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+  .btn:hover:not(:disabled):not(.disabled) {
+    transform: none;
+  }
 
-.text-muted {
-  color: var(--color-text-secondary, #6b7280);
-}
-
-/* 18. Border Animations */
-.border-gradient {
-  position: relative;
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.border-gradient::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s ease;
-}
-
-.border-gradient:hover::before {
-  left: 100%;
+  .hover-lift:hover,
+  .feature-card:hover {
+    transform: none;
+  }
 }

@@ -75,13 +75,61 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="bg-light border-top py-3 text-center text-muted small">
-    {% if current_user.is_authenticated %}<a class="me-2" href="{{ url_for('main.feedback') }}">Send feedback</a>&middot;{% endif %}
-    <a class="me-2" href="{{ url_for('main.privacy_policy') }}">Privacy</a>&middot;
-    <a class="me-2" href="{{ url_for('main.terms_of_service') }}">Terms</a>&middot;
-    <a class="me-2" href="{{ url_for('main.refund_policy') }}">Refunds</a>&middot;
-    <a class="me-2" href="{{ url_for('main.cookie_policy') }}">Cookies</a>&middot;
-    Blockchain-Enabled Online Auction System &middot; Sepolia test network only, no real funds
+  <!-- ========== PREMIUM FOOTER ========== -->
+  <footer style="border-top: 1px solid var(--cb-border); background: transparent; padding: var(--cb-spacing-xl) 0; margin-top: var(--cb-spacing-2xl);">
+    <div class="container">
+      <div class="row g-5 mb-5">
+        <!-- Brand Column -->
+        <div class="col-lg-4 mb-4 mb-lg-0">
+          <h5 class="h6 mb-3" style="color: var(--cb-text); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">ChainBid</h5>
+          <p style="color: var(--cb-text-secondary); font-size: 0.9rem; line-height: 1.6;">
+            Blockchain-powered auction platform for verified collectibles. Secure, transparent, and certified.
+          </p>
+          <p style="color: var(--cb-muted); font-size: 0.8rem; margin-top: 1rem;">
+            <strong>Test Network:</strong> Sepolia only • No real funds
+          </p>
+        </div>
+
+        <!-- Links Column 1 -->
+        <div class="col-6 col-lg-2">
+          <h6 class="h6 mb-3" style="color: var(--cb-text); font-weight: 700; font-size: 0.9rem;">Platform</h6>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li class="mb-2"><a href="{{ url_for('auctions.browse') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Browse Auctions</a></li>
+            <li class="mb-2"><a href="{{ url_for('auth.register') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Create Account</a></li>
+            <li class="mb-2"><a href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('auth.login') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Dashboard</a></li>
+          </ul>
+        </div>
+
+        <!-- Links Column 2 -->
+        <div class="col-6 col-lg-2">
+          <h6 class="h6 mb-3" style="color: var(--cb-text); font-weight: 700; font-size: 0.9rem;">Legal</h6>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li class="mb-2"><a href="{{ url_for('main.privacy_policy') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Privacy</a></li>
+            <li class="mb-2"><a href="{{ url_for('main.terms_of_service') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Terms</a></li>
+            <li class="mb-2"><a href="{{ url_for('main.refund_policy') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Refunds</a></li>
+            <li class="mb-2"><a href="{{ url_for('main.cookie_policy') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Cookies</a></li>
+          </ul>
+        </div>
+
+        <!-- Links Column 3 -->
+        <div class="col-6 col-lg-2">
+          <h6 class="h6 mb-3" style="color: var(--cb-text); font-weight: 700; font-size: 0.9rem;">Support</h6>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            {% if current_user.is_authenticated %}
+            <li class="mb-2"><a href="{{ url_for('main.feedback') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Send Feedback</a></li>
+            {% endif %}
+            <li class="mb-2"><a href="{{ url_for('notifications.index') if current_user.is_authenticated else url_for('auth.login') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Notifications</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer Divider -->
+      <div style="border-top: 1px solid var(--cb-border); padding-top: var(--cb-spacing-lg); text-align: center;">
+        <p style="color: var(--cb-muted); font-size: 0.85rem; margin-bottom: 0;">
+          © 2026 ChainBid. All rights reserved. Sepolia test network only.
+        </p>
+      </div>
+    </div>
   </footer>
 
   {% include "components/cookie_banner.html" %}
