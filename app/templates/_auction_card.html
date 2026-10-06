@@ -4,9 +4,9 @@
   <a href="{{ url_for('auctions.detail', auction_id=a.id) }}" class="text-decoration-none text-reset">
     <div class="card h-100">
       {% if p.cover %}
-      <img src="{{ url_for('static', filename='uploads/' ~ p.cover) }}" alt="" class="card-img-top" style="height:180px;object-fit:cover">
+      <img src="{{ url_for('static', filename='uploads/' ~ p.cover) }}" alt="{{ p.title }}" class="card-img-top" style="height:180px;object-fit:cover">
       {% else %}
-      <div class="card-img-top bg-secondary-subtle d-flex align-items-center justify-content-center text-muted" style="height:180px">No image</div>
+      <img src="{{ url_for('static', filename='img/no-image.svg') }}" alt="No image available for {{ p.title }}" class="card-img-top" style="height:180px;object-fit:cover;background:#f0f0f0">
       {% endif %}
       <div class="card-body">
         <h5 class="card-title h6">{{ p.title }}</h5>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- Background -->
+  <rect width="400" height="400" fill="#f0f0f0"/>
+
+  <!-- Grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="400" height="400" fill="url(#grid)" />
+
+  <!-- Image icon -->
+  <g transform="translate(200, 160)">
+    <!-- Camera/Image icon -->
+    <circle cx="0" cy="-20" r="25" fill="none" stroke="#999" stroke-width="3"/>
+    <circle cx="0" cy="-20" r="12" fill="none" stroke="#999" stroke-width="3"/>
+    <path d="M -60 30 L -60 50 L 60 50 L 60 30" fill="none" stroke="#999" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="-40" cy="25" r="8" fill="#999"/>
+  </g>
+
+  <!-- Text -->
+  <text x="200" y="340" font-family="Arial, sans-serif" font-size="18" fill="#999" text-anchor="middle" font-weight="500">
+    No Image Available
+  </text>
+  <text x="200" y="365" font-family="Arial, sans-serif" font-size="14" fill="#bbb" text-anchor="middle">
+    Upload a product photo
+  </text>
+</svg>

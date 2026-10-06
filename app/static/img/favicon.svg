@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Purple gradient background -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6b3fff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4b1fcc;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" fill="url(#grad)" rx="12"/>
+
+  <!-- Auction gavel icon -->
+  <g transform="translate(32, 32)">
+    <!-- Hammer head -->
+    <rect x="-12" y="-18" width="24" height="10" fill="white" rx="2"/>
+
+    <!-- Hammer handle -->
+    <rect x="-2" y="-8" width="4" height="20" fill="white"/>
+
+    <!-- Gavel base -->
+    <rect x="-14" y="12" width="28" height="4" fill="white" rx="2"/>
+
+    <!-- Block -->
+    <rect x="-14" y="16" width="28" height="6" fill="rgba(255,255,255,0.8)" rx="1"/>
+  </g>
+</svg>
