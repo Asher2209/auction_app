@@ -38,6 +38,7 @@
       <div id="nav" class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto">
           <li class="nav-item"><a class="nav-link" href="{{ url_for('auctions.browse') }}">Browse auctions</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.browse_cards') }}">Trading Cards</a></li>
         </ul>
         <ul class="navbar-nav">
           {% if current_user.is_authenticated %}
@@ -98,6 +99,7 @@
           <h6 class="h6 mb-3" style="color: var(--cb-text); font-weight: 700; font-size: 0.9rem;">Platform</h6>
           <ul style="list-style: none; padding: 0; margin: 0;">
             <li class="mb-2"><a href="{{ url_for('auctions.browse') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Browse Auctions</a></li>
+            <li class="mb-2"><a href="{{ url_for('main.browse_cards') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Trading Cards</a></li>
             <li class="mb-2"><a href="{{ url_for('auth.register') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Create Account</a></li>
             <li class="mb-2"><a href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('auth.login') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Dashboard</a></li>
           </ul>

@@ -1,0 +1,176 @@
+﻿{% extends "base.html" %}
+{% block title %}Search Trading Cards - ChainBid{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: var(--dt-space-3xl);">
+  <h1 class="h1 mb-2">Search Trading Cards</h1>
+  <p class="lead">Find verified collectible cards from trusted sellers</p>
+</div>
+
+<!-- Filter Panel -->
+<div class="card mb-5">
+  <div class="card-body p-4">
+    <form method="GET">
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-lg-6">
+          <label class="form-label">Search</label>
+          <input class="form-control" name="q" placeholder="Card name, set, or player..." value="{{ q }}">
+        </div>
+        
+        <div class="col-12 col-lg-3">
+          <label class="form-label">Card Type</label>
+          <select class="form-select" name="type">
+            <option value="">All Types</option>
+            {% for ctype in card_types %}
+            <option value="{{ ctype.id }}" {{ 'selected' if card_type|string == ctype.id|string else '' }}>{{ ctype.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="col-12 col-lg-3">
+          <label class="form-label">Sort</label>
+          <select class="form-select" name="sort" onchange="this.form.submit()">
+            <option value="newest" {{ 'selected' if sort == 'newest' else '' }}>Newest</option>
+            <option value="oldest" {{ 'selected' if sort == 'oldest' else '' }}>Oldest</option>
+            <option value="price_low" {{ 'selected' if sort == 'price_low' else '' }}>Price: Low to High</option>
+            <option value="price_high" {{ 'selected' if sort == 'price_high' else '' }}>Price: High to Low</option>
+            <option value="rarity" {{ 'selected' if sort == 'rarity' else '' }}>Rarity</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="row g-3">
+        <div class="col-6 col-lg-2">
+          <label class="form-label">Condition</label>
+          <select class="form-select form-select-sm" name="condition">
+            <option value="">All</option>
+            {% for cond in conditions %}
+            <option value="{{ cond }}" {{ 'selected' if condition == cond else '' }}>{{ cond }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="col-6 col-lg-2">
+          <label class="form-label">Graded</label>
+          <select class="form-select form-select-sm" name="graded">
+            <option value="">Any</option>
+            <option value="true" {{ 'selected' if graded == 'true' else '' }}>Verified</option>
+            <option value="false" {{ 'selected' if graded == 'false' else '' }}>Unverified</option>
+          </select>
+        </div>
+        
+        <div class="col-6 col-lg-2">
+          <label class="form-label">Grader</label>
+          <select class="form-select form-select-sm" name="grader">
+            <option value="">Any</option>
+            {% for g in graders %}
+            <option value="{{ g }}" {{ 'selected' if grader == g else '' }}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="col-6 col-lg-2">
+          <label class="form-label">Min Price</label>
+          <input type="number" class="form-control form-control-sm" name="min_price" value="{{ min_price or '' }}" step="0.01">
+        </div>
+        
+        <div class="col-6 col-lg-2">
+          <label class="form-label">Max Price</label>
+          <input type="number" class="form-control form-control-sm" name="max_price" value="{{ max_price or '' }}" step="0.01">
+        </div>
+        
+        <div class="col-12 col-lg-2" style="display: flex; align-items: flex-end;">
+          <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Results -->
+{% if cards.items %}
+<div class="mb-4">
+  <p style="color: var(--dt-text-secondary);">Found <strong>{{ cards.total }}</strong> card{{ 's' if cards.total != 1 else '' }}</p>
+</div>
+
+<div class="product-grid">
+  {% for card in cards.items %}
+    <div class="auction-card">
+      <div class="auction-card-image">
+        {% if card.images %}
+          <img src="{{ url_for('static', filename='uploads/' ~ card.images[0].path) }}" alt="{{ card.card_name }}">
+        {% else %}
+          <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: var(--dt-bg-1);">
+            <span style="color: var(--dt-text-muted);">No image</span>
+          </div>
+        {% endif %}
+        
+        {% if card.is_graded %}
+        <div class="auction-card-badges">
+          <span class="badge badge-success">{{ card.grading_company or 'Verified' }}</span>
+        </div>
+        {% endif %}
+      </div>
+      
+      <div class="auction-card-body">
+        <div class="auction-card-category">{{ card.card_type.name }}</div>
+        <h3 class="auction-card-title">{{ card.card_name }}</h3>
+        
+        <div class="auction-card-info">
+          <div class="auction-card-bid">
+            <div class="auction-card-bid-label">Est. Value</div>
+            <div class="auction-card-bid-amount">{{ card.estimated_value|money }}</div>
+          </div>
+        </div>
+        
+        <div class="auction-card-meta">
+          <span class="auction-card-bids">{{ card.set_name }}</span>
+          <a href="{{ url_for('main.view_card', card_id=card.id) }}" class="btn btn-sm btn-primary">View</a>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% if cards.pages > 1 %}
+<nav style="text-align: center; margin-top: var(--dt-space-3xl);">
+  <ul class="pagination" style="justify-content: center;">
+    {% if cards.has_prev %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('main.search_cards', page=cards.prev_num, q=q) }}">← Previous</a>
+    </li>
+    {% endif %}
+    
+    {% for page_num in cards.iter_pages() %}
+      {% if page_num %}
+        {% if page_num == cards.page %}
+        <li class="page-item active">
+          <span class="page-link">{{ page_num }}</span>
+        </li>
+        {% else %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('main.search_cards', page=page_num, q=q) }}">{{ page_num }}</a>
+        </li>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    
+    {% if cards.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('main.search_cards', page=cards.next_num, q=q) }}">Next →</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon">🔍</div>
+  <h3 class="empty-state-title">No Cards Found</h3>
+  <p class="empty-state-description">Try adjusting your search or filters to find cards.</p>
+  <a href="{{ url_for('main.browse_cards') }}" class="btn btn-primary">Browse All</a>
+</div>
+{% endif %}
+
+{% endblock %}

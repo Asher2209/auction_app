@@ -119,7 +119,7 @@
 /* ========== PRODUCT GRID ========== */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(clamp(250px, 22vw, 280px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: var(--dt-space-2xl);
   margin-bottom: var(--dt-space-3xl);
 }
@@ -152,7 +152,7 @@
 .auction-card-image {
   position: relative;
   width: 100%;
-  padding-bottom: 100%;
+  padding-bottom: 140%;
   overflow: hidden;
   background-color: var(--dt-bg-1);
 }

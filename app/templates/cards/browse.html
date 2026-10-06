@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Browse Trading Cards - ChainBid{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: var(--dt-space-3xl);">
+  <h1 class="h1 mb-2">Browse Trading Cards</h1>
+  <p class="lead">Explore verified collectible cards</p>
+</div>
+
+{% if card_type %}
+<div class="mb-4">
+  <p style="color: var(--dt-text-secondary);">Browsing: <strong>{{ card_type.name }}</strong></p>
+</div>
+{% endif %}
+
+{% if cards.items %}
+<div class="product-grid">
+  {% for card in cards.items %}
+    <div class="auction-card">
+      <div class="auction-card-image">
+        {% if card.images %}
+          <img src="{{ url_for('static', filename='uploads/' ~ card.images[0].path) }}" alt="{{ card.card_name }}" style="height: 300px; object-fit: cover; width: 100%;">
+        {% else %}
+          <div style="display: flex; align-items: center; justify-content: center; height: 300px; background: var(--dt-bg-1);">
+            <span style="color: var(--dt-text-muted);">No image</span>
+          </div>
+        {% endif %}
+      </div>
+      
+      <div class="auction-card-body">
+        <div class="auction-card-category">{{ card.card_type.name }}</div>
+        <h3 class="auction-card-title">{{ card.card_name }}</h3>
+        
+        <div class="auction-card-info">
+          <div class="auction-card-bid">
+            <div class="auction-card-bid-label">Est. Value</div>
+            <div class="auction-card-bid-amount" style="color: var(--dt-accent); font-size: 1.25rem; font-weight: 600;">${{ "%.2f"|format(card.estimated_value) }}</div>
+          </div>
+        </div>
+        
+        <div class="auction-card-meta" style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--dt-space-md);">
+          <span class="auction-card-bids" style="font-size: 0.9rem; color: var(--dt-text-muted);">{{ card.set_name }}</span>
+          <a href="{{ url_for('main.view_card', card_id=card.id) }}" class="btn btn-sm btn-primary">View</a>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% if cards.pages > 1 %}
+<nav style="text-align: center; margin-top: var(--dt-space-3xl);">
+  <ul class="pagination" style="justify-content: center;">
+    {% if cards.has_prev %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('main.browse_cards', page=cards.prev_num) }}">&lt;&lt; Previous</a>
+    </li>
+    {% endif %}
+    
+    {% for page_num in cards.iter_pages() %}
+      {% if page_num %}
+        {% if page_num == cards.page %}
+        <li class="page-item active">
+          <span class="page-link">{{ page_num }}</span>
+        </li>
+        {% else %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('main.browse_cards', page=page_num) }}">{{ page_num }}</a>
+        </li>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    
+    {% if cards.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('main.browse_cards', page=cards.next_num) }}">Next &gt;&gt;</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="empty-state" style="text-align: center; padding: var(--dt-space-3xl); background: var(--dt-bg-1); border-radius: var(--dt-radius-lg);">
+  <div class="empty-state-icon" style="font-size: 3rem; margin-bottom: var(--dt-space-lg);">No Cards</div>
+  <h3 class="empty-state-title">No Cards Available</h3>
+  <p class="empty-state-description" style="color: var(--dt-text-secondary); margin-bottom: var(--dt-space-lg);">Check back soon for new collectible cards.</p>
+</div>
+{% endif %}
+
+{% endblock %}

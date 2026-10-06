@@ -1,13 +1,13 @@
-from datetime import timedelta
+﻿from datetime import timedelta
 
-from flask import flash, redirect, render_template, url_for
+from flask import flash, redirect, render_template, url_for, request, abort, jsonify
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField
 from wtforms.validators import DataRequired, Length
 
 from ...extensions import db
-from ...models import Auction, Category, Feedback, utcnow
+from ...models import Auction, Category, Feedback, utcnow, CollectibleCard, CardType, Product
 from ... import sockets
 from ...services import auction_service
 from ...services import review_service as rs
@@ -102,8 +102,8 @@ def search_cards():
     max_price = request.args.get('max_price', type=float)
     sort = request.args.get('sort', 'newest')
     
-    query = CollectibleCard.query.join(Product).filter(
-        Product.approval_status == 'approved'
+    query = CollectibleCard.query.filter(
+        CollectibleCard.product.has(approval_status='approved')
     )
     
     if q:
@@ -185,8 +185,8 @@ def browse_cards():
         if not card_type:
             abort(404)
     
-    query = CollectibleCard.query.join(Product).filter(
-        Product.approval_status == 'approved'
+    query = CollectibleCard.query.filter(
+        CollectibleCard.product.has(approval_status='approved')
     )
     
     if card_type:
@@ -252,8 +252,8 @@ def api_search_cards():
     if len(q) < 2:
         return jsonify([])
     
-    query = CollectibleCard.query.join(Product).filter(
-        Product.approval_status == 'approved'
+    query = CollectibleCard.query.filter(
+        CollectibleCard.product.has(approval_status='approved')
     )
     
     search_term = f"%{q}%"
@@ -268,3 +268,4 @@ def api_search_cards():
         'set': card.set_name,
         'value': float(card.estimated_value) if card.estimated_value else 0
     } for card in results])
+
