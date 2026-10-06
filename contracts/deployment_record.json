@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-06 17:43:01 UTC",
+  "network": "sepolia",
+  "chainId": 11155111,
+  "contractAddress": "0xC3240cFD2c9ec199Be2715F27816a1f538629307",
+  "deployerAddress": "0xB776439242fD5d02e74d429Dd9E6823043D43A0D",
+  "transactionHash": "eb9ae48e18cc60f2b6cf185c96dbbc83d99dabb75fc213e455174b307f4d2ca9",
+  "blockNumber": 11857392,
+  "gasUsed": 6760396,
+  "explorerUrl": "https://sepolia.etherscan.io/address/0xC3240cFD2c9ec199Be2715F27816a1f538629307"
+}
