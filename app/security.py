@@ -19,7 +19,7 @@ def content_security_policy(host):
         "default-src 'self'",
         f"script-src 'self' {CDN_HOSTS}",
         f"style-src 'self' 'unsafe-inline' {CDN_HOSTS}",  # inline style="" attributes are used for sizing
-        "img-src 'self' data:",
+        "img-src 'self' data: https://raw.githubusercontent.com https://images.pokemontcg.io",  # allow external card images
         "font-src 'self' https://cdn.jsdelivr.net",
         f"connect-src 'self' ws://{host} wss://{host}",  # Socket.IO
         "object-src 'none'",
