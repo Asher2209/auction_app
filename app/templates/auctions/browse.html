@@ -1,134 +1,131 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% from "_auction_card.html" import card %}
 {% from "_pagination.html" import pager %}
 {% block title %}Browse Auctions - ChainBid{% endblock %}
 {% block content %}
 
 <!-- ========== PAGE HEADER ========== -->
-<div style="padding-bottom: 2rem; border-bottom: 1px solid var(--cb-border); margin-bottom: 3rem;">
+<div style="margin-bottom: var(--dt-space-3xl);">
   <h1 class="h1 mb-2">Browse Auctions</h1>
-  <p class="lead text-muted">Explore {{ page.total }} live and upcoming auction{{ '' if page.total == 1 else 's' }}</p>
+  <p class="lead">Explore {{ page.total }} active and upcoming auction{{ '' if page.total == 1 else 's' }}</p>
 </div>
 
-<!-- ========== FILTERS (Premium Card Design) ========== -->
+<!-- ========== FILTERS PANEL ========== -->
 <div class="card mb-5">
   <div class="card-body p-4">
     <form method="get">
       <div class="row g-3 mb-4">
-        <!-- Search Input -->
         <div class="col-12 col-lg-4">
           <label class="form-label">Search</label>
-          <input
-            class="form-control"
-            name="q"
-            aria-label="Search"
-            value="{{ f.q }}"
-            maxlength="100"
-            placeholder="Name, description..."
-            style="border-radius: 0.75rem;"
-          >
+          <input class="form-control" name="q" placeholder="Name, description..." value="{{ f.q }}" maxlength="100">
         </div>
-
-        <!-- Category Select -->
-        <div class="col-6 col-lg-3">
+        
+        <div class="col-6 col-lg-2">
           <label class="form-label">Category</label>
-          <select class="form-select" name="category" aria-label="Category">
-            <option value="">All categories</option>
-            {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if f.category == c.id }}>{{ c.name }}</option>{% endfor %}
+          <select class="form-select" name="category">
+            <option value="">All</option>
+            {% for c in categories %}
+            <option value="{{ c.id }}" {{ 'selected' if f.category == c.id }}>{{ c.name }}</option>
+            {% endfor %}
           </select>
         </div>
-
-        <!-- Status Select -->
-        <div class="col-6 col-lg-3">
+        
+        <div class="col-6 col-lg-2">
           <label class="form-label">Status</label>
-          <select class="form-select" name="status" aria-label="Auction status">
-            {% for s in statuses %}<option value="{{ s }}" {{ 'selected' if f.status == s }}>{{ s|capitalize }}</option>{% endfor %}
+          <select class="form-select" name="status">
+            <option value="">All</option>
+            {% for s in statuses %}
+            <option value="{{ s }}" {{ 'selected' if f.status == s }}>{{ s|capitalize }}</option>
+            {% endfor %}
           </select>
         </div>
-
-        <!-- Sort Select -->
+        
         <div class="col-12 col-lg-2">
           <label class="form-label">Sort By</label>
-          <select class="form-select" name="sort" aria-label="Sort by">
-            {% for s in sorts %}<option value="{{ s }}" {{ 'selected' if f.sort == s }}>
+          <select class="form-select" name="sort">
+            {% for s in sorts %}
+            <option value="{{ s }}" {{ 'selected' if f.sort == s }}>
               {{ {'ending': 'Ending soon', 'newest': 'Newest', 'price_low': 'Low price', 'price_high': 'High price', 'most_bids': 'Most bids'}[s] }}
-            </option>{% endfor %}
+            </option>
+            {% endfor %}
           </select>
         </div>
       </div>
-
-      <!-- Price Range -->
+      
       <div class="row g-3 mb-4">
         <div class="col-6 col-lg-2">
           <label class="form-label">Min Price</label>
-          <input
-            class="form-control"
-            type="number"
-            min="0"
-            step="0.01"
-            name="min_price"
-            aria-label="Minimum price"
-            value="{{ f.min_price if f.min_price is not none }}"
-            placeholder="₹0"
-          >
+          <input class="form-control" type="number" min="0" step="0.01" name="min_price" value="{{ f.min_price if f.min_price is not none }}">
         </div>
-
+        
         <div class="col-6 col-lg-2">
           <label class="form-label">Max Price</label>
-          <input
-            class="form-control"
-            type="number"
-            min="0"
-            step="0.01"
-            name="max_price"
-            aria-label="Maximum price"
-            value="{{ f.max_price if f.max_price is not none }}"
-            placeholder="Any"
-          >
+          <input class="form-control" type="number" min="0" step="0.01" name="max_price" value="{{ f.max_price if f.max_price is not none }}">
         </div>
-
-        <div class="col-12 col-lg-8 d-flex align-items-end gap-2">
-          <button class="btn btn-primary flex-grow-1" type="submit">
-            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-            Apply Filters
-          </button>
-          <a class="btn btn-ghost" href="{{ url_for('auctions.browse') }}">Reset</a>
+        
+        <div class="col-12 col-lg-8" style="display: flex; align-items: flex-end; gap: var(--dt-space-md);">
+          <button type="submit" class="btn btn-primary">Filter</button>
+          <a href="{{ url_for('auctions.browse') }}" class="btn btn-secondary">Reset</a>
         </div>
       </div>
-
-      <p class="text-muted small mb-0">
-        <strong>{{ page.total }}</strong> auction{{ '' if page.total == 1 else 's' }} found
-        • Price filters use current bids
-      </p>
     </form>
   </div>
 </div>
 
-<!-- ========== AUCTIONS GRID ========== -->
+<!-- ========== RESULTS ========== -->
 {% if page.items %}
-  <div class="row g-3 mb-5">
-    {% for a in page.items %}
-      {{ card(a, counts.get(a.id), ratings.get(a.product_id)) }}
-    {% endfor %}
-  </div>
+<div class="mb-4">
+  <p style="color: var(--dt-text-secondary);">Found <strong>{{ page.total }}</strong> item{{ '' if page.total == 1 else 's' }}</p>
+</div>
 
-  <!-- ========== PAGINATION ========== -->
-  <div class="mt-5">{{ pager(page, 'auctions.browse', **qs) }}</div>
+<div class="product-grid">
+  {% for auction in page.items %}
+    {{ card(auction, counts.get(auction.id), ratings.get(auction.product_id)) }}
+  {% endfor %}
+</div>
+
+<!-- ========== PAGINATION ========== -->
+{% if page.pages > 1 %}
+<nav style="text-align: center; margin-top: var(--dt-space-3xl);">
+  <ul class="pagination" style="justify-content: center;">
+    {% if page.has_prev %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('auctions.browse', page=page.prev_num, q=f.q, category=f.category, status=f.status, sort=f.sort, min_price=f.min_price, max_price=f.max_price) }}">← Previous</a>
+    </li>
+    {% endif %}
+    
+    {% for page_num in page.iter_pages() %}
+      {% if page_num %}
+        {% if page_num == page.page %}
+        <li class="page-item active">
+          <span class="page-link">{{ page_num }}</span>
+        </li>
+        {% else %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('auctions.browse', page=page_num, q=f.q, category=f.category, status=f.status, sort=f.sort, min_price=f.min_price, max_price=f.max_price) }}">{{ page_num }}</a>
+        </li>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    
+    {% if page.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('auctions.browse', page=page.next_num, q=f.q, category=f.category, status=f.status, sort=f.sort, min_price=f.min_price, max_price=f.max_price) }}">Next →</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
 {% else %}
-  <!-- ========== EMPTY STATE ========== -->
-  <div class="text-center py-5">
-    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 4rem; height: 4rem; color: var(--cb-muted); margin-bottom: 1rem;">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="12" y1="8" x2="12" y2="16"></line>
-      <line x1="8" y1="12" x2="16" y2="12"></line>
-    </svg>
-    <h3 class="h4 mb-2">No auctions found</h3>
-    <p class="text-muted mb-4">Try adjusting your filters or search terms to find what you're looking for.</p>
-    <a href="{{ url_for('auctions.browse') }}" class="btn btn-outline-primary">Clear Filters</a>
-  </div>
+<div class="empty-state">
+  <div class="empty-state-icon">🔍</div>
+  <h3 class="empty-state-title">No Auctions Found</h3>
+  <p class="empty-state-description">
+    Try adjusting your filters or browse by category to find items.
+  </p>
+  <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary">Clear Filters</a>
+</div>
 {% endif %}
 
 {% endblock %}
