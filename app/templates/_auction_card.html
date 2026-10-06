@@ -1,25 +1,25 @@
 {% macro card(a, count, rating=None) %}
 {% set p = a.product %}
-<div class="col-12 col-sm-6 col-lg-3">
+<div class="col-12 col-sm-6 col-md-4 col-lg-3">
   <a href="{{ url_for('auctions.detail', auction_id=a.id) }}" class="text-decoration-none text-reset">
-    <div class="card h-100">
+    <div class="card h-100 d-flex flex-column">
       {% if p.collectible_card and p.collectible_card.images and p.collectible_card.images[0].url %}
-        <img src="{{ p.collectible_card.images[0].url }}" alt="{{ p.title }}" class="card-img-top" loading="lazy" style="height:200px;object-fit:contain;background:#f5f5f5;padding:8px">
+        <img src="{{ p.collectible_card.images[0].url }}" alt="{{ p.title }}" class="card-img-top" loading="lazy" style="height:160px;object-fit:contain;background:#f5f5f5;padding:8px;flex-shrink:0">
       {% elif p.cover %}
-        <img src="{{ url_for('static', filename='uploads/' ~ p.cover) }}" alt="{{ p.title }}" class="card-img-top" loading="lazy" style="height:200px;object-fit:cover">
+        <img src="{{ url_for('static', filename='uploads/' ~ p.cover) }}" alt="{{ p.title }}" class="card-img-top" loading="lazy" style="height:160px;object-fit:cover;flex-shrink:0">
       {% else %}
-        <img src="{{ url_for('static', filename='img/no-image.svg') }}" alt="No image available for {{ p.title }}" class="card-img-top" loading="lazy" style="height:200px;object-fit:cover;background:#f0f0f0">
+        <img src="{{ url_for('static', filename='img/no-image.svg') }}" alt="No image available for {{ p.title }}" class="card-img-top" loading="lazy" style="height:160px;object-fit:cover;background:#f0f0f0;flex-shrink:0">
       {% endif %}
-      <div class="card-body d-flex flex-column">
-        <h5 class="card-title h6" style="min-height: 2.5em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ p.title }}</h5>
-        <p class="card-text text-muted small mb-2">{{ p.category.name }}
+      <div class="card-body d-flex flex-column flex-grow-1 p-3">
+        <h5 class="card-title" style="font-size: 0.95rem; font-weight: 600; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; margin-bottom: 0.5rem;">{{ p.title }}</h5>
+        <p class="card-text text-muted" style="font-size: 0.8rem; margin-bottom: 0.5rem;">{{ p.category.name }}
           {% if rating %}&middot; <span class="text-warning">&#9733;</span> {{ rating[0] }} <span class="text-muted">({{ rating[1] }})</span>{% endif %}</p>
-        <div class="small text-muted">{{ 'Current bid' if count else 'Starting at' }}</div>
-        <div class="fw-semibold" style="font-size: 1.1em; color: var(--dt-accent);">{{ a.current_bid|money }}</div>
+        <div class="small text-muted" style="font-size: 0.75rem; margin-bottom: 0.25rem;">{{ 'Current bid' if count else 'Starting at' }}</div>
+        <div class="fw-semibold" style="font-size: 1.15rem; color: var(--dt-accent); margin-bottom: 0.75rem;">{{ a.current_bid|money }}</div>
       </div>
-      <div class="card-footer small text-muted d-flex justify-content-between">
+      <div class="card-footer small text-muted d-flex justify-content-between p-2" style="font-size: 0.75rem; background: transparent; border-top: 1px solid #eee;">
         <span>{{ count or 0 }} bid{{ '' if count == 1 else 's' }}</span>
-        <span>
+        <span style="text-align: right;">
           {% if a.status == 'active' %}{{ a.end_time|time_left }} left
           {% elif a.status == 'scheduled' %}Starts {{ a.start_time|utc }}
           {% else %}Ended{% endif %}
