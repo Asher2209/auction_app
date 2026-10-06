@@ -16,7 +16,20 @@
   
   <!-- LEFT: IMAGE GALLERY -->
   <div class="product-detail-gallery">
-    {% if product.images %}
+    {% if product.collectible_card and product.collectible_card.images %}
+    <div class="product-detail-gallery-main">
+      <img id="gallery-main" src="{{ product.collectible_card.images[0].get_image_src() }}" alt="{{ product.title }}" style="height: 400px; object-fit: contain; background: #f5f5f5; padding: 10px;">
+    </div>
+    {% if product.collectible_card.images|length > 1 %}
+    <div class="product-detail-gallery-thumbs">
+      {% for img in product.collectible_card.images[:4] %}
+      <div class="product-detail-gallery-thumb" onclick="document.getElementById('gallery-main').src='{{ img.get_image_src() }}'">
+        <img src="{{ img.get_image_src() }}" alt="thumbnail" style="height: 60px; object-fit: contain;">
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% elif product.images %}
     <div class="product-detail-gallery-main">
       <img id="gallery-main" src="{{ url_for('static', filename='uploads/' ~ product.images[0].path) }}" alt="{{ product.title }}">
     </div>
@@ -105,7 +118,7 @@
         {% if current_user.is_authenticated and auction.status == 'active' %}
         <form id="bid-form" method="post" action="{{ url_for('auctions.bid', auction_id=auction.id) }}" class="product-auction-bid-input">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="number" name="amount" class="form-control" placeholder="Enter bid amount" min="{{ next_bid }}" step="0.01" required>
+          <input type="number" name="amount" class="form-control" placeholder="Enter bid amount" min="{{ auction.current_bid + 0.01 }}" step="0.01" required>
           <button type="submit" class="btn btn-primary">Place Bid</button>
         </form>
         {% elif not current_user.is_authenticated %}
@@ -128,7 +141,7 @@
           <div class="product-seller-name">{{ product.seller.name }}</div>
           <div class="product-seller-rating">
             <span style="color: var(--dt-warning);">★★★★★</span>
-            <span style="color: var(--dt-text-muted);">({{ seller_rating_count }} reviews)</span>
+            <span style="color: var(--dt-text-muted);">(0 reviews)</span>
           </div>
         </div>
       </div>
@@ -190,15 +203,27 @@
 </section>
 
 <!-- ========== RELATED ITEMS ========== -->
-{% if related_items %}
+{% if similar %}
 <section style="margin-top: var(--dt-space-4xl);">
   <div class="section-header">
     <h2 class="section-title">Similar Items</h2>
   </div>
   
   <div class="product-grid">
-    {% for item in related_items[:4] %}
-      {# Use the auction card macro if available #}
+    {% for item in similar[:4] %}
+      <a href="{{ url_for('auctions.detail', auction_id=item.id) }}" class="text-decoration-none text-reset" style="display: flex; flex-direction: column; height: 100%;">
+        <div class="card h-100">
+          {% if item.product.images %}
+            <img src="{{ url_for('static', filename='uploads/' ~ item.product.images[0].path) }}" alt="{{ item.product.title }}" style="height: 200px; object-fit: cover;">
+          {% else %}
+            <div style="height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;"><span>No image</span></div>
+          {% endif %}
+          <div class="card-body">
+            <h5>{{ item.product.title[:30] }}</h5>
+            <p style="color: #666; font-size: 0.9rem;">{{ item.current_bid|money }}</p>
+          </div>
+        </div>
+      </a>
     {% endfor %}
   </div>
 </section>

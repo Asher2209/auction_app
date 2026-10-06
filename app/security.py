@@ -17,10 +17,10 @@ def content_security_policy(host):
     """No inline scripts or handlers, scripts only from this site and two pinned CDNs (which also carry SRI hashes)."""
     return "; ".join([
         "default-src 'self'",
-        f"script-src 'self' {CDN_HOSTS}",
+        f"script-src 'self' 'unsafe-inline' {CDN_HOSTS}",
         f"style-src 'self' 'unsafe-inline' {CDN_HOSTS}",  # inline style="" attributes are used for sizing
         "img-src 'self' data: https://raw.githubusercontent.com https://images.pokemontcg.io",  # allow external card images
-        "font-src 'self' https://cdn.jsdelivr.net",
+        "font-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com",
         f"connect-src 'self' ws://{host} wss://{host}",  # Socket.IO
         "object-src 'none'",
         "base-uri 'self'",
