@@ -1,20 +1,157 @@
-{% extends "auth/_card.html" %}
+{% extends "base.html" %}
 {% from "_form.html" import field %}
-{% block title %}Profile - ChainBid{% endblock %}
-{% block heading %}Your profile{% endblock %}
-{% block form %}
-<p class="text-muted small">{{ current_user.email }} &middot; {{ current_user.role|capitalize }}</p>
-<form method="post" novalidate>
-  {{ form.hidden_tag() }}
-  {{ field(form.name) }}
-  {{ field(form.phone) }}
-  {{ field(form.address, rows=3) }}
-  {{ field(form.wallet_address, placeholder="0x...") }}
-  <div class="form-text mb-3">
-    {% if current_user.role == 'seller' %}Sellers: this is where buyers' crypto payments are sent (a test-network address).{% else %}Optional. Your public address only.{% endif %}
-    <strong>Never enter a private key or seed phrase.</strong>
+{% block title %}Account Settings - ChainBid{% endblock %}
+{% block content %}
+
+<!-- ========== PAGE HEADER ========== -->
+<div style="padding-bottom: 2rem; border-bottom: 1px solid var(--cb-border); margin-bottom: 3rem;">
+  <h1 class="h1 mb-2">Account Settings</h1>
+  <p class="lead text-muted">Manage your profile and account preferences</p>
+</div>
+
+<div class="row g-4">
+  <!-- ========== SIDEBAR: ACCOUNT INFO ========== -->
+  <div class="col-lg-3">
+    <div class="glass p-5" style="border-radius: 1.5rem; text-align: center;">
+      <!-- Avatar -->
+      <div style="width: 100px; height: 100px; background: var(--cb-grad); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: white; font-size: 2.5rem; font-weight: 700;">
+        {{ current_user.name[0] }}
+      </div>
+
+      <!-- User Info -->
+      <h3 class="h5 mb-1" style="color: var(--cb-text);">{{ current_user.name }}</h3>
+      <p class="text-muted small mb-3">{{ current_user.email }}</p>
+
+      <!-- Badge -->
+      <div class="mb-4">
+        <span class="badge" style="background: {% if current_user.role == 'seller' %}rgba(37, 99, 235, 0.15){% else %}rgba(16, 185, 129, 0.15){% endif %}; color: {% if current_user.role == 'seller' %}#1d4ed8{% else %}#047857{% endif %}; padding: 0.5rem 1rem; font-size: 0.85rem;">
+          {{ {'seller': '🏪 Seller Account', 'buyer': '👤 Buyer Account'}[current_user.role] }}
+        </span>
+      </div>
+
+      <!-- Member Since -->
+      <p class="text-muted small mb-4" style="border-top: 1px solid var(--cb-border); padding-top: 1rem;">
+        Member since<br>
+        <strong style="color: var(--cb-text);">{{ current_user.created_at|datetimeformat("%b %Y") }}</strong>
+      </p>
+
+      <!-- Quick Links -->
+      <div class="d-grid gap-2">
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">
+          Dashboard
+        </a>
+        <a href="{{ url_for('auth.change_password') }}" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">
+          Change Password
+        </a>
+      </div>
+    </div>
   </div>
-  <button class="btn btn-primary" type="submit">Save</button>
-  <a class="btn btn-outline-secondary" href="{{ url_for('auth.change_password') }}">Change password</a>
-</form>
+
+  <!-- ========== MAIN FORM ========== -->
+  <div class="col-lg-9">
+    <form method="post" novalidate class="glass p-5" style="border-radius: 1.5rem;">
+      {{ form.hidden_tag() }}
+
+      <!-- Personal Information Section -->
+      <div class="mb-5">
+        <h2 class="h5 mb-4" style="color: var(--cb-text);">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 0.5rem;">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Personal Information
+        </h2>
+
+        <div class="row g-4">
+          <div class="col-md-6">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control" ~ (" is-invalid" if form.name.errors else ""), style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+            {% for e in form.name.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" value="{{ current_user.email }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
+            <small class="text-muted d-block mt-1">Your email cannot be changed</small>
+          </div>
+
+          <div class="col-md-6">
+            {{ form.phone.label(class="form-label") }}
+            {{ form.phone(class="form-control" ~ (" is-invalid" if form.phone.errors else ""), style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+            {% for e in form.phone.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Account Role</label>
+            <input type="text" class="form-control" value="{{ current_user.role|capitalize }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
+            <small class="text-muted d-block mt-1">Your account type cannot be changed</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Section -->
+      <div class="mb-5" style="border-top: 1px solid var(--cb-border); padding-top: 2rem;">
+        <h2 class="h5 mb-4" style="color: var(--cb-text);">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 0.5rem;">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          Mailing Address
+        </h2>
+
+        {{ form.address.label(class="form-label") }}
+        {{ form.address(class="form-control" ~ (" is-invalid" if form.address.errors else ""), rows=3, style="border-radius: 0.75rem; padding: 0.75rem 1rem; resize: none;") }}
+        {% for e in form.address.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+        <small class="text-muted d-block mt-1">Used for shipping and correspondence</small>
+      </div>
+
+      <!-- Wallet Address Section -->
+      <div class="mb-4" style="border-top: 1px solid var(--cb-border); padding-top: 2rem;">
+        <h2 class="h5 mb-4" style="color: var(--cb-text);">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 0.5rem;">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+          Wallet Address
+        </h2>
+
+        {{ form.wallet_address.label(class="form-label") }}
+        {{ form.wallet_address(class="form-control" ~ (" is-invalid" if form.wallet_address.errors else ""), placeholder="0x...", style="border-radius: 0.75rem; padding: 0.75rem 1rem; font-family: 'Courier New', monospace;") }}
+        {% for e in form.wallet_address.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+
+        <div style="background: rgba(109, 40, 217, 0.1); border-left: 4px solid var(--cb-link); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
+          <p class="text-muted small mb-2">
+            <strong>⚠️ Important:</strong>
+            {% if current_user.role == 'seller' %}
+              This is where buyers' cryptocurrency payments are sent (Sepolia test network address only).
+            {% else %}
+              Optional. Your public wallet address (for reference only).
+            {% endif %}
+          </p>
+          <p class="text-danger small mb-0">
+            <strong>Never share your private key or seed phrase.</strong>
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="d-flex gap-2 pt-2" style="border-top: 1px solid var(--cb-border);">
+        <button class="btn btn-primary" type="submit">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Save Changes
+        </button>
+        <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-primary">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          Change Password
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
 {% endblock %}
