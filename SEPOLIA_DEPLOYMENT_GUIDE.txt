@@ -1,0 +1,137 @@
+================================================================================
+COLLECTIBLE CARD TOKEN - SEPOLIA TESTNET DEPLOYMENT GUIDE
+================================================================================
+
+STATUS: Contract compiled and ready for deployment ✓
+
+WHAT YOU NEED TO DEPLOY:
+
+1. Ethereum Wallet with Sepolia Test ETH
+   - MetaMask or any Web3 wallet
+   - 0.5 ETH on Sepolia testnet (for gas)
+   - Your wallet address (e.g., 0x...)
+   - Your private key (KEEP SECRET!)
+
+2. Environment Setup
+   - Python 3.8+
+   - Web3.py: pip install web3
+   - python-dotenv: pip install python-dotenv
+
+STEP-BY-STEP DEPLOYMENT:
+
+Step 1: Get Test ETH
+   - Visit: https://sepoliafaucet.com/
+   - Enter your wallet address
+   - Request 0.5 ETH
+   - Wait for confirmation (5-10 minutes)
+
+Step 2: Set Environment Variables
+
+   Windows (Command Prompt):
+     set DEPLOYER_ADDRESS=0x...your_address...
+     set DEPLOYER_PRIVATE_KEY=0x...your_private_key...
+   
+   Mac/Linux/Git Bash:
+     export DEPLOYER_ADDRESS=0x...
+     export DEPLOYER_PRIVATE_KEY=0x...
+
+Step 3: Create Deployment Script
+
+   Create file: scripts/deploy.py
+   (See deployment script below)
+
+Step 4: Run Deployment
+
+   python scripts/deploy.py
+
+   The script will:
+   - Connect to Sepolia testnet
+   - Estimate gas fees
+   - Build transaction
+   - Sign with your private key
+   - Send to network
+   - Wait for confirmation
+   - Save contract address to .env
+   - Save deployment record
+
+Step 5: Verify Deployment
+
+   - Check Etherscan: https://sepolia.etherscan.io/address/0x...
+   - Look for "Contract" badge next to address
+   - Contract should show in "Read Contract" tab
+
+WHAT GETS SAVED:
+
+1. .env file updated with:
+   CONTRACT_ADDRESS=0x...deployed_address...
+
+2. contracts/deployment_record.json created with:
+   - Contract address
+   - Transaction hash
+   - Block number
+   - Gas used
+   - Timestamps
+   - Etherscan links
+
+ESTIMATED COSTS:
+
+Network: Sepolia Testnet
+Gas Price: ~1 Gwei (very cheap!)
+Deployment Gas: ~500,000-1,000,000 gas
+Estimated Cost: ~0.0005 ETH
+  (Test network - no real money cost)
+
+SECURITY IMPORTANT:
+
+1. Private Key:
+   - NEVER share with anyone
+   - NEVER commit to git
+   - NEVER post online
+   - Only use on testnet
+
+2. Before Production:
+   - Use a different wallet for mainnet
+   - Use hardware wallet (Ledger, Trezor)
+   - Keep backup of seed phrase
+   - Test on testnet first
+
+NEXT STEPS AFTER DEPLOYMENT:
+
+1. Verify contract on Etherscan
+2. Test contract methods
+3. Integrate CONTRACT_ADDRESS with auction system
+4. Run end-to-end tests
+5. Deploy payment settlement
+6. Security audit
+7. Mainnet deployment (optional)
+
+TROUBLESHOOTING:
+
+Q: "Balance too low"
+A: Need 0.1 ETH minimum. Get more from faucet:
+   https://sepoliafaucet.com/
+
+Q: "Could not connect"
+A: Check RPC_URL in .env points to Alchemy endpoint
+
+Q: "Transaction reverted"
+A: Check gas limit is sufficient. Try increasing by 50%
+
+Q: "Nonce too low"
+A: Multiple transactions pending. Wait or check pending txns
+
+DEPLOYMENT SCRIPT (scripts/deploy.py):
+
+See the full Python script in this directory.
+It handles all steps from signing to verification.
+
+FOR HELP:
+
+1. Check Sepolia Etherscan docs
+2. Web3.py documentation: https://web3py.readthedocs.io
+3. MetaMask support: https://support.metamask.io
+4. Sepolia faucets: https://sepoliafaucet.com/
+
+================================================================================
+READY TO DEPLOY!
+================================================================================
