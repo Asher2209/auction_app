@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Browse - ChainBid{% endblock %}
+{% block content %}
+
+<div style="margin-bottom: var(--dt-space-3xl);">
+  <h1 class="h1 mb-2">Browse Marketplace</h1>
+  <p class="lead">Explore auctions and trading cards</p>
+</div>
+
+<!-- Filters -->
+<div style="display: flex; gap: var(--dt-space-lg); margin-bottom: var(--dt-space-2xl); flex-wrap: wrap; align-items: center;">
+  <!-- Category Filter -->
+  <div style="display: flex; align-items: center; gap: var(--dt-space-md);">
+    <label for="category-filter" style="font-weight: 600;">Category:</label>
+    <select id="category-filter" style="padding: var(--dt-space-sm) var(--dt-space-md); border-radius: var(--dt-radius-md); border: 1px solid var(--dt-border); background: var(--dt-bg-1);" onchange="updateFilters()">
+      <option value="all" {% if category == 'all' %}selected{% endif %}>All Items</option>
+      <option value="auctions" {% if category == 'auctions' %}selected{% endif %}>Auctions Only</option>
+      <option value="cards" {% if category == 'cards' %}selected{% endif %}>Trading Cards Only</option>
+    </select>
+  </div>
+
+  <!-- Card Type Filter (only for cards) -->
+  {% if category in ('cards', 'all') %}
+  <div style="display: flex; align-items: center; gap: var(--dt-space-md);">
+    <label for="card-type-filter" style="font-weight: 600;">Card Type:</label>
+    <select id="card-type-filter" style="padding: var(--dt-space-sm) var(--dt-space-md); border-radius: var(--dt-radius-md); border: 1px solid var(--dt-border); background: var(--dt-bg-1);" onchange="updateFilters()">
+      <option value="">All Types</option>
+      {% for ct in all_card_types %}
+      <option value="{{ ct.slug }}" {% if card_type and card_type.id == ct.id %}selected{% endif %}>{{ ct.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endif %}
+
+  <!-- Sort Filter -->
+  <div style="display: flex; align-items: center; gap: var(--dt-space-md); margin-left: auto;">
+    <label for="sort-filter" style="font-weight: 600;">Sort:</label>
+    <select id="sort-filter" style="padding: var(--dt-space-sm) var(--dt-space-md); border-radius: var(--dt-radius-md); border: 1px solid var(--dt-border); background: var(--dt-bg-1);" onchange="updateFilters()">
+      <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+      <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+      <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+    </select>
+  </div>
+</div>
+
+<script>
+function updateFilters() {
+  const category = document.getElementById('category-filter').value;
+  const cardType = document.getElementById('card-type-filter')?.value || '';
+  const sort = document.getElementById('sort-filter').value;
+  
+  let url = '/browse?category=' + category + '&sort=' + sort;
+  if (cardType) {
+    url += '&card_type=' + cardType;
+  }
+  window.location.href = url;
+}
+</script>
+
+<!-- Items Grid -->
+{% if items %}
+<div class="product-grid">
+  {% for item in items %}
+    {% if item.type == 'auction' %}
+      {% set a = item.data %}
+      {% set p = a.product %}
+      <div class="col-12 col-sm-6 col-md-6 col-lg-4" style="display: flex; flex-direction: column;">
+        <a href="{{ url_for('auctions.detail', auction_id=a.id) }}" class="text-decoration-none text-reset" style="display: flex; flex-direction: column; height: 100%;">
+          <div class="card h-100" style="display: flex; flex-direction: column; min-height: 420px;">
+            {% if p.cover %}
+              <img src="{{ url_for('static', filename='uploads/' ~ p.cover) }}" alt="{{ p.title }}" class="card-img-top" loading="lazy" style="height:160px;object-fit:cover;flex-shrink:0">
+            {% else %}
+              <img src="{{ url_for('static', filename='img/no-image.svg') }}" alt="No image" class="card-img-top" loading="lazy" style="height:160px;object-fit:cover;background:#f0f0f0;flex-shrink:0">
+            {% endif %}
+            <div class="card-body" style="display: flex; flex-direction: column; flex-grow: 1; padding: 1rem;">
+              <h5 style="font-size: 1.1rem; font-weight: 600; line-height: 1.4; margin: 0 0 0.8rem 0;">{{ p.title }}</h5>
+              <p style="font-size: 0.85rem; color: #666; margin: 0 0 0.6rem 0;">{{ p.category.name }}</p>
+              <div style="font-size: 0.8rem; color: #999; margin: 0 0 0.3rem 0;">Current bid</div>
+              <div style="font-size: 1.35rem; font-weight: 700; color: var(--dt-accent); margin: 0 0 auto 0;">{{ a.current_bid|money }}</div>
+            </div>
+            <div style="font-size: 0.8rem; color: #999; padding: 0.6rem 1rem; border-top: 1px solid #eee;">
+              {{ a.end_time|time_left }} left
+            </div>
+          </div>
+        </a>
+      </div>
+    
+    {% elif item.type == 'card' %}
+      {% set card = item.data %}
+      <div class="auction-card">
+        <div class="auction-card-image">
+          {% if card.images %}
+            {% set img = card.images[0] %}
+            {% if img.url %}
+              <img src="{{ img.url }}" alt="{{ card.card_name }}" style="height: 300px; object-fit: cover; width: 100%;" loading="lazy">
+            {% elif img.path %}
+              <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" alt="{{ card.card_name }}" style="height: 300px; object-fit: cover; width: 100%;">
+            {% else %}
+              <div style="display: flex; align-items: center; justify-content: center; height: 300px; background: var(--dt-bg-1);">
+                <span style="color: var(--dt-text-muted);">No image</span>
+              </div>
+            {% endif %}
+          {% else %}
+            <div style="display: flex; align-items: center; justify-content: center; height: 300px; background: var(--dt-bg-1);">
+              <span style="color: var(--dt-text-muted);">No image</span>
+            </div>
+          {% endif %}
+        </div>
+        
+        <div class="auction-card-body">
+          <div class="auction-card-category">{{ card.card_type.name }}</div>
+          <h3 class="auction-card-title">{{ card.card_name }}</h3>
+          
+          <div class="auction-card-info">
+            <div class="auction-card-bid">
+              <div class="auction-card-bid-label">Est. Value</div>
+              <div class="auction-card-bid-amount" style="color: var(--dt-accent); font-size: 1.25rem; font-weight: 600;">${{ "%.2f"|format(card.estimated_value) }}</div>
+            </div>
+          </div>
+          
+          <div class="auction-card-meta" style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--dt-space-md);">
+            <span class="auction-card-bids" style="font-size: 0.9rem; color: var(--dt-text-muted);">{{ card.set_name }}</span>
+            <a href="{{ url_for('main.view_card', card_id=card.id) }}" class="btn btn-sm btn-primary">View</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="empty-state" style="text-align: center; padding: var(--dt-space-3xl); background: var(--dt-bg-1); border-radius: var(--dt-radius-lg);">
+  <div class="empty-state-icon" style="font-size: 3rem; margin-bottom: var(--dt-space-lg);">No Items</div>
+  <h3 class="empty-state-title">No Items Available</h3>
+  <p class="empty-state-description" style="color: var(--dt-text-secondary);">Try adjusting your filters or check back soon.</p>
+</div>
+{% endif %}
+
+{% endblock %}

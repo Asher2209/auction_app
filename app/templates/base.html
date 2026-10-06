@@ -37,8 +37,7 @@
       </button>
       <div id="nav" class="collapse navbar-collapse">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('auctions.browse') }}">Browse auctions</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.browse_cards') }}">Trading Cards</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('main.shop') }}">Browse</a></li>
         </ul>
         <ul class="navbar-nav">
           {% if current_user.is_authenticated %}

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ card.card_name }} - ChainBid{% endblock %}
 {% block content %}
-<!-- TEMPLATE VERSION 999 MARKER -->
 <nav class="mb-4">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ url_for('main.browse_cards') }}">Cards</a></li>
@@ -11,7 +10,6 @@
 </nav>
 
 <div class="product-detail-grid">
-  <!-- Gallery -->
   <div class="product-detail-gallery">
     {% if card.images and card.images|length > 0 %}
     <div class="product-detail-gallery-main">
@@ -28,16 +26,14 @@
     {% endif %}
     {% else %}
     <div class="product-detail-gallery-main" style="display: flex; align-items: center; justify-content: center; height: 400px; background: #f5f5f5;">
-      <p style="color: var(--dt-text-muted);">No image available</p>
+      <p>No image available</p>
     </div>
     {% endif %}
   </div>
   
-  <!-- Info -->
   <div class="product-detail-info">
     <div class="product-info-header">
       <h1 class="product-info-title">{{ card.card_name }}</h1>
-      
       <div class="product-info-meta">
         <span class="product-info-badge">{{ card.card_type.name }}</span>
         {% if card.is_graded %}
@@ -55,15 +51,15 @@
       <div style="display: grid; gap: var(--dt-space-md); padding-top: var(--dt-space-xl); border-top: 1px solid var(--dt-border);">
         <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
           <span style="color: var(--dt-text-muted);">Condition</span>
-          <strong style="color: var(--dt-text-primary);">{{ card.condition }}</strong>
+          <strong>{{ card.condition }}</strong>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
           <span style="color: var(--dt-text-muted);">Set</span>
-          <strong style="color: var(--dt-text-primary);">{{ card.set_name }}</strong>
+          <strong>{{ card.set_name }}</strong>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
           <span style="color: var(--dt-text-muted);">Year</span>
-          <strong style="color: var(--dt-text-primary);">{{ card.release_year }}</strong>
+          <strong>{{ card.release_year }}</strong>
         </div>
         {% if card.is_graded %}
         <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
@@ -78,7 +74,6 @@
       </div>
     </div>
     
-    <!-- Seller -->
     <div class="product-seller-info">
       <div class="product-seller-header">
         <div class="product-seller-avatar">{{ product.seller.name[0].upper() }}</div>
@@ -91,7 +86,6 @@
   </div>
 </div>
 
-<!-- Description -->
 {% if card.condition_notes %}
 <section class="description-section" style="margin-top: var(--dt-space-4xl);">
   <h2 class="description-title">Condition Notes</h2>
@@ -99,7 +93,6 @@
 </section>
 {% endif %}
 
-<!-- Related Items -->
 {% if related %}
 <section style="margin-top: var(--dt-space-4xl);">
   <div class="section-header">
@@ -113,7 +106,7 @@
         {% if item.images and item.images|length > 0 %}
           <img src="{{ item.images[0].get_image_src() }}" alt="{{ item.card_name }}" style="height: 300px; object-fit: contain; background: #f5f5f5; padding: 5px;">
         {% else %}
-          <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: var(--dt-bg-1);"><span style="color: var(--dt-text-muted);">No image</span></div>
+          <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: var(--dt-bg-1);"><span>No image</span></div>
         {% endif %}
       </div>
       <div class="auction-card-body">
@@ -132,5 +125,4 @@
   </div>
 </section>
 {% endif %}
-
 {% endblock %}
