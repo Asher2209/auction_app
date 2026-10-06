@@ -1,0 +1,174 @@
+/* ChainBid Design Tokens - Premium Dark Matte Marketplace
+   Foundation for redesigned UI/UX system
+   All colors, spacing, typography, and layout variables */
+
+:root, [data-bs-theme="light"] {
+  /* ========== COLOR PALETTE: Dark Matte ========== */
+  /* Background layers - create depth without glass */
+  --dt-bg-0: #0D0D0C;           /* Page background (darkest) */
+  --dt-bg-1: #141413;           /* Secondary background */
+  --dt-bg-2: #1A1917;           /* Surface/cards */
+  --dt-bg-3: #211F1C;           /* Elevated surfaces/hover */
+
+  /* Text hierarchy */
+  --dt-text-primary: #F2EFE8;   /* Main text, high contrast */
+  --dt-text-secondary: #A7A39A; /* Supporting text */
+  --dt-text-muted: #706C65;     /* Captions, metadata */
+
+  /* Borders - minimal, sophisticated */
+  --dt-border: #302D29;         /* Subtle separator lines */
+  --dt-border-light: #262319;   /* Even more subtle */
+
+  /* Accent - warm amber/gold for important elements */
+  --dt-accent: #C79A52;         /* Primary warm accent */
+  --dt-accent-hover: #D4A866;   /* Accent hover state */
+  --dt-accent-dark: #B88A45;    /* Accent active state */
+
+  /* Status colors - reserved for specific meanings */
+  --dt-success: #10B981;        /* Verified, confirmed */
+  --dt-warning: #F59E0B;        /* Pending, needs attention */
+  --dt-danger: #EF4444;         /* Rejected, error */
+  --dt-info: #3B82F6;           /* Information */
+
+  /* ========== TYPOGRAPHY ========== */
+  --dt-font-primary: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dt-font-display: "Space Grotesk Variable", "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dt-font-accent: "Instrument Serif", Georgia, "Times New Roman", serif;
+
+  /* Font weights */
+  --dt-font-weight-regular: 400;
+  --dt-font-weight-medium: 500;
+  --dt-font-weight-semibold: 600;
+  --dt-font-weight-bold: 700;
+  --dt-font-weight-extrabold: 800;
+
+  /* ========== SPACING SCALE ========== */
+  /* 4px base unit */
+  --dt-space-xs: 0.25rem;   /* 4px */
+  --dt-space-sm: 0.5rem;    /* 8px */
+  --dt-space-md: 0.75rem;   /* 12px */
+  --dt-space-lg: 1rem;      /* 16px */
+  --dt-space-xl: 1.5rem;    /* 24px */
+  --dt-space-2xl: 2rem;     /* 32px */
+  --dt-space-3xl: 3rem;     /* 48px */
+  --dt-space-4xl: 4rem;     /* 64px */
+
+  /* ========== BORDER RADIUS ========== */
+  --dt-radius-sm: 6px;      /* Buttons, inputs */
+  --dt-radius-md: 8px;      /* Cards, containers */
+  --dt-radius-lg: 12px;     /* Large containers */
+  --dt-radius-pill: 999px;  /* Badges, pills (semantic only) */
+
+  /* ========== SHADOWS ========== */
+  /* Minimal, elevation-only shadows - no decorative glows */
+  --dt-shadow-none: none;
+  --dt-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --dt-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --dt-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.45);
+  --dt-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
+  --dt-shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.55);
+
+  /* ========== BORDERS ========== */
+  --dt-border-width: 1px;
+  --dt-border-color: var(--dt-border);
+
+  /* ========== TRANSITIONS ========== */
+  --dt-transition-fast: 0.15s ease;
+  --dt-transition-base: 0.2s ease;
+  --dt-transition-slow: 0.3s ease;
+
+  /* ========== Z-INDEX SCALE ========== */
+  --dt-z-dropdown: 1000;
+  --dt-z-fixed: 1020;
+  --dt-z-modal-backdrop: 1040;
+  --dt-z-modal: 1050;
+  --dt-z-popover: 1060;
+  --dt-z-tooltip: 1070;
+
+  /* ========== LINE HEIGHTS ========== */
+  --dt-line-height-tight: 1.2;
+  --dt-line-height-normal: 1.5;
+  --dt-line-height-relaxed: 1.75;
+
+  /* ========== LETTER SPACING ========== */
+  --dt-letter-spacing-tight: -0.02em;
+  --dt-letter-spacing-normal: 0;
+  --dt-letter-spacing-wide: 0.05em;
+
+  /* ========== OPACITY ========== */
+  --dt-opacity-disabled: 0.5;
+  --dt-opacity-hover: 0.9;
+}
+
+/* ========== DARK MODE (override defaults) ========== */
+[data-bs-theme="dark"] {
+  /* Dark mode uses same palette (already dark) */
+  --dt-bg-0: #0D0D0C;
+  --dt-bg-1: #141413;
+  --dt-bg-2: #1A1917;
+  --dt-bg-3: #211F1C;
+
+  --dt-text-primary: #F2EFE8;
+  --dt-text-secondary: #A7A39A;
+  --dt-text-muted: #706C65;
+
+  --dt-border: #302D29;
+  --dt-border-light: #262319;
+
+  --dt-accent: #C79A52;
+}
+
+/* ========== LIGHT MODE ========== */
+[data-bs-theme="light"] {
+  /* Separate material system for light mode - not inverted */
+  --dt-bg-0: #FEFCF8;           /* Off-white background */
+  --dt-bg-1: #F9F7F3;           /* Secondary background */
+  --dt-bg-2: #F5F2ED;           /* Surface/cards */
+  --dt-bg-3: #EDE8E0;           /* Elevated surfaces/hover */
+
+  --dt-text-primary: #2A2824;   /* Dark charcoal text */
+  --dt-text-secondary: #6B6560; /* Medium gray text */
+  --dt-text-muted: #9A9289;     /* Light gray text */
+
+  --dt-border: #D4CDBF;         /* Warm beige borders */
+  --dt-border-light: #E5DFCE;   /* Lighter borders */
+
+  --dt-accent: #C79A52;         /* Same warm accent */
+
+  /* Shadows are stronger on light background */
+  --dt-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --dt-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --dt-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --dt-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --dt-shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* ========== UTILITY MAPS FOR COMPONENTS ========== */
+/* These are referenced in component styles */
+
+/* Surface elevations (bg-0 → bg-3 creates depth) */
+.surface-0 { background: var(--dt-bg-0); }
+.surface-1 { background: var(--dt-bg-1); }
+.surface-2 { background: var(--dt-bg-2); }
+.surface-3 { background: var(--dt-bg-3); }
+
+/* Text colors */
+.text-primary { color: var(--dt-text-primary); }
+.text-secondary { color: var(--dt-text-secondary); }
+.text-muted { color: var(--dt-text-muted); }
+
+/* Accent color utilities */
+.accent { color: var(--dt-accent); }
+.bg-accent { background: var(--dt-accent); color: var(--dt-bg-0); }
+
+/* Border utilities */
+.border { border-color: var(--dt-border); }
+.border-light { border-color: var(--dt-border-light); }
+
+/* Shadow utilities */
+.shadow-none { box-shadow: var(--dt-shadow-none); }
+.shadow-xs { box-shadow: var(--dt-shadow-xs); }
+.shadow-sm { box-shadow: var(--dt-shadow-sm); }
+.shadow-md { box-shadow: var(--dt-shadow-md); }
+.shadow-lg { box-shadow: var(--dt-shadow-lg); }
+.shadow-xl { box-shadow: var(--dt-shadow-xl); }
