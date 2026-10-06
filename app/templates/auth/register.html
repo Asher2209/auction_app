@@ -1,18 +1,92 @@
 {% extends "auth/_card.html" %}
 {% from "_form.html" import field %}
 {% block title %}Register - ChainBid{% endblock %}
-{% block heading %}Create your account{% endblock %}
+{% block heading %}Join the community{% endblock %}
 {% block form %}
 <form method="post" novalidate>
   {{ form.hidden_tag() }}
-  {{ field(form.name) }}
-  {{ field(form.email) }}
-  {{ field(form.phone) }}
-  {{ field(form.address, rows=2) }}
-  {{ field(form.role) }}
-  {{ field(form.password) }}
-  {{ field(form.confirm) }}
-  <button class="btn btn-primary w-100" type="submit">Register</button>
+
+  <!-- Name Field -->
+  <div class="mb-4">
+    {{ form.name.label(class="form-label") }}
+    {{ form.name(class="form-control" ~ (" is-invalid" if form.name.errors else ""), placeholder="Your full name", style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+    {% for e in form.name.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+  </div>
+
+  <!-- Email Field -->
+  <div class="mb-4">
+    {{ form.email.label(class="form-label") }}
+    {{ form.email(class="form-control" ~ (" is-invalid" if form.email.errors else ""), placeholder="your@email.com", style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+    {% for e in form.email.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+  </div>
+
+  <!-- Phone Field -->
+  <div class="mb-4">
+    {{ form.phone.label(class="form-label") }}
+    {{ form.phone(class="form-control" ~ (" is-invalid" if form.phone.errors else ""), placeholder="+91 9876543210", style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+    {% for e in form.phone.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+  </div>
+
+  <!-- Address Field -->
+  <div class="mb-4">
+    {{ form.address.label(class="form-label") }}
+    {{ form.address(class="form-control" ~ (" is-invalid" if form.address.errors else ""), placeholder="Your mailing address", rows=2, style="border-radius: 0.75rem; padding: 0.75rem 1rem; resize: none;") }}
+    {% for e in form.address.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+  </div>
+
+  <!-- Role Selection -->
+  <div class="mb-4">
+    {{ form.role.label(class="form-label") }}
+    {{ form.role(class="form-select" ~ (" is-invalid" if form.role.errors else ""), style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+    {% for e in form.role.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+    <small class="text-muted d-block mt-1">Choose your account type to get started</small>
+  </div>
+
+  <!-- Password Field -->
+  <div class="mb-4">
+    {{ form.password.label(class="form-label") }}
+    {{ form.password(class="form-control" ~ (" is-invalid" if form.password.errors else ""), placeholder="••••••••", style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+    {% for e in form.password.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+    <small class="text-muted d-block mt-1">At least 8 characters with mixed case and numbers</small>
+  </div>
+
+  <!-- Confirm Password Field -->
+  <div class="mb-4">
+    {{ form.confirm.label(class="form-label") }}
+    {{ form.confirm(class="form-control" ~ (" is-invalid" if form.confirm.errors else ""), placeholder="••••••••", style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+    {% for e in form.confirm.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+  </div>
+
+  <!-- Terms & Privacy -->
+  <div class="form-check mb-4">
+    <input class="form-check-input" type="checkbox" id="agree-terms" name="agree_terms" value="1" required>
+    <label class="form-check-label" for="agree-terms" style="font-size: 0.9rem;">
+      I agree to the <a href="{{ url_for('main.terms_of_service') }}" target="_blank" class="text-decoration-none">Terms</a> and <a href="{{ url_for('main.privacy_policy') }}" target="_blank" class="text-decoration-none">Privacy</a>
+    </label>
+  </div>
+
+  <!-- Register Button -->
+  <button class="btn btn-primary w-100 py-3" type="submit" style="font-weight: 600; border-radius: 0.75rem;">
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+      <line x1="12" y1="12" x2="12" y2="18"></line>
+      <line x1="9" y1="15" x2="15" y2="15"></line>
+    </svg>
+    Create Your Account
+  </button>
 </form>
-<p class="mt-3 mb-0 small">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+{% endblock %}
+
+{% block auth_links %}
+<p class="text-muted mb-0">
+  Already have an account?
+  <a href="{{ url_for('auth.login') }}" class="text-decoration-none fw-600" style="color: var(--cb-link);">
+    Log in
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; vertical-align: -2px;">
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+      <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+  </a>
+</p>
 {% endblock %}

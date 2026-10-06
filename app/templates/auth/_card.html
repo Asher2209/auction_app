@@ -1,13 +1,99 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-12 col-md-8 col-lg-6">
-    <div class="card shadow-sm">
-      <div class="card-body p-4">
-        <h1 class="h4 mb-3">{% block heading %}{% endblock %}</h1>
-        {% block form %}{% endblock %}
+
+<!-- ========== PREMIUM AUTH PAGE ========== -->
+<div style="min-height: 100vh; display: flex; align-items: center; padding: 2rem 0;">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <!-- Left Column: Branding & Benefits -->
+      <div class="col-lg-6 mb-5 mb-lg-0">
+        <div style="max-width: 450px;">
+          <!-- Logo/Branding -->
+          <div class="mb-5">
+            <h1 class="h1 mb-3 gradient-text">
+              <span style="color: var(--cb-text);">Chain</span>Bid
+            </h1>
+            <p class="lead text-muted">Blockchain-powered auctions for verified collectibles</p>
+          </div>
+
+          <!-- Benefits List -->
+          <div style="display: grid; gap: 1.5rem;">
+            <div class="d-flex gap-3">
+              <div style="width: 48px; height: 48px; background: rgba(109, 40, 217, 0.15); border-radius: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--cb-link);">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+              <div>
+                <h5 class="h6 mb-1" style="color: var(--cb-text);">Verified Collectibles</h5>
+                <p class="text-muted small mb-0">Professional authentication & grading</p>
+              </div>
+            </div>
+
+            <div class="d-flex gap-3">
+              <div style="width: 48px; height: 48px; background: rgba(109, 40, 217, 0.15); border-radius: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--cb-link);">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
+              <div>
+                <h5 class="h6 mb-1" style="color: var(--cb-text);">Secure Bidding</h5>
+                <p class="text-muted small mb-0">Blockchain-verified transactions</p>
+              </div>
+            </div>
+
+            <div class="d-flex gap-3">
+              <div style="width: 48px; height: 48px; background: rgba(109, 40, 217, 0.15); border-radius: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--cb-link);">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <div>
+                <h5 class="h6 mb-1" style="color: var(--cb-text);">Trusted Community</h5>
+                <p class="text-muted small mb-0">Verified sellers & transparent ratings</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom CTA -->
+          <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--cb-border);">
+            <p class="text-muted small mb-2">🔒 Your data is secure and encrypted</p>
+            <p class="text-muted small mb-0">Powered by blockchain technology</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Auth Form -->
+      <div class="col-lg-6">
+        <div class="glass p-5" style="border-radius: 2rem; backdrop-filter: blur(14px) saturate(160%);">
+          <!-- Heading -->
+          <h2 class="h3 mb-1" style="color: var(--cb-text);">{% block heading %}{% endblock %}</h2>
+          <p class="text-muted mb-5">Secure access to verified collectibles</p>
+
+          <!-- Form -->
+          {% block form %}{% endblock %}
+
+          <!-- Divider -->
+          <div style="display: flex; align-items: center; gap: 1rem; margin: 2rem 0; color: var(--cb-muted);">
+            <div style="flex: 1; height: 1px; background: var(--cb-border);"></div>
+            <span style="font-size: 0.85rem;">or</span>
+            <div style="flex: 1; height: 1px; background: var(--cb-border);"></div>
+          </div>
+
+          <!-- Auth Links -->
+          <div style="display: grid; gap: 0.75rem; text-align: center; font-size: 0.9rem;">
+            {% block auth_links %}{% endblock %}
+          </div>
+        </div>
+
+        <!-- Footer Note -->
+        <p class="text-muted small mt-4 text-center mb-0">
+          By using ChainBid, you agree to our <a href="{{ url_for('main.terms_of_service') }}" class="text-decoration-none">Terms</a> and <a href="{{ url_for('main.privacy_policy') }}" class="text-decoration-none">Privacy</a>
+        </p>
       </div>
     </div>
   </div>
 </div>
+
 {% endblock %}

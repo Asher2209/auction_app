@@ -1,14 +1,58 @@
 {% extends "auth/_card.html" %}
 {% from "_form.html" import field %}
-{% block title %}Log in - ChainBid{% endblock %}
-{% block heading %}Log in{% endblock %}
+{% block title %}Log In - ChainBid{% endblock %}
+{% block heading %}Welcome back{% endblock %}
 {% block form %}
 <form method="post" novalidate>
   {{ form.hidden_tag() }}
-  {{ field(form.email) }}
-  {{ field(form.password) }}
-  <button class="btn btn-primary w-100" type="submit">Log in</button>
+
+  <!-- Email Field -->
+  <div class="mb-4">
+    {{ form.email.label(class="form-label") }}
+    {{ form.email(class="form-control" ~ (" is-invalid" if form.email.errors else ""), placeholder="your@email.com", style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+    {% for e in form.email.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+  </div>
+
+  <!-- Password Field -->
+  <div class="mb-4">
+    {{ form.password.label(class="form-label") }}
+    {{ form.password(class="form-control" ~ (" is-invalid" if form.password.errors else ""), placeholder="••••••••", style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
+    {% for e in form.password.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
+  </div>
+
+  <!-- Remember Me -->
+  <div class="form-check mb-4">
+    <input class="form-check-input" type="checkbox" id="remember" name="remember" value="1">
+    <label class="form-check-label" for="remember">Remember me on this device</label>
+  </div>
+
+  <!-- Login Button -->
+  <button class="btn btn-primary w-100 py-3" type="submit" style="font-weight: 600; border-radius: 0.75rem;">
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+      <polyline points="10 17 15 12 10 7"></polyline>
+    </svg>
+    Log In to Your Account
+  </button>
+
+  <!-- Forgot Password Link -->
+  <div class="text-center mt-4 mb-0">
+    <p class="text-muted small mb-0">
+      <a href="{{ url_for('auth.forgot_password') }}" class="text-decoration-none" style="color: var(--cb-link);">Forgot your password?</a>
+    </p>
+  </div>
 </form>
-<p class="mt-3 mb-1 small"><a href="{{ url_for('auth.forgot_password') }}">Forgot password?</a></p>
-<p class="mb-0 small">No account? <a href="{{ url_for('auth.register') }}">Register</a></p>
+{% endblock %}
+
+{% block auth_links %}
+<p class="text-muted mb-0">
+  Don't have an account?
+  <a href="{{ url_for('auth.register') }}" class="text-decoration-none fw-600" style="color: var(--cb-link);">
+    Create one
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; vertical-align: -2px;">
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+      <polyline points="12 5 19 12 12 19"></polyline>
+    </svg>
+  </a>
+</p>
 {% endblock %}
