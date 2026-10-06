@@ -1,0 +1,38 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "rpcUrl": "https://eth-sepolia.g.alchemy.com/v2/alch_fJISI_tz9fx5O5JFLXsHD",
+  "blockExplorer": "https://sepolia.etherscan.io",
+  "contract": {
+    "name": "CollectibleCardToken",
+    "file": "contracts/CollectibleCardToken.sol",
+    "functions": [
+      "mint(uint256 _platformId, address _owner, string memory _cardName)",
+      "transferCard(uint256 _tokenId, address _newOwner, uint256 _auctionId)",
+      "pay(uint256 _auctionId, address payable _seller)",
+      "ownerOf(uint256 _tokenId)",
+      "tokensOf(address _owner)",
+      "getTransferHistory(uint256 _tokenId)"
+    ],
+    "events": [
+      "CardMinted(uint256 indexed tokenId, address indexed owner)",
+      "OwnershipTransferred(uint256 indexed tokenId, address indexed from, address indexed to)",
+      "PaymentMade(uint256 indexed auctionId, address indexed buyer, uint256 amount)"
+    ]
+  },
+  "deployment": {
+    "status": "READY_FOR_COMPILATION",
+    "steps": [
+      "Step 1: Compile contract with Solidity compiler",
+      "Step 2: Set environment variables (DEPLOYER_PRIVATE_KEY, DEPLOYER_ADDRESS)",
+      "Step 3: Run deployment script",
+      "Step 4: Verify contract on Etherscan",
+      "Step 5: Update .env with CONTRACT_ADDRESS"
+    ],
+    "estimatedGas": {
+      "deployment": "500000",
+      "mint": "150000",
+      "transfer": "100000"
+    }
+  }
+}
