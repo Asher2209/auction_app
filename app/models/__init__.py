@@ -19,6 +19,7 @@ from .collectible_verification import CollectibleVerification, VerificationLog, 
 from .collectible_cards import (  # noqa: E402
     CardType, CollectibleCard, CardImage, CardVerificationChecklist, CardVerificationHistory
 )
+from .blockchain_assets import BlockchainAsset, BlockchainTransfer  # noqa: E402
 
 
 @login_manager.user_loader
@@ -34,5 +35,6 @@ __all__ = [
     "Notification", "NotificationPreference", "Review", "Feedback", "Message",
     "CollectibleVerification", "VerificationLog", "SupportedGrader",
     "CardType", "CollectibleCard", "CardImage", "CardVerificationChecklist", "CardVerificationHistory",
+    "BlockchainAsset", "BlockchainTransfer",
     "utcnow",
 ]

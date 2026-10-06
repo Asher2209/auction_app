@@ -9,8 +9,9 @@ from datetime import timedelta
 from ...extensions import db
 from ...models import (
     CollectibleVerification, CollectibleCard, CardVerificationChecklist,
-    CardVerificationHistory, Product, User, utcnow
+    CardVerificationHistory, Product, User, utcnow, BlockchainAsset
 )
+from ...services import card_identity_service, qrcode_service
 from ...utils import role_required
 from . import bp
 from .forms_verification import (

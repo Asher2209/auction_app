@@ -44,6 +44,10 @@ class CollectibleCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), unique=True, nullable=False)
     card_type_id = db.Column(db.Integer, db.ForeignKey('card_types.id'), nullable=False)
+    
+    # Unique platform identifier for this specific physical card instance
+    # Format: CARD-XXXXXX (e.g., CARD-000001)
+    platform_card_id = db.Column(db.String(20), unique=True, index=True)
 
     # Common card fields
     card_name = db.Column(db.String(255), nullable=False)  # e.g., "Charizard", "Lionel Messi"

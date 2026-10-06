@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ collectible_card.card_name }} - Platform Verified{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h1>{{ collectible_card.card_name }}</h1>
+  <p>Set: {{ collectible_card.set_name }} | Card #: {{ collectible_card.card_number }}</p>
+  <p>Platform ID: {{ platform_card_id }}</p>
+  {% if blockchain_asset %}
+    <p>Token ID: {{ blockchain_asset.token_id }}</p>
+    <p>Owner: {{ blockchain_asset.owner_wallet }}</p>
+  {% endif %}
+</div>
+{% endblock %}
