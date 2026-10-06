@@ -116,9 +116,9 @@
       <!-- Action Buttons -->
       <div class="product-auction-actions" style="margin-top: var(--dt-space-xl); padding-top: var(--dt-space-xl); border-top: 1px solid var(--dt-border);">
         {% if current_user.is_authenticated and auction.status == 'active' %}
-        <form id="bid-form" method="post" action="{{ url_for('auctions.bid', auction_id=auction.id) }}" class="product-auction-bid-input">
+        <form id="bid-form" method="post" action="{{ url_for('auctions.place_bid', auction_id=auction.id) }}" class="product-auction-bid-input">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="number" name="amount" class="form-control" placeholder="Enter bid amount" min="{{ auction.current_bid + 0.01 }}" step="0.01" required>
+          <input type="number" name="amount" class="form-control" placeholder="Enter bid amount" min="{{ (auction.current_bid|float) + 0.01 }}" step="0.01" required>
           <button type="submit" class="btn btn-primary">Place Bid</button>
         </form>
         {% elif not current_user.is_authenticated %}
@@ -145,7 +145,7 @@
           </div>
         </div>
       </div>
-      <a href="{{ url_for('messaging.send', user_id=product.seller.id) }}" class="btn btn-secondary" style="width: 100%; margin-bottom: var(--dt-space-lg);">
+      <a href="{{ url_for('messaging.send_message', product_id=auction.product_id) }}" class="btn btn-secondary" style="width: 100%; margin-bottom: var(--dt-space-lg);">
         Contact Seller
       </a>
       <div style="font-size: 0.9rem; line-height: 1.6;">

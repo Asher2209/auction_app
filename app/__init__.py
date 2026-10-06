@@ -127,4 +127,8 @@ def create_app(config_class=Config):
     def datetimeformat(value, fmt="%d %b %Y"):
         return value.strftime(fmt) if value else ""
 
+    @app.template_filter("date")
+    def date_filter(value, fmt="%d %b %Y"):
+        return value.strftime(fmt) if value else ""
+
     return app
