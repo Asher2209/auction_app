@@ -18,6 +18,51 @@ from . import bp
 from .forms_cards import CollectibleCardForm
 
 
+@bp.route("/collectibles", methods=["GET"])
+@role_required("seller")
+def collectibles_dashboard():
+    """My Collectibles dashboard - seller's trading card inventory"""
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status', 'all')
+    sort = request.args.get('sort', 'newest')
+
+    query = CollectibleCard.query.join(Product).filter(Product.seller_id == current_user.id)
+
+    if status != 'all':
+        if status == 'pending':
+            query = query.join(CollectibleVerification).filter(
+                CollectibleVerification.verification_status.in_(('pending', 'under_review'))
+            )
+        elif status == 'verified':
+            query = query.join(CollectibleVerification).filter(
+                CollectibleVerification.verification_status == 'verified'
+            )
+        elif status == 'rejected':
+            query = query.join(CollectibleVerification).filter(
+                CollectibleVerification.verification_status == 'rejected'
+            )
+        elif status == 'more_info':
+            query = query.join(CollectibleVerification).filter(
+                CollectibleVerification.verification_status == 'more_info_needed'
+            )
+
+    if sort == 'oldest':
+        query = query.order_by(CollectibleCard.created_at.asc())
+    elif sort == 'name':
+        query = query.order_by(CollectibleCard.card_name.asc())
+    else:
+        query = query.order_by(CollectibleCard.created_at.desc())
+
+    cards = query.paginate(page=page, per_page=12)
+
+    return render_template(
+        'seller/collectibles/dashboard.html',
+        cards=cards,
+        status=status,
+        sort=sort
+    )
+
+
 @bp.route("/cards/new", methods=["GET", "POST"])
 @role_required("seller")
 def create_card():
