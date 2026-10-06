@@ -1,25 +1,25 @@
 {% macro card(a, count, rating=None) %}
 {% set p = a.product %}
-<div class="col-12 col-sm-6 col-md-4 col-lg-3">
-  <a href="{{ url_for('auctions.detail', auction_id=a.id) }}" class="text-decoration-none text-reset">
-    <div class="card h-100" style="display: flex; flex-direction: column;">
+<div class="col-12 col-sm-6 col-md-6 col-lg-4" style="display: flex; flex-direction: column;">
+  <a href="{{ url_for('auctions.detail', auction_id=a.id) }}" class="text-decoration-none text-reset" style="display: flex; flex-direction: column; height: 100%;">
+    <div class="card h-100" style="display: flex; flex-direction: column; min-height: 420px;">
       {% if p.collectible_card and p.collectible_card.images and p.collectible_card.images[0].url %}
-        <img src="{{ p.collectible_card.images[0].url }}" alt="{{ p.title }}" class="card-img-top" loading="lazy" style="height:140px;object-fit:contain;background:#f5f5f5;padding:8px;flex-shrink:0">
+        <img src="{{ p.collectible_card.images[0].url }}" alt="{{ p.title }}" class="card-img-top" loading="lazy" style="height:160px;object-fit:contain;background:#f5f5f5;padding:8px;flex-shrink:0">
       {% elif p.cover %}
-        <img src="{{ url_for('static', filename='uploads/' ~ p.cover) }}" alt="{{ p.title }}" class="card-img-top" loading="lazy" style="height:140px;object-fit:cover;flex-shrink:0">
+        <img src="{{ url_for('static', filename='uploads/' ~ p.cover) }}" alt="{{ p.title }}" class="card-img-top" loading="lazy" style="height:160px;object-fit:cover;flex-shrink:0">
       {% else %}
-        <img src="{{ url_for('static', filename='img/no-image.svg') }}" alt="No image available for {{ p.title }}" class="card-img-top" loading="lazy" style="height:140px;object-fit:cover;background:#f0f0f0;flex-shrink:0">
+        <img src="{{ url_for('static', filename='img/no-image.svg') }}" alt="No image available for {{ p.title }}" class="card-img-top" loading="lazy" style="height:160px;object-fit:cover;background:#f0f0f0;flex-shrink:0">
       {% endif %}
-      <div class="card-body" style="display: flex; flex-direction: column; flex-grow: 1; padding: 0.75rem;">
-        <h5 style="font-size: 0.9rem; font-weight: 600; line-height: 1.2; margin: 0 0 0.5rem 0; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto;">{{ p.title }}</h5>
-        <p style="font-size: 0.8rem; color: #666; margin: 0 0 0.5rem 0;">{{ p.category.name }}
+      <div class="card-body" style="display: flex; flex-direction: column; flex-grow: 1; padding: 1rem;">
+        <h5 style="font-size: 1.1rem; font-weight: 600; line-height: 1.4; margin: 0 0 0.8rem 0; word-wrap: break-word; overflow-wrap: break-word;">{{ p.title }}</h5>
+        <p style="font-size: 0.85rem; color: #666; margin: 0 0 0.6rem 0;">{{ p.category.name }}
           {% if rating %}&middot; <span style="color: #ffc107;">&#9733;</span> {{ rating[0] }} <span style="color: #999;">({{ rating[1] }})</span>{% endif %}</p>
-        <div style="font-size: 0.75rem; color: #999; margin: 0 0 0.25rem 0;">{{ 'Current bid' if count else 'Starting at' }}</div>
-        <div style="font-size: 1.1rem; font-weight: 600; color: var(--dt-accent); margin: 0 0 auto 0;">{{ a.current_bid|money }}</div>
+        <div style="font-size: 0.8rem; color: #999; margin: 0 0 0.3rem 0;">{{ 'Current bid' if count else 'Starting at' }}</div>
+        <div style="font-size: 1.35rem; font-weight: 700; color: var(--dt-accent); margin: 0 0 auto 0; white-space: nowrap;">{{ a.current_bid|money }}</div>
       </div>
-      <div style="font-size: 0.75rem; color: #999; padding: 0.5rem 0.75rem; border-top: 1px solid #eee; display: flex; justify-content: space-between;">
+      <div style="font-size: 0.8rem; color: #999; padding: 0.6rem 1rem; border-top: 1px solid #eee; display: flex; justify-content: space-between;">
         <span>{{ count or 0 }} bid{{ '' if count == 1 else 's' }}</span>
-        <span style="text-align: right;">
+        <span style="text-align: right; font-size: 0.75rem;">
           {% if a.status == 'active' %}{{ a.end_time|time_left }} left
           {% elif a.status == 'scheduled' %}Starts {{ a.start_time|utc }}
           {% else %}Ended{% endif %}
