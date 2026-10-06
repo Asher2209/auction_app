@@ -1,103 +1,218 @@
 {% extends "base.html" %}
 {% block title %}{{ product.title }} - ChainBid{% endblock %}
 {% block content %}
-<a class="small" href="{{ url_for('auctions.browse') }}">&larr; All auctions</a>
+
+<!-- ========== BREADCRUMB ========== -->
+<nav style="margin-bottom: 2rem;">
+  <ol class="breadcrumb" style="background: transparent; padding: 0; margin: 0;">
+    <li class="breadcrumb-item"><a href="{{ url_for('auctions.browse') }}">Auctions</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('auctions.browse', category=product.category.id) }}">{{ product.category.name }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ product.title[:50] }}...</li>
+  </ol>
+</nav>
+
 <div class="row g-4 mt-1">
+  <!-- ========== IMAGE GALLERY ========== -->
   <div class="col-lg-7">
     {% if product.images %}
-    <div id="gallery" class="carousel slide border rounded overflow-hidden bg-white">
-      <div class="carousel-inner">
+    <div id="gallery" class="carousel slide glass mb-5" style="border-radius: 1.5rem; overflow: hidden;">
+      <div class="carousel-inner" style="background: var(--cb-surface-secondary);">
         {% for img in product.images %}
         <div class="carousel-item {{ 'active' if loop.first }}">
-          <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" class="d-block w-100" alt="{{ product.title }}" style="max-height:440px;object-fit:contain">
+          <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" class="d-block w-100" alt="{{ product.title }}" style="max-height:500px;object-fit:contain;padding:2rem;">
         </div>
         {% endfor %}
       </div>
       {% if product.images|length > 1 %}
-      <button class="carousel-control-prev" type="button" data-bs-target="#gallery" data-bs-slide="prev"><span class="carousel-control-prev-icon bg-dark rounded"></span><span class="visually-hidden">Previous</span></button>
-      <button class="carousel-control-next" type="button" data-bs-target="#gallery" data-bs-slide="next"><span class="carousel-control-next-icon bg-dark rounded"></span><span class="visually-hidden">Next</span></button>
+      <button class="carousel-control-prev" type="button" data-bs-target="#gallery" data-bs-slide="prev" style="background: rgba(0,0,0,0.3); border-radius: 50%; width: 40px; height: 40px; left: 1rem;">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: white;">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#gallery" data-bs-slide="next" style="background: rgba(0,0,0,0.3); border-radius: 50%; width: 40px; height: 40px; right: 1rem;">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: white;">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+        <span class="visually-hidden">Next</span>
+      </button>
+      <div style="position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.4); color: white; padding: 0.5rem 1rem; border-radius: 999px; font-size: 0.9rem;">
+        <span id="gallery-counter">1</span> / {{ product.images|length }}
+      </div>
       {% endif %}
     </div>
+    {% else %}
+    <div class="glass mb-5" style="border-radius: 1.5rem; padding: 4rem; text-align: center; background: var(--cb-surface-secondary);">
+      <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 4rem; height: 4rem; color: var(--cb-muted); margin-bottom: 1rem;">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+      </svg>
+      <p class="text-muted">No image available</p>
+    </div>
     {% endif %}
-    <h2 class="h5 mt-4">Description</h2>
-    <p style="white-space:pre-wrap">{{ product.description }}</p>
-  </div>
 
+    <!-- ========== DESCRIPTION SECTION ========== -->
+    <div class="mb-5">
+      <h2 class="h4 mb-3">Product Description</h2>
+      <div class="glass p-4" style="border-radius: 1.25rem;">
+        <p style="white-space: pre-wrap; color: var(--cb-text-secondary); line-height: 1.7; margin-bottom: 0;">{{ product.description }}</p>
+      </div>
+    </div>
+
+    <!-- ========== REVIEWS SECTION ========== -->
+    {% include "auctions/_reviews.html" %}
+
+    <!-- ========== BID HISTORY ========== -->
+    <div class="mt-5">
+      <h2 class="h4 mb-3">Bid History</h2>
+      <div class="glass p-4" style="border-radius: 1.25rem; overflow-x: auto;">
+        <p class="text-muted mb-0 {{ 'd-none' if bids }}" id="no-bids">No bids placed yet.</p>
+        <table class="table table-sm mb-0 {{ '' if bids else 'd-none' }}" id="bid-table" style="font-size: 0.9rem;">
+          <thead style="border-bottom: 1px solid var(--cb-border);">
+            <tr style="text-transform: uppercase; font-weight: 600; color: var(--cb-text); font-size: 0.8rem;">
+              <th>Bidder</th>
+              <th>Amount</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="bid-rows">
+
+  <!-- ========== BID PANEL ========== -->
   <div class="col-lg-5" id="auction-live"
        data-auction-id="{{ auction.id }}" data-status="{{ state.status }}"
        data-start="{{ state.start_time }}" data-end="{{ state.end_time }}" data-now="{{ state.server_now }}"
        data-leading-id="{{ state.leading_bidder_id or '' }}"
        data-user-id="{{ current_user.id if current_user.is_authenticated else '' }}"
        data-currency="{{ currency }}">
-    <h1 class="h3">{{ product.title }}</h1>
-    <p>
-      <span class="badge text-bg-secondary">{{ product.category.name }}</span>
-      {% set sb = {'active': ('Live', 'text-bg-success'), 'scheduled': ('Upcoming', 'text-bg-info'), 'closed': ('Ended', 'text-bg-dark')}[auction.status] %}
-      <span id="status-badge" class="badge {{ sb[1] }}">{{ sb[0] }}</span>
-      <span id="live-indicator" class="badge text-bg-light border text-muted">connecting&hellip;</span>
-    </p>
+
+    <!-- Title and Status -->
+    <h1 class="h2 mb-3">{{ product.title }}</h1>
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+      <span class="badge bg-light text-dark" style="border-radius: 0.5rem;">{{ product.category.name }}</span>
+      {% set sb = {'active': ('Live', '#10b981'), 'scheduled': ('#3b82f6', 'upcoming'), 'closed': ('#6b7280', 'ended')}[auction.status] %}
+      <span id="status-badge" class="badge" style="background: {{ sb[1] if auction.status == 'scheduled' else (sb if auction.status == 'closed' else sb[1]) }}; color: white; border-radius: 0.5rem;">
+        {{ {'active': 'Live Now', 'scheduled': 'Upcoming', 'closed': 'Ended'}[auction.status] }}
+      </span>
+      <span id="live-indicator" class="badge" style="background: rgba(109, 40, 217, 0.1); color: var(--cb-link); border-radius: 0.5rem; font-size: 0.75rem;">
+        <span style="display: inline-block; width: 6px; height: 6px; background: currentColor; border-radius: 50%; margin-right: 0.4rem;"></span>
+        <span id="live-status">connecting</span>
+      </span>
+    </div>
 
     <div id="notice" class="alert d-none" role="alert"></div>
 
-    <div class="card mb-3"><div class="card-body">
-      <div class="text-muted small" id="bid-label">{{ 'Current highest bid' if bid_total else 'Starting price' }}</div>
-      <div class="display-6 fw-semibold" id="current-bid">{{ auction.current_bid|money }}</div>
+    <!-- ========== CURRENT BID CARD ========== -->
+    <div class="glass p-5 mb-4" style="border-radius: 1.5rem;">
+      <div class="text-muted small text-uppercase fw-600" id="bid-label" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+        {{ 'Current highest bid' if bid_total else 'Starting price' }}
+      </div>
+      <div class="h2 fw-700 gradient-text mb-4" id="current-bid">{{ auction.current_bid|money }}</div>
 
-      <div class="mt-3 p-2 bg-light rounded text-center">
-        <div class="text-muted small" id="countdown-label">{{ {'active': 'Time remaining', 'scheduled': 'Starts in', 'closed': ''}[auction.status] }}</div>
-        <div class="fs-3 font-monospace" id="countdown" aria-live="off">{{ (auction.start_time if auction.status == 'scheduled' else auction.end_time)|time_left }}</div>
-        <div class="text-muted small d-flex justify-content-center gap-4">
-          <span>days</span><span>hours</span><span>minutes</span><span>seconds</span>
+      <!-- ========== COUNTDOWN TIMER ========== -->
+      <div style="background: var(--cb-surface-secondary); border-radius: 1rem; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem;">
+        <div class="text-muted small mb-2" id="countdown-label">
+          {{ {'active': '⏱ Time remaining', 'scheduled': '🕐 Starts in', 'closed': ''}[auction.status] }}
+        </div>
+        <div style="font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: 700; color: var(--cb-link); letter-spacing: 2px;" id="countdown">
+          {{ (auction.start_time if auction.status == 'scheduled' else auction.end_time)|time_left }}
+        </div>
+        <div class="text-muted small mt-2" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; font-size: 0.75rem;">
+          <span>Days</span><span>Hours</span><span>Minutes</span><span>Seconds</span>
         </div>
       </div>
 
-      <dl class="row mt-3 mb-0 small">
-        <dt class="col-6">Starting price</dt><dd class="col-6">{{ product.starting_price|money }}</dd>
-        <dt class="col-6">Number of bids</dt><dd class="col-6" id="bid-count">{{ bid_total }}</dd>
-        <dt class="col-6">Seller</dt><dd class="col-6">{{ product.seller.name }}</dd>
-        <dt class="col-6" id="end-label">{{ 'Ended' if auction.status == 'closed' else 'Ends' }}</dt>
-        <dd class="col-6" id="end-time">{{ auction.end_time|ist }}</dd>
-      </dl>
-    </div></div>
-
-    <div id="winner-box" class="alert alert-secondary {{ '' if auction.status == 'closed' and auction.winner else 'd-none' }}">
-      {% if auction.winner %}Won by {{ auction.winner.buyer.name|mask }} for {{ auction.winner.winning_amount|money }}.{% endif %}
+      <!-- ========== AUCTION DETAILS ========== -->
+      <div style="display: grid; gap: 1rem; border-top: 1px solid var(--cb-border); padding-top: 1.5rem;">
+        <div class="d-flex justify-content-between align-items: center">
+          <span class="text-muted small">Starting Price</span>
+          <strong>{{ product.starting_price|money }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items: center">
+          <span class="text-muted small">Number of Bids</span>
+          <strong id="bid-count">{{ bid_total }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items: center">
+          <span class="text-muted small">Seller</span>
+          <strong style="font-size: 0.9rem;">{{ product.seller.name }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items: center">
+          <span class="text-muted small" id="end-label">{{ 'Ended' if auction.status == 'closed' else 'Ends' }}</span>
+          <strong style="font-size: 0.9rem;" id="end-time">{{ auction.end_time|ist }}</strong>
+        </div>
+      </div>
     </div>
 
+    <!-- ========== WINNER INFO ========== -->
+    <div id="winner-box" class="glass p-4 mb-4" style="border-radius: 1.25rem; border-left: 4px solid #10b981; {{ '' if auction.status == 'closed' and auction.winner else 'd-none' }}">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #10b981;">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <strong style="color: #10b981;">Auction Closed</strong>
+      </div>
+      <p class="text-muted small mb-0">{% if auction.winner %}Won by <strong>{{ auction.winner.buyer.name|mask }}</strong> for <strong>{{ auction.winner.winning_amount|money }}</strong>{% endif %}</p>
+    </div>
+
+    <!-- ========== BIDDING FORM ========== -->
     {% if can_bid %}
     <form id="bid-form" method="post" action="{{ url_for('auctions.place_bid', auction_id=auction.id) }}"
-          class="card card-body mb-3 {{ '' if auction.status == 'active' else 'd-none' }}" novalidate>
+          class="glass p-5 mb-4 {{ '' if auction.status == 'active' else 'd-none' }}" style="border-radius: 1.5rem;" novalidate>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label class="form-label" for="amount">Your bid ({{ currency }})</label>
-      <div class="input-group">
+      <label class="form-label" for="amount" style="font-weight: 600; margin-bottom: 1rem;">Enter Your Bid ({{ currency }})</label>
+      <div class="input-group mb-3" style="gap: 0;">
         <input class="form-control" id="amount" name="amount" inputmode="decimal" autocomplete="off"
-               placeholder="{{ state.min_next_bid }}" required>
-        <button class="btn btn-success" type="submit" id="bid-btn">Place bid</button>
+               placeholder="Minimum: {{ state.min_next_bid }}" required
+               style="border-radius: 0.75rem 0 0 0.75rem; padding: 0.75rem 1rem;">
+        <button class="btn btn-primary" type="submit" id="bid-btn" style="border-radius: 0 0.75rem 0.75rem 0;">
+          Place Bid
+        </button>
       </div>
-      <div class="form-text">Minimum bid: <span id="min-bid">{{ currency }}{{ '{:,.2f}'.format(state.min_next_bid|float) }}</span>.
-        A bid in the last minute extends the auction by 2 minutes.</div>
-      <div class="text-danger small mt-1" id="bid-error" role="alert"></div>
+      <div style="background: var(--cb-surface-secondary); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1rem;">
+        <div class="text-muted small mb-1">Minimum bid allowed</div>
+        <div style="font-weight: 600; color: var(--cb-link);" id="min-bid">{{ currency }}{{ '{:,.2f}'.format(state.min_next_bid|float) }}</div>
+      </div>
+      <p class="text-muted small mb-0">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 0.3rem; vertical-align: -2px;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        Bids placed in the final minute extend the auction by 2 minutes.
+      </p>
+      <div class="text-danger small mt-2" id="bid-error" role="alert"></div>
     </form>
-    <form method="post" action="{{ url_for('buyer.toggle_watch', auction_id=auction.id) }}" class="mb-2">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="btn btn-outline-primary w-100" type="submit">{{ 'Remove from watchlist' if watching else 'Add to watchlist' }}</button>
-    </form>
-    <a href="{{ url_for('messaging.send_message', product_id=product.id) }}" class="btn btn-outline-secondary w-100 mb-3">Message seller</a>
+
+    <!-- ========== ACTION BUTTONS ========== -->
+    <div class="d-grid gap-2 mb-3">
+      <form method="post" action="{{ url_for('buyer.toggle_watch', auction_id=auction.id) }}" style="margin: 0;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-ghost w-100" type="submit" style="padding: 0.75rem;">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          {{ 'Remove from Watchlist' if watching else 'Add to Watchlist' }}
+        </button>
+      </form>
+      <a href="{{ url_for('messaging.send_message', product_id=product.id) }}" class="btn btn-ghost">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        Message Seller
+      </a>
+    </div>
+
     {% elif not current_user.is_authenticated %}
-    <p class="small"><a href="{{ url_for('auth.login', next=request.path) }}">Log in</a> as a buyer to bid or watch this auction.</p>
+    <div class="glass p-4 mb-3" style="border-radius: 1.25rem; border-left: 4px solid var(--cb-link);">
+      <p class="text-muted small mb-2">Ready to bid?</p>
+      <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-primary w-100">Log in to Bid</a>
+    </div>
     {% else %}
-    <p class="small text-muted">Only buyer accounts can bid.</p>
+    <div class="glass p-4" style="border-radius: 1.25rem; border-left: 4px solid var(--cb-muted);">
+      <p class="text-muted small mb-0">📋 Only buyer accounts can bid on auctions. <a href="{{ url_for('main.dashboard') }}">View your account settings</a>.</p>
+    </div>
     {% endif %}
   </div>
 </div>
-
-{% include "auctions/_reviews.html" %}
-
-<h2 class="h5 mt-4">Bid history</h2>
-<p class="text-muted {{ 'd-none' if bids }}" id="no-bids">No bids yet.</p>
-<table class="table table-sm bg-white {{ '' if bids else 'd-none' }}" style="max-width:560px" id="bid-table">
-  <thead><tr><th>Bidder</th><th>Amount</th><th>Time</th></tr></thead>
-  <tbody id="bid-rows">
   {% for b in bids %}
     <tr>
       <td>{% if current_user.is_authenticated and b.buyer_id == current_user.id %}<strong>You</strong>{% else %}{{ b.buyer.name|mask }}{% endif %}</td>
