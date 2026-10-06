@@ -83,6 +83,14 @@ def browse():
 @bp.route("/<int:auction_id>")
 def detail(auction_id):
     _refresh()
+    # Handle trading card IDs (10000+) by redirecting to card detail
+    if auction_id >= 10000:
+        card_id = auction_id - 10000
+        from flask import redirect
+        from ...models import CollectibleCard
+        card = CollectibleCard.query.get_or_404(card_id)
+        return redirect(f"/cards/{card_id}")
+    
     auction = visible_auction_or_404(auction_id)
     bids = auction.bids[:20]
     watching = False
