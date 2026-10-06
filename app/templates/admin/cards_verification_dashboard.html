@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Card Verification - ChainBid Admin{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; flex-wrap: wrap; gap: 1.5rem;">
+  <div>
+    <h1 class="h1 mb-1">Collectible Card Verification</h1>
+    <p class="lead text-muted">Review and approve trading card listings</p>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-5">
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="glass p-4" style="border-radius: 1.5rem; text-align: center;">
+      <div class="h3 mb-1" style="color: #f59e0b;">{{ pending_count }}</div>
+      <div class="small text-muted">Pending Review</div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="glass p-4" style="border-radius: 1.5rem; text-align: center;">
+      <div class="h3 mb-1" style="color: #8b5cf6;">{{ info_needed_count }}</div>
+      <div class="small text-muted">Waiting for Seller</div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="glass p-4" style="border-radius: 1.5rem; text-align: center;">
+      <div class="h3 mb-1" style="color: #10b981;">{{ verified_count }}</div>
+      <div class="small text-muted">Approved</div>
+    </div>
+  </div>
+  <div class="col-12 col-sm-6 col-lg-3">
+    <div class="glass p-4" style="border-radius: 1.5rem; text-align: center;">
+      <div class="h3 mb-1" style="color: #ef4444;">{{ rejected_count }}</div>
+      <div class="small text-muted">Rejected</div>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
+  <div class="row g-3">
+    <div class="col-12 col-sm-6 col-md-3">
+      <label class="small fw-600 mb-2">Status</label>
+      <a href="{{ url_for('admin.cards_verify_dashboard') }}" class="btn btn-sm {% if not status %}btn-primary{% else %}btn-ghost{% endif %}" style="border-radius: 0.5rem;">
+        All Pending
+      </a>
+      <a href="{{ url_for('admin.cards_verify_dashboard', status='verified') }}" class="btn btn-sm {% if status == 'verified' %}btn-primary{% else %}btn-ghost{% endif %}" style="border-radius: 0.5rem;">
+        Approved
+      </a>
+      <a href="{{ url_for('admin.cards_verify_dashboard', status='rejected') }}" class="btn btn-sm {% if status == 'rejected' %}btn-primary{% else %}btn-ghost{% endif %}" style="border-radius: 0.5rem;">
+        Rejected
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Verification Queue -->
+<div class="glass p-5" style="border-radius: 1.5rem; overflow-x: auto;">
+  {% if verifications.items %}
+  <table style="width: 100%; font-size: 0.95rem;">
+    <thead style="border-bottom: 1px solid var(--cb-border); text-transform: uppercase; font-size: 0.8rem; color: var(--cb-text); font-weight: 600;">
+      <tr>
+        <th style="padding: 1rem; text-align: left;">Card Name</th>
+        <th style="padding: 1rem; text-align: left;">Type</th>
+        <th style="padding: 1rem; text-align: left;">Seller</th>
+        <th style="padding: 1rem; text-align: left;">Status</th>
+        <th style="padding: 1rem; text-align: right;">Submitted</th>
+        <th style="padding: 1rem; text-align: center;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for v in verifications.items %}
+      {% set card = v.collectible_card %}
+      {% set product = v.product %}
+      <tr style="border-bottom: 1px solid var(--cb-border-light);">
+        <td style="padding: 1rem;">
+          <a href="{{ url_for('admin.card_verification_detail', verification_id=v.id) }}" style="color: var(--cb-link); text-decoration: none; font-weight: 500;">
+            {{ card.card_name }}
+          </a>
+          <div class="small text-muted">{{ card.set_name or 'N/A' }}</div>
+        </td>
+        <td style="padding: 1rem;">
+          <span class="badge" style="background: rgba(107, 114, 128, 0.15); color: #4b5563; border-radius: 0.5rem; padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            {{ card.card_type.name }}
+          </span>
+        </td>
+        <td style="padding: 1rem;">
+          <div style="font-weight: 500;">{{ product.seller.name }}</div>
+          <div class="small text-muted">{{ product.seller.email }}</div>
+        </td>
+        <td style="padding: 1rem;">
+          {% set status_color = {
+            'pending': '#f59e0b',
+            'submitted': '#3b82f6',
+            'under_review': '#8b5cf6',
+            'more_info_needed': '#f97316',
+            'verified': '#10b981',
+            'rejected': '#ef4444'
+          } %}
+          <span class="badge" style="background: {{ status_color.get(v.verification_status, '#6b7280') }}; color: white; border-radius: 0.5rem; padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+            {% if v.verification_status == 'pending' %}⏳ Pending
+            {% elif v.verification_status == 'under_review' %}👁️ In Review
+            {% elif v.verification_status == 'more_info_needed' %}❓ More Info
+            {% elif v.verification_status == 'verified' %}✓ Approved
+            {% elif v.verification_status == 'rejected' %}✗ Rejected
+            {% endif %}
+          </span>
+        </td>
+        <td style="padding: 1rem; text-align: right; color: var(--cb-muted); font-size: 0.85rem;">
+          {{ v.created_at.strftime('%d %b %Y') }}
+        </td>
+        <td style="padding: 1rem; text-align: center;">
+          <a href="{{ url_for('admin.card_verification_detail', verification_id=v.id) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 0.5rem; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+            Review
+          </a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="padding: 3rem; text-align: center;">
+    <p class="text-muted">No cards pending verification</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Pagination -->
+{% if verifications.pages > 1 %}
+<nav class="mt-4" style="text-align: center;">
+  <ul class="pagination" style="justify-content: center; margin: 0;">
+    {% if verifications.has_prev %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('admin.cards_verify_dashboard', page=verifications.prev_num) }}">← Previous</a>
+    </li>
+    {% endif %}
+
+    {% for page_num in verifications.iter_pages() %}
+      {% if page_num %}
+        {% if page_num == verifications.page %}
+        <li class="page-item active">
+          <span class="page-link">{{ page_num }}</span>
+        </li>
+        {% else %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('admin.cards_verify_dashboard', page=page_num) }}">{{ page_num }}</a>
+        </li>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+
+    {% if verifications.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('admin.cards_verify_dashboard', page=verifications.next_num) }}">Next →</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+<!-- Info Box -->
+<div class="glass p-4" style="border-radius: 1.5rem; border-left: 4px solid var(--cb-link); margin-top: 3rem;">
+  <h6 class="fw-600 mb-2">📋 Verification Process</h6>
+  <p class="small text-muted mb-0">
+    Click "Review" to open the full verification interface. Use the checklist to document your review, then approve, reject, or request more information from the seller.
+  </p>
+</div>
+{% endblock %}
