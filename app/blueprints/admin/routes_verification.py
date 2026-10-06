@@ -1,8 +1,8 @@
-"""
+﻿"""
 Admin routes for collectible card verification workflow
 """
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import abort, current_app, flash, redirect, render_template, request, url_for
 from sqlalchemy import func
 from datetime import timedelta
 
@@ -204,7 +204,7 @@ def approve_card(verification_id):
 
         db.session.commit()
 
-        flash(f"Card '{verification.collectible_card.card_name}' approved! ✓", 'success')
+        flash(f"Card '{verification.collectible_card.card_name}' approved! âœ“", 'success')
     else:
         flash('Error approving card.', 'danger')
 
@@ -278,3 +278,5 @@ def request_card_info(verification_id):
         flash('Error sending request.', 'danger')
 
     return redirect(url_for('admin.card_verification_detail', verification_id=verification_id))
+
+
