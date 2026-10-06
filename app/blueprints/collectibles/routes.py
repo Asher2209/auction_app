@@ -6,7 +6,7 @@ from ...services import qrcode_service
 from . import bp
 
 
-@bp.route("/verify/<platform_card_id>", methods=["GET"])
+@bp.route("/card-verification/<platform_card_id>", methods=["GET"])
 def verify_card(platform_card_id: str):
     """
     Public card verification page - accessible via QR code
