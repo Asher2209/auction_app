@@ -108,13 +108,18 @@ class CardImage(db.Model):
 
     # Image type identifies what the image shows
     image_type = db.Column(db.String(50), nullable=False)  # "front", "back", "slab", "certificate", "close_up"
-    path = db.Column(db.String(255), nullable=False)
+    path = db.Column(db.String(255))  # Local path
+    url = db.Column(db.String(500))  # External URL (e.g., from Pokémon TCG API)
     uploaded_at = db.Column(db.DateTime, default=utcnow)
 
     collectible_card = db.relationship('CollectibleCard', backref=db.backref('images', cascade='all, delete-orphan'))
 
     def __repr__(self):
-        return f'<CardImage {self.image_type} - {self.path}>'
+        return f'<CardImage {self.image_type} - {self.path or self.url}>'
+    
+    def get_image_src(self):
+        """Return the appropriate image source (URL or path)"""
+        return self.url or self.path
 
 
 class CardVerificationChecklist(db.Model):

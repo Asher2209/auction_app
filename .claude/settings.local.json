@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(mkdir -p C:\\\\Users\\\\admin\\\\Desktop\\\\Asher\\\\Projects\\\\auction_app\\\\app\\\\templates\\\\cards)",
+      "Bash(git commit -m 'Phase 5: Add comprehensive search and filtering for trading cards *)",
+      "Bash(git commit -m 'Phase 1: Design Token System - Premium Dark Matte Marketplace Foundation *)",
+      "Bash(git commit -m 'Phase 2: Core Components Redesign - Dark Matte Component System *)",
+      "Bash(git commit -m 'Phase 3: Page Layouts - Editorial Design System and Homepage Redesign *)",
+      "Bash(cp app/templates/auctions/browse.html app/templates/auctions/browse-old.html)",
+      "Bash(cp app/templates/auctions/browse-new.html app/templates/auctions/browse.html)",
+      "Bash(git commit -m 'Phase 4: Remaining Page Templates - Auction Detail & Browse Redesign *)",
+      "Bash(curl -s http://localhost:5000/)",
+      "Bash(pip install *)",
+      "Bash(python -m pip install web3 -q)",
+      "Bash(python3)",
+      "Bash(cd \"/mnt/c/Users/admin/Desktop/Asher/Projects/auction_app\" *)"
     ]
   }
 }

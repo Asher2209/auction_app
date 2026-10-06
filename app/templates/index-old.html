@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% from "_auction_card.html" import card %}
+{% block title %}ChainBid - Blockchain-Powered Auctions{% endblock %}
+{% block content %}
+
+<!-- ========== PREMIUM HERO SECTION ========== -->
+<div class="section-spacious">
+  <div class="hero" data-beam>
+    <div class="row align-items-center">
+      <div class="col-lg-7 mb-5 mb-lg-0">
+        <!-- Badge -->
+        <div class="hero-badge mb-4">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+          </svg>
+          Verified & Certified Auctions
+        </div>
+
+        <!-- Main Heading -->
+        <h1 class="gradient-text mb-4" style="font-size: clamp(2.5rem, 6vw, 3.5rem); line-height: 1.15; font-weight: 800; margin-bottom: 1.5rem;">
+          Authentic <span class="accent">collectibles</span> at your fingertips
+        </h1>
+
+        <!-- Subheading -->
+        <p class="lead mb-5" style="font-size: 1.15rem; color: var(--cb-muted); max-width: 32rem;">
+          Bid on certified collectibles with blockchain verification. Real-time auctions, secure payments, and verified seller ratings.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="d-flex gap-3 flex-wrap mb-5">
+          <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary btn-lg">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            Browse Auctions
+          </a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">
+            Create Account
+          </a>
+        </div>
+
+        <!-- Trust Elements -->
+        <div class="d-flex gap-4 flex-wrap" style="font-size: 0.9rem;">
+          <div class="d-flex align-items-center gap-2">
+            <div style="width: 40px; height: 40px; background: rgba(109, 40, 217, 0.15); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--cb-link);">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div>
+              <strong style="color: var(--cb-text);">Verified Items</strong><br>
+              <span style="color: var(--cb-muted); font-size: 0.85rem;">Professional authentication</span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.15); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--cb-blue);">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <div>
+              <strong style="color: var(--cb-text);">Secure Bidding</strong><br>
+              <span style="color: var(--cb-muted); font-size: 0.85rem;">Blockchain-powered</span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <div style="width: 40px; height: 40px; background: rgba(109, 40, 217, 0.15); border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--cb-link);">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div>
+              <strong style="color: var(--cb-text);">Trusted Sellers</strong><br>
+              <span style="color: var(--cb-muted); font-size: 0.85rem;">Reputation verified</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual Element (Right Side) -->
+      <div class="col-lg-5">
+        <div style="position: relative; padding-bottom: 100%; overflow: hidden; border-radius: 1.5rem;">
+          <svg
+            viewBox="0 0 400 400"
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(109, 40, 217, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%);"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <!-- Decorative auction gavel -->
+            <g transform="translate(200, 150)">
+              <circle cx="0" cy="0" r="100" fill="none" stroke="url(#heroGrad)" stroke-width="2" opacity="0.2"/>
+              <circle cx="0" cy="0" r="80" fill="none" stroke="url(#heroGrad)" stroke-width="2" opacity="0.15"/>
+              <!-- Gavel -->
+              <rect x="-40" y="-60" width="80" height="30" rx="8" fill="url(#heroGrad)" opacity="0.6"/>
+              <rect x="-8" y="-30" width="16" height="50" fill="url(#heroGrad)" opacity="0.5"/>
+              <rect x="-50" y="20" width="100" height="15" rx="4" fill="url(#heroGrad)" opacity="0.4"/>
+            </g>
+            <defs>
+              <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color: #6d28d9; stop-opacity: 1"/>
+                <stop offset="100%" style="stop-color: #2563eb; stop-opacity: 1"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SEARCH / BROWSE SECTION ========== -->
+<div class="section">
+  <h2 class="h3 mb-4" style="text-align: center;">Find your next treasure</h2>
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-8">
+      <form action="{{ url_for('auctions.browse') }}" method="get" class="d-flex gap-2">
+        <div class="flex-grow-1">
+          <input
+            class="form-control form-control-lg"
+            name="q"
+            aria-label="Search auctions"
+            maxlength="100"
+            placeholder="Search by name, description, or category..."
+            style="border-radius: 0.75rem 0 0 0.75rem;"
+          >
+        </div>
+        <button class="btn btn-primary btn-lg" type="submit" style="border-radius: 0 0.75rem 0.75rem 0;">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          Search
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Categories -->
+  {% if categories %}
+  <div style="text-align: center; margin-bottom: 3rem;">
+    <p class="text-muted small mb-3">Browse by category</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+      {% for c in categories %}
+        <a
+          href="{{ url_for('auctions.browse', category=c.id) }}"
+          class="btn btn-ghost"
+          style="font-size: 0.9rem; padding: 0.5rem 1rem; border-radius: 999px;"
+        >
+          {{ c.name }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ========== FEATURED AUCTIONS ========== -->
+{% if auctions %}
+<div class="section">
+  <div class="d-flex justify-content-between align-items-center mb-5">
+    <div>
+      <h2 class="h2 mb-1">Live Now</h2>
+      <p class="text-muted mb-0">{{ auctions|length }} auction{{ '' if auctions|length == 1 else 's' }} ending soon</p>
+    </div>
+    <a href="{{ url_for('auctions.browse') }}" class="btn btn-outline-primary">
+      View All
+      <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    </a>
+  </div>
+
+  <div class="row g-3">
+    {% for a in auctions %}
+      {{ card(a, counts.get(a.id), ratings.get(a.product_id)) }}
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="section text-center">
+  <div style="padding: 3rem 0;">
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 4rem; height: 4rem; color: var(--cb-muted); margin-bottom: 1rem;">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M12 6v6l4 2"></path>
+    </svg>
+    <p class="text-muted mb-3">No active auctions yet.</p>
+    <p class="text-muted small">Run <code>python scripts/seed.py</code> to load demo data, or check back soon.</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- ========== FEATURES SECTION ========== -->
+<div class="section-spacious" style="border-top: 1px solid var(--cb-border); margin-top: var(--cb-spacing-2xl);">
+  <h2 class="h2 text-center mb-5">Why ChainBid?</h2>
+
+  <div class="row g-4">
+    <div class="col-md-6 col-lg-4">
+      <div class="glass p-5" style="border-radius: 1.25rem; text-align: center;">
+        <div class="icon-box mb-4" style="margin-left: auto; margin-right: auto;">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+          </svg>
+        </div>
+        <h3 class="h5 mb-2">Verified & Authenticated</h3>
+        <p class="text-muted small">All items verified through professional grading and AI authentication</p>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="glass p-5" style="border-radius: 1.25rem; text-align: center;">
+        <div class="icon-box mb-4" style="margin-left: auto; margin-right: auto;">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+            <polyline points="13 2 13 9 20 9"></polyline>
+          </svg>
+        </div>
+        <h3 class="h5 mb-2">Secure & Transparent</h3>
+        <p class="text-muted small">Blockchain-powered auctions with complete transaction history</p>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="glass p-5" style="border-radius: 1.25rem; text-align: center;">
+        <div class="icon-box mb-4" style="margin-left: auto; margin-right: auto;">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <h3 class="h5 mb-2">Real-Time Bidding</h3>
+        <p class="text-muted small">Instant notifications and live auction updates as items sell</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

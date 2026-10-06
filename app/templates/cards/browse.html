@@ -19,7 +19,16 @@
     <div class="auction-card">
       <div class="auction-card-image">
         {% if card.images %}
-          <img src="{{ url_for('static', filename='uploads/' ~ card.images[0].path) }}" alt="{{ card.card_name }}" style="height: 300px; object-fit: cover; width: 100%;">
+          {% set img = card.images[0] %}
+          {% if img.url %}
+            <img src="{{ img.url }}" alt="{{ card.card_name }}" style="height: 300px; object-fit: cover; width: 100%;" loading="lazy">
+          {% elif img.path %}
+            <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" alt="{{ card.card_name }}" style="height: 300px; object-fit: cover; width: 100%;">
+          {% else %}
+            <div style="display: flex; align-items: center; justify-content: center; height: 300px; background: var(--dt-bg-1);">
+              <span style="color: var(--dt-text-muted);">No image</span>
+            </div>
+          {% endif %}
         {% else %}
           <div style="display: flex; align-items: center; justify-content: center; height: 300px; background: var(--dt-bg-1);">
             <span style="color: var(--dt-text-muted);">No image</span>
