@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-07T08:08:05.569060",
+  "total_requests": 1,
+  "successful": 0,
+  "failed": 1,
+  "success_rate": 0.0,
+  "response_times": {
+    "min": 2259.0887546539307,
+    "max": 2259.0887546539307,
+    "avg": 2259.0887546539307,
+    "median": 2259.0887546539307
+  }
+}
