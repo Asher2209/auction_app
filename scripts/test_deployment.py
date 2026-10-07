@@ -11,7 +11,7 @@ print("COLLECTIBLE CARD TOKEN - DEPLOYMENT TEST")
 print("=" * 90)
 
 # Load environment
-rpc_url = os.getenv("RPC_URL", "https://eth-sepolia.g.alchemy.com/v2/alch_fJISI_tz9fx5O5JFLXsHD")
+rpc_url = os.getenv("RPC_URL", "https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY_SET_RPC_URL_IN_ENV")
 contract_address = os.getenv("CONTRACT_ADDRESS")
 
 if not contract_address:

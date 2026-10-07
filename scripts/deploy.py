@@ -38,7 +38,7 @@ except ImportError:
     sys.exit(1)
 
 # Connect to Sepolia
-rpc_url = os.getenv("RPC_URL", "https://eth-sepolia.g.alchemy.com/v2/alch_fJISI_tz9fx5O5JFLXsHD")
+rpc_url = os.getenv("RPC_URL", "https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY_SET_RPC_URL_IN_ENV")
 web3 = Web3(Web3.HTTPProvider(rpc_url))
 
 print("\n[CONNECT] SEPOLIA TESTNET")
