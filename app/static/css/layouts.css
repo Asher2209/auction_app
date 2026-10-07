@@ -279,6 +279,13 @@
   top: calc(var(--dt-space-xl) + 60px);
 }
 
+/* stacked: a pinned gallery would sit on top of the bid panel as the page scrolls (this must come after the rule above) */
+@media (max-width: 1024px) {
+  .product-detail-gallery {
+    position: static;
+  }
+}
+
 .product-detail-gallery-main {
   background-color: var(--dt-bg-1);
   border: 1px solid var(--dt-border);

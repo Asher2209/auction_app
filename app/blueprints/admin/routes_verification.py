@@ -90,9 +90,6 @@ def card_verification_detail(verification_id):
     """View detailed verification page for a card"""
     verification = CollectibleVerification.query.get_or_404(verification_id)
 
-    if verification.is_graded:
-        abort(403)  # This is for graded cards verification, use different route
-
     card = verification.collectible_card
     product = verification.product
     seller = product.seller
@@ -113,9 +110,11 @@ def card_verification_detail(verification_id):
     approval_form = CardApprovalForm()
     rejection_form = CardRejectionForm()
     info_form = CardMoreInfoForm()
+    signals = auction_validation_service.find_duplicate_signals(card)
 
     return render_template(
         'admin/card_verification_detail.html',
+        duplicate_issues=signals.violations + signals.warnings,
         verification=verification,
         card=card,
         product=product,

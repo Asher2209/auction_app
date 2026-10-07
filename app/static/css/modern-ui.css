@@ -33,7 +33,7 @@
 .feature-card:hover {
   transform: translateY(-8px);
   box-shadow: var(--cb-shadow-lg);
-  border-color: rgba(109, 40, 217, 0.25);
+  border-color: rgba(199, 154, 82, 0.4);
 }
 
 .feature-card-icon {
@@ -209,7 +209,7 @@
 }
 
 .hover-glow:hover {
-  box-shadow: 0 0 24px rgba(109, 40, 217, 0.25);
+  border-color: rgba(199, 154, 82, 0.5);
 }
 
 /* ========== ANIMATION CLASSES ========== */
@@ -268,7 +268,7 @@
   letter-spacing: 0.05em;
   background: var(--cb-badge-bg);
   color: var(--cb-badge-text);
-  border: 1px solid rgba(109, 40, 217, 0.25);
+  border: 1px solid rgba(199, 154, 82, 0.3);
 }
 
 .badge-success {

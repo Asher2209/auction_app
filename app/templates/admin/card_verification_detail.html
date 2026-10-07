@@ -32,7 +32,7 @@
       {% set status_color = {
         'pending': '#f59e0b',
         'submitted': '#3b82f6',
-        'under_review': '#8b5cf6',
+        'under_review': '#3b82f6',
         'more_info_needed': '#f97316',
         'verified': '#10b981',
         'rejected': '#ef4444'
@@ -148,68 +148,23 @@
       {% endif %}
     </div>
 
-    <!-- Type-Specific Details -->
-    {% if type_details %}
-    <div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
-      <h6 class="text-muted small text-uppercase fw-600 mb-3">{{ card.card_type.name }} Specifics</h6>
+    <!-- Listing facts, type-specific details and duplicate signals -->
+    <div class="cd-panel mb-4" id="admin-card-facts">
+      <h2 class="cd-heading">Listing and type details</h2>
+      <dl class="cd-grid">
+        <div class="cd-row"><dt>Estimated value (given by the seller)</dt><dd>{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</dd></div>
+        <div class="cd-row"><dt>Starting price</dt><dd>{{ product.starting_price|money }}</dd></div>
+        {% for key, val in type_details.items() if val %}
+        <div class="cd-row"><dt>{{ key|replace('_', ' ')|capitalize }}</dt><dd>{{ 'Yes' if val is sameas true else val }}</dd></div>
+        {% endfor %}
+      </dl>
+    </div>
 
-      {% if card.card_type.slug == 'pokemon' %}
-        {% if type_details.pokemon_name %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Pokémon Name:</strong></div>
-          <div class="col-6">{{ type_details.pokemon_name }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.pokemon_hp %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>HP:</strong></div>
-          <div class="col-6">{{ type_details.pokemon_hp }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.pokemon_holo_type %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Holo Type:</strong></div>
-          <div class="col-6">{{ type_details.pokemon_holo_type }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.pokemon_first_edition %}
-        <div class="mb-2"><span class="badge bg-success">First Edition</span></div>
-        {% endif %}
-        {% if type_details.pokemon_shadowless %}
-        <div class="mb-2"><span class="badge bg-info">Shadowless</span></div>
-        {% endif %}
-        {% if type_details.pokemon_promo %}
-        <div class="mb-2"><span class="badge bg-warning">Promo</span></div>
-        {% endif %}
-      {% elif card.card_type.slug == 'football' %}
-        {% if type_details.football_player_name %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Player:</strong></div>
-          <div class="col-6">{{ type_details.football_player_name }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.football_team %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Club:</strong></div>
-          <div class="col-6">{{ type_details.football_team }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.football_league %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>League:</strong></div>
-          <div class="col-6">{{ type_details.football_league }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.football_season %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Season:</strong></div>
-          <div class="col-6">{{ type_details.football_season }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.football_is_rookie %}
-        <div class="mb-2"><span class="badge bg-success">Rookie Card</span></div>
-        {% endif %}
-      {% endif %}
+    {% if duplicate_issues %}
+    <div class="cd-panel mb-4" id="admin-duplicates" style="border-color: var(--dt-warning);">
+      <h2 class="cd-heading" style="color: var(--dt-warning);">Potential duplicates</h2>
+      <ul class="mb-0 small">{% for issue in duplicate_issues %}<li>{{ issue.message }}</li>{% endfor %}</ul>
+      <p class="cd-note">A shared certification number is a signal, not proof. Images alone cannot show that two entries are the same physical card.</p>
     </div>
     {% endif %}
 

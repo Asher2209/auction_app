@@ -14,7 +14,7 @@ from ...models import (
 )
 from ...ratelimit import limited
 from ...services import (auction_validation_service, blockchain_minting_service, blockchain_service,
-                         card_auction_service, card_settlement_service, card_status_service, uploads)
+                         card_auction_service, card_settlement_service, card_status_service, seller_cards_service, uploads)
 from ...services.notifications import notify
 from ...services.card_identity_service import assign_platform_card_id
 from ...services.qrcode_service import save_qr_code_to_file
@@ -38,46 +38,9 @@ def _card_category():
 @bp.route("/collectibles", methods=["GET"])
 @role_required("seller")
 def collectibles_dashboard():
-    """My Collectibles dashboard - seller's trading card inventory"""
-    page = request.args.get('page', 1, type=int)
-    status = request.args.get('status', 'all')
-    sort = request.args.get('sort', 'newest')
-
-    query = CollectibleCard.query.join(Product).filter(Product.seller_id == current_user.id)
-
-    if status != 'all':
-        if status == 'pending':
-            query = query.join(CollectibleVerification).filter(
-                CollectibleVerification.verification_status.in_(('pending', 'under_review'))
-            )
-        elif status == 'verified':
-            query = query.join(CollectibleVerification).filter(
-                CollectibleVerification.verification_status == 'verified'
-            )
-        elif status == 'rejected':
-            query = query.join(CollectibleVerification).filter(
-                CollectibleVerification.verification_status == 'rejected'
-            )
-        elif status == 'more_info':
-            query = query.join(CollectibleVerification).filter(
-                CollectibleVerification.verification_status == 'more_info_needed'
-            )
-
-    if sort == 'oldest':
-        query = query.order_by(CollectibleCard.created_at.asc())
-    elif sort == 'name':
-        query = query.order_by(CollectibleCard.card_name.asc())
-    else:
-        query = query.order_by(CollectibleCard.created_at.desc())
-
-    cards = query.paginate(page=page, per_page=12)
-
-    return render_template(
-        'seller/collectibles/dashboard.html',
-        cards=cards,
-        status=status,
-        sort=sort
-    )
+    """My cards: every card with its verification, blockchain and auction state, grouped by lifecycle."""
+    data = seller_cards_service.seller_cards(current_user, request.args.get("status", "all"), request.args.get("sort", "newest"))
+    return render_template("seller/collectibles/dashboard.html", sorts=seller_cards_service.SORTS, **data)
 
 
 @bp.route("/cards/new", methods=["GET", "POST"])
@@ -454,17 +417,3 @@ def edit_card(card_id):
         card=card,
         card_types=CardType.query.filter_by(is_active=True)
     )
-
-
-@bp.route("/cards/debug")
-def debug_template():
-    """Debug route to check template content"""
-    import os
-    template_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'templates', 'seller', 'cards', 'card_form.html')
-    
-    if os.path.exists(template_path):
-        with open(template_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        return f"Template found at: {template_path}<br>Size: {len(content)} bytes<br>Contains 'DIRECT HTML': {'DIRECT HTML' in content}"
-    else:
-        return f"Template NOT found at: {template_path}"

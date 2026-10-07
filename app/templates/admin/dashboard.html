@@ -26,10 +26,33 @@
   {% endfor %}
 </div>
 
+<h2 class="h5">Trading cards &amp; blockchain</h2>
+<div class="row g-3 mb-4" id="card-stats">
+  {% for label, value, href in [
+      ('Collectible cards', cs.total, url_for('admin.cards_verify_dashboard')),
+      ('Pending verification', cs.pending, url_for('admin.cards_verify_dashboard', status='pending')),
+      ('Verified', cs.verified, url_for('admin.cards_verify_dashboard', status='verified')),
+      ('Rejected', cs.rejected, url_for('admin.cards_verify_dashboard', status='rejected')),
+      ('More information required', cs.more_info, url_for('admin.cards_verify_dashboard', status='more_info_needed')),
+      ('Card auctions live or scheduled', cs.live, none),
+      ('Card auctions completed', cs.completed, none),
+      ('Cards sold and paid', cs.sold, none),
+      ('Blockchain assets', cs.assets, url_for('admin.tokens')),
+      ('Tokens minted', cs.minted, url_for('admin.tokens', status='minted')),
+      ('Ownership transfers', cs.transfers, none)] %}
+  <div class="col-6 col-md-3">
+    <div class="card h-100"><div class="card-body">
+      <div class="text-muted small">{{ label }}</div>
+      <div class="fs-3 fw-semibold">{% if href %}<a class="text-decoration-none" href="{{ href }}">{{ value }}</a>{% else %}{{ value }}{% endif %}</div>
+    </div></div>
+  </div>
+  {% endfor %}
+</div>
+
 <h2 class="h5">Waiting for review</h2>
 <div class="list-group bg-white">
   {% for p in pending %}
-  <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ url_for('admin.product_review', product_id=p.id) }}">
+  <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ url_for('admin.card_verification_detail', verification_id=p.collectible_verification.id) if p.collectible_verification else url_for('admin.product_review', product_id=p.id) }}">
     <span>{{ p.title }} <span class="text-muted small">by {{ p.seller.name }}</span></span>
     <span class="text-muted small">{{ p.created_at|utc }}</span>
   </a>

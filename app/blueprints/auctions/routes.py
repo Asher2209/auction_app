@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from ... import sockets
 from ...models import Auction, Category, Product, Watchlist, utcnow, CollectibleCard
 from ...ratelimit import limited
-from ...services import auction_service
+from ...services import auction_service, blockchain_service, ownership_transfer_service
 from ...services import review_service as rs
 from ...services.auction_service import BidError
 from ...services.catalog import (
@@ -99,7 +99,10 @@ def detail(auction_id):
     pid = auction.product_id
     eligible = rs.can_review(current_user, auction.id)
     similar = (Auction.query.join(Product).filter(Product.category_id == auction.product.category_id, Auction.status.in_(("scheduled", "active")), Auction.id != auction.id).order_by(Auction.end_time.asc()).limit(6).all())
-    return render_template("auctions/detail.html", auction=auction, product=auction.product, bids=bids, bid_total=len(auction.bids), watching=watching, reviews=rs.visible_reviews(pid), stats=rs.stats_for_products([pid]).get(pid), seller_rating=rs.seller_stats(auction.product.seller_id), can_review=eligible, mine=rs.own_review(current_user, pid) if eligible else None, state=auction_service.auction_state(auction), can_bid=current_user.is_authenticated and current_user.role == "buyer", similar=similar, similar_counts=bid_counts([a.id for a in similar]), similar_stats=rs.stats_for_products([a.product_id for a in similar]))
+    return render_template("auctions/detail.html", auction=auction, product=auction.product, bids=bids, bid_total=len(auction.bids), watching=watching, reviews=rs.visible_reviews(pid), stats=rs.stats_for_products([pid]).get(pid), seller_rating=rs.seller_stats(auction.product.seller_id), can_review=eligible, mine=rs.own_review(current_user, pid) if eligible else None, state=auction_service.auction_state(auction), can_bid=current_user.is_authenticated and current_user.role == "buyer", similar=similar, similar_counts=bid_counts([a.id for a in similar]), similar_stats=rs.stats_for_products([a.product_id for a in similar]),
+        transfers=ownership_transfer_service.history(auction.product.collectible_card.blockchain_asset)
+        if auction.product.collectible_card and auction.product.collectible_card.blockchain_asset else [],
+        tx_url=blockchain_service.explorer_url)
 
 @bp.route("/<int:auction_id>/state")
 def state(auction_id):
