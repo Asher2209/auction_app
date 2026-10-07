@@ -1,12 +1,17 @@
 ﻿{% extends "base.html" %}
-{% block title %}{{ collectible_card.card_name }} - Platform Verified - ChainBid{% endblock %}
+{% block title %}{{ collectible_card.card_name }} - {% if is_verified %}Platform Verified{% else %}Card Record{% endif %} - ChainBid{% endblock %}
 
 {% block content %}
 <div style="background: linear-gradient(135deg, var(--cb-surface, #0f172a) 0%, var(--cb-surface-secondary, #1e293b) 100%); margin: -3rem -3rem 0 -3rem; padding: 3rem; margin-bottom: 3rem; border-bottom: 1px solid var(--cb-border, #334155);">
   <div class="container-lg">
     <div class="d-flex align-items-center gap-3 mb-3">
+      {% if is_verified %}
       <span style="display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #10b981;"></span>
       <span style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #10b981;">Platform Verified</span>
+      {% else %}
+      <span style="display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: #6b7280;"></span>
+      <span style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280;">Not yet platform verified</span>
+      {% endif %}
     </div>
     <h1 class="h2 mb-2">{{ collectible_card.card_name }}</h1>
     <p class="lead text-muted mb-0">
@@ -68,10 +73,12 @@
           <div class="small text-muted mb-1">Platform Card ID</div>
           <div style="font-family: monospace; font-size: 1rem; font-weight: 700; color: #3b82f6; letter-spacing: 1px;">{{ platform_card_id }}</div>
         </div>
+        {% if is_verified and verification.verification_date %}
         <div class="mb-0">
           <div class="small text-muted mb-1">Verified On</div>
-          <div style="font-size: 0.9rem;">{{ verification.verification_date | date('%d %b %Y') if verification.verification_date else 'Pending Review' }}</div>
+          <div style="font-size: 0.9rem;">{{ verification.verification_date | date('%d %b %Y') }}</div>
         </div>
+        {% endif %}
       </div>
 
       <!-- Verification Status -->
@@ -97,7 +104,11 @@
           </strong>
         </div>
         <p class="small text-muted mb-0">
+          {% if is_verified %}
           This card has been reviewed and verified by the ChainBid platform. Platform verification confirms basic card details and image authenticity, not full authenticity.
+          {% else %}
+          This card has not been platform verified. The details shown were provided by the seller and have not been confirmed by the platform.
+          {% endif %}
         </p>
       </div>
       {% endif %}

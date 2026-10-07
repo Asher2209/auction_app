@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from ...extensions import db
 from ...models import (
-    Product, ProductImage, ProductDetails, CollectibleCard, CardType, CardImage,
+    Category, Product, ProductImage, ProductDetails, CollectibleCard, CardType, CardImage,
     CollectibleVerification, utcnow
 )
 from ...services import uploads
@@ -18,6 +18,17 @@ from ...services.qrcode_service import save_qr_code_to_file
 from ...utils import role_required
 from . import bp
 from .forms_cards import CollectibleCardForm
+
+CARD_CATEGORY_NAME = "Trading Cards"
+
+
+def _card_category():
+    category = Category.query.filter_by(name=CARD_CATEGORY_NAME).first()
+    if category is None:
+        category = Category(name=CARD_CATEGORY_NAME)
+        db.session.add(category)
+        db.session.flush()
+    return category
 
 
 @bp.route("/collectibles", methods=["GET"])
@@ -95,7 +106,7 @@ def create_card():
                 # Create Product entry
                 product = Product(
                     seller_id=current_user.id,
-                    category_id=None,  # Will be set to "Collectible Cards" category
+                    category_id=_card_category().id,
                     title=form.card_name.data.strip(),
                     description=form.condition_notes.data or "See card details for condition information.",
                     starting_price=form.estimated_value.data or Decimal("1.00"),

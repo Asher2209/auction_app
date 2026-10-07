@@ -54,7 +54,7 @@ class CollectibleVerification(db.Model):
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationships
-    product = db.relationship('Product', backref='collectible_verification', uselist=False)
+    product = db.relationship('Product', backref=db.backref('collectible_verification', uselist=False))
     collectible_card = db.relationship('CollectibleCard', foreign_keys=[collectible_card_id])
     verification_history = db.relationship('CardVerificationHistory', backref='verification', cascade='all, delete-orphan')
     checklists = db.relationship('CardVerificationChecklist', backref='verification', cascade='all, delete-orphan')

@@ -11,8 +11,19 @@ from app.services.card_identity_service import assign_platform_card_id
 from app.services.qrcode_service import save_qr_code_to_file
 
 
-def backfill_platform_card_ids():
+def regenerate_all_qr_codes():
+    """Rewrite every card's QR file (use after APP_BASE_URL or the public card route changes)"""
+    cards = CollectibleCard.query.filter(CollectibleCard.platform_card_id.isnot(None)).all()
+    for card in cards:
+        save_qr_code_to_file(card.platform_card_id, card.id)
+    print(f"Regenerated {len(cards)} QR codes")
+
+
+def backfill_platform_card_ids(regenerate_qr=False):
     """Assign platform card IDs and generate QR codes for cards missing them"""
+    if regenerate_qr:
+        regenerate_all_qr_codes()
+
     # Find all cards without platform IDs
     cards_without_ids = CollectibleCard.query.filter_by(platform_card_id=None).all()
     
@@ -41,7 +52,8 @@ def backfill_platform_card_ids():
 
 
 if __name__ == '__main__':
+    import sys
     from app import create_app
     app = create_app()
     with app.app_context():
-        backfill_platform_card_ids()
+        backfill_platform_card_ids(regenerate_qr="--regenerate-qr" in sys.argv)

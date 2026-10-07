@@ -16,6 +16,7 @@ def verify_card(platform_card_id: str):
     product = collectible_card.product
     verification = product.collectible_verification
     blockchain_asset = collectible_card.blockchain_asset
+    is_verified = verification is not None and verification.verification_status == 'verified'
     
     # Get card images
     card_images = collectible_card.images
@@ -41,6 +42,7 @@ def verify_card(platform_card_id: str):
         collectible_card=collectible_card,
         product=product,
         verification=verification,
+        is_verified=is_verified,
         blockchain_asset=blockchain_asset,
         card_images=card_images,
         type_details=type_details,
