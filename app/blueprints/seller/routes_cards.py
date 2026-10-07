@@ -12,11 +12,12 @@ from ...models import (
     Category, Product, ProductImage, ProductDetails, CollectibleCard, CardType, CardImage,
     CollectibleVerification, utcnow
 )
-from ...services import uploads
+from ...services import auction_validation_service, card_auction_service, uploads
 from ...services.card_identity_service import assign_platform_card_id
 from ...services.qrcode_service import save_qr_code_to_file
 from ...utils import role_required
 from . import bp
+from .forms_card_auction import CardAuctionForm
 from .forms_cards import CollectibleCardForm
 
 CARD_CATEGORY_NAME = "Trading Cards"
@@ -248,8 +249,38 @@ def view_card(card_id):
         product=card.product,
         verification=verification,
         card_images=card_images,
-        type_details=type_details
+        type_details=type_details,
+        auction=card.product.auction,
+        listing=auction_validation_service.check_listing(card.product),
     )
+
+
+@bp.route("/cards/<int:card_id>/auction", methods=["GET", "POST"])
+@role_required("seller")
+def create_card_auction(card_id):
+    """Put a verified, token-backed card up for auction. Every rule is enforced by the service, not by this page."""
+    card = db.session.get(CollectibleCard, card_id)
+    if card is None or card.product.seller_id != current_user.id:
+        abort(404)  # 404 so sellers cannot probe for other sellers' cards
+    product = card.product
+    if product.auction is not None:
+        flash("This card already has an auction.", "info")
+        return redirect(url_for("seller.view_card", card_id=card.id))
+
+    form = CardAuctionForm()
+    status = 200
+    if form.validate_on_submit():
+        try:
+            auction = card_auction_service.create_card_auction(
+                product, current_user, form.starting_bid.data, form.start_time.data, form.duration_hours.data)
+        except card_auction_service.CardAuctionError as e:
+            flash(e.message, "danger")
+            status = e.status
+        else:
+            flash("Your auction has been created.", "success")
+            return redirect(url_for("auctions.detail", auction_id=auction.id))
+    return render_template("seller/cards/card_auction.html", form=form, card=card, product=product,
+                           listing=auction_validation_service.check_listing(product)), status
 
 
 @bp.route("/cards/<int:card_id>/edit", methods=["GET", "POST"])
