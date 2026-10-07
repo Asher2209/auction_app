@@ -27,19 +27,8 @@ def _set_categories(form):
 @bp.route("/")
 @role_required("seller")
 def dashboard():
-    tab = request.args.get("tab", "all")
-    if tab not in TABS:
-        tab = "all"
-    q = Product.query.filter_by(seller_id=current_user.id).outerjoin(Auction)
-    if tab == "pending":
-        q = q.filter(Product.approval_status.in_(("pending", "rejected")))
-    elif tab == "active":
-        q = q.filter(Auction.status.in_(("scheduled", "active")))
-    elif tab == "completed":
-        q = q.filter(Auction.status == "closed")
-    products = q.order_by(Product.created_at.desc()).all()
-    return render_template("seller/dashboard.html", products=products, tab=tab, tabs=TABS)
-
+    # Redirect to collectibles dashboard (dedicated cards interface)
+    return redirect(url_for("seller.collectibles_dashboard"))
 
 @bp.route("/products/new", methods=["GET", "POST"])
 @role_required("seller")
