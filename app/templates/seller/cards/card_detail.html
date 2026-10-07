@@ -75,6 +75,32 @@
     </div>
     {% endif %}
 
+    <!-- PHASE 1: Platform Card Identity -->
+    {% if card.platform_card_id %}
+    <div class="glass p-4 mb-4" style="border-radius: 1.25rem; border-left: 3px solid var(--cb-primary, #3b82f6);">
+      <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Identity</h6>
+      
+      <div class="mb-3">
+        <div class="small text-muted mb-1">Platform Card ID</div>
+        <div style="font-family: monospace; font-size: 0.95rem; font-weight: 600; color: var(--cb-text-primary, #1f2937);">
+          {{ card.platform_card_id }}
+        </div>
+        <div class="small text-muted mt-1">
+          <a href="{{ url_for('collectibles.verify_card', platform_card_id=card.platform_card_id) }}" target="_blank" class="link-primary">
+            View public card page →
+          </a>
+        </div>
+      </div>
+
+      <!-- QR Code -->
+      <div class="mb-0" style="text-align: center;">
+        <div class="small text-muted mb-2">Scan to verify this card</div>
+        {% set qr_path = 'qrcodes/card_' ~ card.id ~ '_' ~ card.platform_card_id ~ '.png' %}
+        <img src="{{ url_for('static', filename=qr_path) }}" alt="QR Code" style="width: 120px; height: 120px; border: 2px solid var(--cb-border, #d1d5db); border-radius: 0.5rem; padding: 4px; background: white;">
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Card Info -->
     <div class="glass p-4" style="border-radius: 1.25rem; margin-bottom: 2rem;">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Details</h6>

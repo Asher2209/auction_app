@@ -33,7 +33,7 @@ def generate_qr_code_svg(platform_card_id: str, include_metadata: bool = False) 
     )
     
     # QR code links to public card verification page
-    qr_url = f"/collectible/verify/{platform_card_id}"
+    qr_url = f"/collectibles/card-verification/{platform_card_id}"
     qr.add_data(qr_url)
     qr.make(fit=True)
     
@@ -91,7 +91,7 @@ def save_qr_code_to_file(platform_card_id: str, card_id: int) -> str:
         border=2,
     )
     
-    qr_url = f"/collectible/verify/{platform_card_id}"
+    qr_url = f"/collectibles/card-verification/{platform_card_id}"
     qr.add_data(qr_url)
     qr.make(fit=True)
     

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Trading card creation and management routes
 Handles seller workflow for collectible cards
 """
@@ -13,6 +13,8 @@ from ...models import (
     CollectibleVerification, utcnow
 )
 from ...services import uploads
+from ...services.card_identity_service import assign_platform_card_id
+from ...services.qrcode_service import save_qr_code_to_file
 from ...utils import role_required
 from . import bp
 from .forms_cards import CollectibleCardForm
@@ -163,6 +165,9 @@ def create_card():
                 db.session.add(collectible_card)
                 db.session.commit()
 
+                # PHASE 1: Assign unique Platform Card ID (CARD-XXXXXX format)
+                platform_card_id = assign_platform_card_id(collectible_card)
+
                 # Save card images with type information
                 for i, saved_path in enumerate(saved):
                     # Infer image type from order: first=front, second=back, rest=detail/slab
@@ -173,6 +178,14 @@ def create_card():
                         path=saved_path
                     )
                     db.session.add(card_image)
+
+                # PHASE 1: Generate QR code pointing to public verification page
+                try:
+                    qr_code_path = save_qr_code_to_file(platform_card_id, collectible_card.id)
+                    current_app.logger.info(f"QR code generated for {platform_card_id} at {qr_code_path}")
+                except Exception as qr_error:
+                    current_app.logger.warning(f"QR code generation failed for {platform_card_id}: {str(qr_error)}")
+                    # Continue even if QR code fails, it's not critical
 
                 # Create verification entry (ungraded cards pending manual review)
                 verification = CollectibleVerification(
@@ -188,6 +201,7 @@ def create_card():
 
                 flash(
                     f"Card '{collectible_card.card_name}' created successfully! "
+                    f"Platform ID: <strong>{platform_card_id}</strong>. "
                     "It's awaiting verification. You'll be able to create an auction once approved.",
                     "success"
                 )
@@ -337,3 +351,17 @@ def edit_card(card_id):
         card=card,
         card_types=CardType.query.filter_by(is_active=True)
     )
+
+
+@bp.route("/cards/debug")
+def debug_template():
+    """Debug route to check template content"""
+    import os
+    template_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'templates', 'seller', 'cards', 'card_form.html')
+    
+    if os.path.exists(template_path):
+        with open(template_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return f"Template found at: {template_path}<br>Size: {len(content)} bytes<br>Contains 'DIRECT HTML': {'DIRECT HTML' in content}"
+    else:
+        return f"Template NOT found at: {template_path}"
