@@ -1,4 +1,4 @@
-﻿"""Health check and monitoring endpoints."""
+"""Health check and monitoring endpoints."""
 
 from flask import Blueprint, jsonify, current_app
 from app.utils.monitoring import get_health_checker, get_metrics_collector

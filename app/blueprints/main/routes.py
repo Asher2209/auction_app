@@ -1,4 +1,4 @@
-﻿from datetime import timedelta
+from datetime import timedelta
 
 from flask import flash, redirect, render_template, url_for, request, abort, jsonify
 from flask_login import current_user, login_required

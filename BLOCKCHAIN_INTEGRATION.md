@@ -1,4 +1,4 @@
-﻿# Blockchain Contract Integration Guide
+# Blockchain Contract Integration Guide
 
 > **Superseded.** The contract described below is the first version of `CollectibleCardToken`. Its `mint()`
 > has no access control (anyone could mint a token for any card), so do not use it. The current contract

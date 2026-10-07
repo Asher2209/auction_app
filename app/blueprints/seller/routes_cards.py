@@ -1,4 +1,4 @@
-﻿"""
+"""
 Trading card creation and management routes
 Handles seller workflow for collectible cards
 """

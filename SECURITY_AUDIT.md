@@ -1,4 +1,4 @@
-﻿# Security Audit Report - Phase F Priority 1
+# Security Audit Report - Phase F Priority 1
 
 **Date**: 2026-10-06  
 **Auditor**: Claude Code  

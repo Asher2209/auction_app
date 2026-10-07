@@ -1,4 +1,4 @@
-﻿# Architecture - ChainBid
+# Architecture - ChainBid
 
 ## System Overview
 

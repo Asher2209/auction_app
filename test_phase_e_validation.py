@@ -1,4 +1,4 @@
-﻿import os, sys, json
+import os, sys, json
 from pathlib import Path
 
 os.environ['FLASK_ENV'] = 'development'

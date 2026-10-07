@@ -1,4 +1,4 @@
-﻿# Production Deployment Checklist
+# Production Deployment Checklist
 
 ## Pre-Deployment (Day Before)
 

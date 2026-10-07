@@ -1,4 +1,4 @@
-﻿"""Load testing script for ChainBid auction system - FIXED VERSION.
+"""Load testing script for ChainBid auction system - FIXED VERSION.
 
 Fixes applied:
 - UTF-8 encoding for Windows compatibility

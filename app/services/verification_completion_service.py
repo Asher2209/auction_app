@@ -1,4 +1,4 @@
-﻿"""Service to complete card verification and create blockchain assets."""
+"""Service to complete card verification and create blockchain assets."""
 
 import logging
 from flask import current_app

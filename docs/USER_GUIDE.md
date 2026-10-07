@@ -1,4 +1,4 @@
-﻿# User Guide - ChainBid Auction System
+# User Guide - ChainBid Auction System
 
 ## Getting Started
 

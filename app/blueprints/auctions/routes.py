@@ -1,4 +1,4 @@
-﻿from flask import flash, jsonify, redirect, render_template, request, url_for
+from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import or_
 from datetime import datetime, timedelta

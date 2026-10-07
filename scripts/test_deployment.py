@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Test deployed CollectibleCardToken contract on Sepolia"""
 
 import os

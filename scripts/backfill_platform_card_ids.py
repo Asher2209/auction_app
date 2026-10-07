@@ -1,4 +1,4 @@
-﻿"""
+"""
 Backfill Platform Card IDs for existing collectible cards
 
 This migration assigns Platform Card IDs to any cards that don't have them yet.

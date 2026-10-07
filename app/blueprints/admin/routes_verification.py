@@ -1,4 +1,4 @@
-﻿"""
+"""
 Admin routes for collectible card verification workflow
 """
 
@@ -223,7 +223,7 @@ def approve_card(verification_id):
 
         db.session.commit()
 
-        flash(f"Card '{verification.collectible_card.card_name}' approved! âœ“", 'success')
+        flash(f"Card '{verification.collectible_card.card_name}' approved. ✓", 'success')
 
         for warning in auction_validation_service.find_duplicate_signals(verification.collectible_card).warnings:
             flash(warning.message, 'warning')

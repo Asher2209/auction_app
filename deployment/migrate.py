@@ -1,4 +1,4 @@
-﻿"""Database migration for production.
+"""Database migration for production.
 
 This file demonstrates database schema management.
 In production, use Flask-Migrate or Alembic.

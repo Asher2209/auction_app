@@ -1,4 +1,4 @@
-﻿# Load Test Execution Summary
+# Load Test Execution Summary
 
 **Date**: 2026-10-07  
 **Time**: 08:08:03 UTC  

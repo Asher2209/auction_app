@@ -687,7 +687,7 @@ def test_editing_a_card_under_review_resubmits_it_and_keeps_its_identity(client,
 
 # =================================== wording: Platform Verified, never authentic ============================================
 OVERCLAIM = re.compile(r"100\s*%\s*(authentic|genuine|real)|authenticity verified|professional authentication|guaranteed (authentic|genuine)"
-                       r"|certified authentic|verified seller", re.I)
+                       r"|certified authentic|verified seller|\bcertified\b", re.I)  # the platform reviews cards, it does not certify them
 
 
 def test_verification_wording_no_card_page_claims_a_card_is_authentic(client, users, seller, cat, card_type):

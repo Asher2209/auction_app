@@ -1,4 +1,4 @@
-﻿"""Utility functions for ChainBid."""
+"""Utility functions for ChainBid."""
 
 from functools import wraps
 from urllib.parse import urlparse

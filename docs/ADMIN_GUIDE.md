@@ -1,4 +1,4 @@
-﻿# Admin Guide - ChainBid Operations & Monitoring
+# Admin Guide - ChainBid Operations & Monitoring
 
 ## Overview
 
