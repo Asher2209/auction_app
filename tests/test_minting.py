@@ -41,7 +41,7 @@ def chain(app):
 
 
 def verified_asset(seller, cat, card_type, chain, **kw):
-    seller.wallet_address = chain.seller_wallet
+    seller.link_wallet(chain.seller_wallet)
     db.session.commit()
     p = make_card(seller, cat, card_type, owner=chain.seller_wallet, **kw)
     asset = p.collectible_card.blockchain_asset

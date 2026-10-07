@@ -1,9 +1,10 @@
 import time
 
-from flask import current_app, flash, redirect, render_template, request, session, url_for
+from flask import current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from ...extensions import db
+from ...services import wallet_service
 from ...services.mailer import send_email
 from ...models import User
 from ...ratelimit import client_ip, limited, limiter, too_many
@@ -137,8 +138,46 @@ def profile():
         current_user.name = form.name.data.strip()
         current_user.phone = form.phone.data.strip()
         current_user.address = form.address.data.strip()
-        current_user.wallet_address = form.wallet_address.data or None  # already checksummed by the form
         db.session.commit()
         flash("Profile updated.", "success")
         return redirect(url_for("auth.profile"))
     return render_template("auth/profile.html", form=form)
+
+
+# ---- wallet: linked only by proving control (see services/wallet_service.py) ----------------------------------------
+def _json_body():
+    data = request.get_json(silent=True)
+    return data if isinstance(data, dict) else {}
+
+
+@bp.route("/wallet/challenge", methods=["POST"])
+@login_required
+@limited("wallet", 20, 60, by="user")
+def wallet_challenge():
+    try:
+        message = wallet_service.start(current_user, _json_body().get("address"), request.host)
+    except wallet_service.WalletError as e:
+        return jsonify(ok=False, error=e.message), e.status
+    return jsonify(ok=True, message=message)
+
+
+@bp.route("/wallet/verify", methods=["POST"])
+@login_required
+@limited("wallet", 20, 60, by="user")
+def wallet_verify():
+    data = _json_body()
+    try:
+        result = wallet_service.finish(current_user, data.get("address"), data.get("signature"))
+    except wallet_service.WalletError as e:
+        return jsonify(ok=False, error=e.message), e.status
+    note = " Your verified cards are now registered to it." if result["registered"] or result["moved"] else ""
+    flash("Wallet verified: you proved you control it." + note, "success")
+    return jsonify(ok=True, wallet=result["address"])
+
+
+@bp.route("/wallet/remove", methods=["POST"])
+@login_required
+def wallet_remove():
+    wallet_service.unlink(current_user)
+    flash("The wallet was removed from your account.", "info")
+    return redirect(url_for("auth.profile"))

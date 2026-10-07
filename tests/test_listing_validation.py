@@ -51,7 +51,7 @@ class FakeChain:
 
 @pytest.fixture
 def seller(users):
-    users["seller"].wallet_address = WALLET_A
+    users["seller"].link_wallet(WALLET_A)
     db.session.commit()
     return users["seller"]
 
@@ -140,7 +140,7 @@ def test_card_without_blockchain_identity_is_blocked(seller, cat, card_type):
 
 # ---- ownership ---------------------------------------------------------------
 def test_wrong_wallet_is_blocked(seller, cat, card_type):
-    seller.wallet_address = WALLET_B
+    seller.link_wallet(WALLET_B)  # proven, but not the wallet the card is registered to
     db.session.commit()
     assert codes(make_card(seller, cat, card_type, owner=WALLET_A)) == {"SELLER_NOT_OWNER"}
 

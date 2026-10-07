@@ -55,8 +55,10 @@ def _require_registered_owner(payment, asset):
         raise CryptoError(f"OWNERSHIP SYNC ERROR: {sync.reason} The sale is on hold.", 409)
     if sync.status != ownership.IN_SYNC:
         raise CryptoError("Ownership of the token could not be verified on the blockchain right now.", 503)
-    wallet = payment.auction.product.seller.wallet_address
-    if not wallet or wallet.lower() != asset.owner_wallet.lower():
+    wallet = payment.auction.product.seller.verified_wallet
+    if not wallet:
+        raise CryptoError("The seller has not verified their wallet. Verify it on the profile page.", 409)
+    if wallet.lower() != asset.owner_wallet.lower():
         raise CryptoError("The seller wallet no longer matches the registered owner of the token.", 409)
 
 
@@ -69,9 +71,10 @@ def _check_ready(payment):
         raise CryptoError("This payment is already paid or being processed.", 409)
     card, asset, w3 = _tokenised(payment)
     _require_registered_owner(payment, asset)
-    winner_wallet = payment.buyer.wallet_address
+    winner_wallet = payment.buyer.verified_wallet
     if not winner_wallet:
-        raise CryptoError("The winning bidder has not added a wallet to their profile yet.", 409)
+        raise CryptoError("The winning bidder has not verified a wallet yet. Once they verify one on their profile, "
+                          "the transfer can be authorized to it.", 409)
     seller_wallet = Web3.to_checksum_address(asset.owner_wallet)
     winner_wallet = Web3.to_checksum_address(winner_wallet)
     if winner_wallet == seller_wallet:

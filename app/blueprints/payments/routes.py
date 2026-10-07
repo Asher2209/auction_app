@@ -32,7 +32,7 @@ def _crypto_context(payment):
     seller = payment.auction.product.seller
     row = payment.crypto
     return {
-        "enabled": True, "eth": format(eth, "f"), "rate": f"{rate:,.2f}", "seller_wallet": seller.wallet_address,
+        "enabled": True, "eth": format(eth, "f"), "rate": f"{rate:,.2f}", "seller_wallet": seller.verified_wallet,
         "chain_name": current_app.config["CHAIN_NAME"], "chain_id_hex": hex(current_app.config["CHAIN_ID"]),
         "required": current_app.config["CONFIRMATIONS_REQUIRED"],
         "tx_hash": row.transaction_hash if row else None,

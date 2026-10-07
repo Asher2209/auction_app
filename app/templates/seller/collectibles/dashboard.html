@@ -8,6 +8,11 @@
   </div>
   <a href="{{ url_for('seller.create_card') }}" class="btn btn-primary">Add a card</a>
 </div>
+{% if current_user.has_verified_wallet %}
+<p class="small text-muted mb-3" id="seller-wallet">Wallet <code>{{ current_user.wallet_address[:6] }}...{{ current_user.wallet_address[-4:] }}</code> (verified). Your cards are registered to it and buyers pay it.</p>
+{% else %}
+<div class="alert alert-warning small mb-3" role="status" id="seller-wallet"><span><strong>No verified wallet.</strong> Your verified cards can be registered on the blockchain and listed only after you <a href="{{ url_for("auth.profile") }}">verify a wallet</a> by signing a message with it.</span></div>
+{% endif %}
 
 <ul class="nav nav-tabs mb-3" id="card-tabs">
   {% for key, label, count in tabs %}

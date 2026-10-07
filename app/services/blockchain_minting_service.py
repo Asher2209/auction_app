@@ -80,6 +80,10 @@ def initiate_mint(asset, minter_wallet_raw):
         raise MintError("Only platform-verified cards can be minted.")
     if asset.status != "draft":
         raise MintError(f"The asset must be a draft to mint, not {asset.status}.", 409)
+    owner = card.product.seller.verified_wallet
+    if owner is None or owner.lower() != (asset.owner_wallet or "").lower():
+        raise MintError("The seller has not proven control of the wallet this card would be minted to. "
+                        "They must verify it on their profile first.", 409)
     platform_id = platform_numeric_id(card)
     w3 = _require_chain()
     try:

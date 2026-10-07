@@ -140,16 +140,17 @@ def prepare(payment, buyer_wallet_raw):
     if buyer_wallet is None:
         raise CryptoError("Connect your wallet first.")
     seller = payment.auction.product.seller
-    if not seller.wallet_address:
-        raise CryptoError("The seller has not added a payout wallet yet, so this cannot be paid in crypto.", 409)
-    if buyer_wallet.lower() == seller.wallet_address.lower():
+    seller_wallet = seller.verified_wallet
+    if not seller_wallet:
+        raise CryptoError("The seller has not verified a wallet yet, so this cannot be paid in crypto.", 409)
+    if buyer_wallet.lower() == seller_wallet.lower():
         raise CryptoError("Your wallet and the seller's wallet must be different.")
 
     cfg = current_app.config
     wei, eth, rate = quote(payment.amount)
     contract = _contract(get_web3())
     row = payment.crypto or CryptoPayment(payment_id=payment.id)
-    row.wallet_address, row.seller_address = buyer_wallet, seller.wallet_address
+    row.wallet_address, row.seller_address = buyer_wallet, seller_wallet
     row.contract_address = Web3.to_checksum_address(cfg["CONTRACT_ADDRESS"])
     row.cryptocurrency, row.expected_wei, row.amount, row.exchange_rate = "ETH", wei, eth, rate
     row.blockchain_network, row.chain_id = cfg["CHAIN_NAME"], cfg["CHAIN_ID"]
@@ -158,12 +159,12 @@ def prepare(payment, buyer_wallet_raw):
     db.session.add(row)
     db.session.commit()
 
-    data = contract.encode_abi("pay", args=[payment.auction_id, seller.wallet_address])
+    data = contract.encode_abi("pay", args=[payment.auction_id, seller_wallet])
     return {
         "tx": {"from": buyer_wallet, "to": row.contract_address, "value": hex(wei), "data": data},
         "chain": {"id": cfg["CHAIN_ID"], "id_hex": hex(cfg["CHAIN_ID"]), "name": cfg["CHAIN_NAME"]},
         "quote": {"inr": f"{payment.amount:.2f}", "eth": format(eth, "f"), "wei": str(wei), "rate": f"{rate:.2f}"},
-        "seller_address": seller.wallet_address,
+        "seller_address": seller_wallet,
     }
 
 

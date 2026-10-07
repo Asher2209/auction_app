@@ -123,6 +123,8 @@ def check_listing(product):
     seller_wallet = product.seller.wallet_address
     if not seller_wallet:
         check.block("SELLER_WALLET_MISSING", "The seller has not connected a wallet.")
+    elif not product.seller.has_verified_wallet:
+        check.block("SELLER_WALLET_UNVERIFIED", "The seller has not verified their wallet. Verify it on the profile page.")
     elif seller_wallet.lower() != (asset.owner_wallet or "").lower():
         check.block("SELLER_NOT_OWNER", "The seller's wallet is not the registered owner of this card.")
 

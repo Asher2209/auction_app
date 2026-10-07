@@ -217,7 +217,7 @@ def test_my_cards_says_so_when_a_card_was_paid_without_a_token_transfer(client, 
 
 
 def test_my_cards_lists_a_token_the_wallet_holds_even_if_it_was_not_won_here(client, users, seller, cat, card_type):
-    users["buyer"].wallet_address = WALLET_A.replace("a1", "d4")
+    users["buyer"].link_wallet(WALLET_A.replace("a1", "d4"))
     p = make_card(users["seller"], cat, card_type, status="minted", token_id=77, owner=users["buyer"].wallet_address)
     db.session.commit()
     login(client, "buyer@t.test")
@@ -228,7 +228,7 @@ def test_my_cards_lists_a_token_the_wallet_holds_even_if_it_was_not_won_here(cli
 def test_my_cards_asks_for_a_wallet_when_there_is_none(client, users):
     login(client, "buyer@t.test")
     html = page(client, "/buyer/cards")
-    assert "Add your wallet address" in html and "do not own any cards yet" in html
+    assert "Verify a wallet" in html and "do not own any cards yet" in html
 
 
 def test_my_cards_is_private_to_the_buyer(client, users, chain, s):

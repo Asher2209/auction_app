@@ -44,7 +44,7 @@ def paid_card(app, users, cats, amount="500"):  # noqa: F811
 
 
 def paid_crypto(app, users, cats, chain):  # noqa: F811
-    users["seller"].wallet_address = chain.seller
+    users["seller"].link_wallet(chain.seller)
     db.session.commit()
     a = won(users, cats, amount="80000")  # 0.25 ETH
     c = client_for(app, "buyer@t.test")

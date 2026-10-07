@@ -42,7 +42,7 @@ def chain(app):
 
 @pytest.fixture
 def setup(app, users, cats, chain):  # noqa: F811
-    users["seller"].wallet_address = chain.seller
+    users["seller"].link_wallet(chain.seller)
     db.session.commit()
     a = won(users, cats, amount="80000")  # 80,000 INR = 0.25 ETH at the configured rate
     return a, client_for(app, "buyer@t.test"), chain
@@ -107,18 +107,14 @@ def test_normalize_wallet_rejects(bad):
         bc.normalize_wallet(bad)
 
 
-def test_profile_stores_checksummed_wallet_and_never_echoes_secrets(app, users):
+def test_a_wallet_is_offered_as_a_checksummed_address_and_secrets_are_never_echoed(app, users):
     c = client_for(app, "seller@t.test")
-    base = {"name": "S", "phone": "9876543210", "address": "Somewhere"}
-    c.post("/auth/profile", data={**base, "wallet_address": ADDR.lower()})
-    assert db.session.get(User, users["seller"].id).wallet_address == ADDR
+    r = c.post("/auth/wallet/challenge", json={"address": ADDR.lower()})
+    assert r.status_code == 200 and f"Wallet: {ADDR}" in r.json["message"]  # what gets signed names the checksummed address
     secret = "0x" + "ab" * 32
-    r = c.post("/auth/profile", data={**base, "wallet_address": secret})
-    html = r.data.decode()
-    assert r.status_code == 200 and "private key or seed phrase" in html and secret not in html and ("ab" * 32) not in html
-    assert db.session.get(User, users["seller"].id).wallet_address == ADDR  # unchanged
-    c.post("/auth/profile", data={**base, "wallet_address": ""})
-    assert db.session.get(User, users["seller"].id).wallet_address is None
+    r = c.post("/auth/wallet/challenge", json={"address": secret})
+    assert r.status_code == 400 and "private key or seed phrase" in r.json["error"] and ("ab" * 32) not in r.data.decode()
+    assert db.session.get(User, users["seller"].id).wallet_address is None  # nothing is linked until a signature proves it
 
 
 # ---- quote -------------------------------------------------------------------------------
@@ -155,10 +151,20 @@ def test_crypto_tab_explains_missing_seller_wallet(app, setup, users):
     users["seller"].wallet_address = None
     db.session.commit()
     html = c.get(f"/payments/{a.id}").data.decode()
-    assert "has not added a payout wallet" in html and 'id="crypto-pay"' not in html
+    assert "has not verified a wallet" in html and 'id="crypto-pay"' not in html
     r = prepare(c, a, chain)
-    assert r.status_code == 409 and "payout wallet" in r.json["error"]
+    assert r.status_code == 409 and "has not verified a wallet" in r.json["error"]
     assert CryptoPayment.query.count() == 0
+
+
+def test_crypto_never_pays_a_seller_wallet_that_was_not_proven(app, setup, users):
+    a, c, chain = setup
+    users["seller"].wallet_verified_at = None  # the address is on record, but its owner never signed for it
+    db.session.commit()
+    html = c.get(f"/payments/{a.id}").data.decode()
+    assert "has not verified a wallet" in html and 'id="crypto-pay"' not in html
+    r = prepare(c, a, chain)
+    assert r.status_code == 409 and CryptoPayment.query.count() == 0
 
 
 # ---- prepare ----------------------------------------------------------------------------
@@ -606,7 +612,7 @@ def test_local_chain_end_to_end_through_the_demo_wallet(local_app):
     seller = make_user("seller@t.test", "seller")
     make_user("buyer@t.test")
     accounts = app.extensions["local_chain_accounts"]
-    seller.wallet_address = accounts[2]
+    seller.link_wallet(accounts[2])
     db.session.commit()
     from app.services import auction_service as svc
     a = make_auction(seller, cat, "Demo", 100)
@@ -701,7 +707,7 @@ def test_local_chain_advances_by_itself_while_a_payment_waits(local_app):
     db.session.commit()
     seller, buyer = make_user("seller@t.test", "seller"), make_user("buyer@t.test")
     accounts = app.extensions["local_chain_accounts"]
-    seller.wallet_address = accounts[2]
+    seller.link_wallet(accounts[2])
     db.session.commit()
     from app.services import auction_service as svc
     a = make_auction(seller, cat, "Demo", 100)

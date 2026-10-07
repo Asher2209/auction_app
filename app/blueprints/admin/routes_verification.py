@@ -227,7 +227,7 @@ def approve_card(verification_id):
 
         for warning in auction_validation_service.find_duplicate_signals(verification.collectible_card).warnings:
             flash(warning.message, 'warning')
-        result = complete_verification_and_create_blockchain_asset(verification, verification.product.seller.wallet_address)
+        result = complete_verification_and_create_blockchain_asset(verification, verification.product.seller.verified_wallet)
         flash(result['message'], 'info' if result['success'] else 'warning')
     else:
         flash('Error approving card.', 'danger')

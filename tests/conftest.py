@@ -1,4 +1,7 @@
 import pytest
+from eth_account import Account
+from eth_account.messages import encode_defunct
+from web3 import Web3
 
 from app import create_app
 from app.config import TestConfig
@@ -40,3 +43,11 @@ def users(app):
 
 def login(client, email, password=PASSWORD):
     return client.post("/auth/login", data={"email": email, "password": password})
+
+
+def prove_wallet(client, key):
+    """Link the wallet of private key `key` to the signed-in user the real way: ask for the message, sign it, send it."""
+    address = Account.from_key(key).address
+    message = client.post("/auth/wallet/challenge", json={"address": address}).get_json()["message"]
+    signature = Web3.to_hex(Account.sign_message(encode_defunct(text=message), private_key=key).signature)
+    return client.post("/auth/wallet/verify", json={"address": address, "signature": signature})

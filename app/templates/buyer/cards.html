@@ -5,8 +5,8 @@
 {% include "buyer/_nav.html" %}
 
 <p class="text-muted small">Cards you have won or hold. A token is a digital ownership record for the physical card; the card itself is handed over by the seller.</p>
-{% if not current_user.wallet_address %}
-<div class="alert alert-info small" role="status">Add your wallet address in <a href="{{ url_for('auth.profile') }}">your profile</a> to pay for cards in cryptocurrency and to see the tokens your wallet holds.</div>
+{% if not current_user.has_verified_wallet %}
+<div class="alert alert-info small" role="status" id="wallet-needed"><span>Verify a wallet in <a href="{{ url_for("auth.profile") }}">your profile</a> to pay for cards in cryptocurrency and to see the tokens your wallet holds. You prove it is yours by signing a message with it.</span></div>
 {% endif %}
 
 <div class="table-responsive">

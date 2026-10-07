@@ -26,7 +26,7 @@ def _row(user, card, auction=None, payment=None, price=None):
     transfer = ots.transfer_for_payment(payment) if payment is not None else None
     if payment is not None and payment.payment_status != "successful":
         code = PENDING
-    elif _same(asset.owner_wallet if asset else None, user.wallet_address) and (transfer or auction is None):
+    elif _same(asset.owner_wallet if asset else None, user.verified_wallet) and (transfer or auction is None):
         code = OWNED
     elif transfer is not None:
         code = MOVED
@@ -46,9 +46,9 @@ def buyer_cards(user):
         card = win.auction.product.collectible_card
         if card is not None:
             rows[card.id] = _row(user, card, win.auction, win.auction.payment, win.winning_amount)
-    if user.wallet_address:
+    if user.verified_wallet:
         held = (BlockchainAsset.query
-                .filter(func.lower(BlockchainAsset.owner_wallet) == user.wallet_address.lower(),
+                .filter(func.lower(BlockchainAsset.owner_wallet) == user.verified_wallet.lower(),
                         BlockchainAsset.status.in_(("minted", "transferred"))).all())
         for asset in held:
             if asset.collectible_card_id not in rows:

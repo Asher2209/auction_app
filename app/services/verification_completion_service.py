@@ -51,14 +51,15 @@ def complete_verification_and_create_blockchain_asset(verification: CollectibleV
                 'message': 'Blockchain is not configured'
             }
         
-        # Use seller's wallet or default
-        owner_wallet = seller_wallet or card.product.seller.wallet_address
-        if not owner_wallet:
-            logger.warning(f"Seller {card.product.seller_id} has no wallet address - cannot create blockchain asset")
+        # Only a wallet the seller has proven they control may own the token
+        verified = card.product.seller.verified_wallet
+        owner_wallet = seller_wallet or verified
+        if not owner_wallet or owner_wallet != verified:
+            logger.info(f"Seller {card.product.seller_id} has no verified wallet - blockchain asset deferred")
             return {
                 'success': False,
                 'asset': None,
-                'message': 'Seller has not connected their wallet'
+                'message': 'The seller has not verified a wallet yet. The card will be registered on the blockchain as soon as they do.'
             }
         
         # Create blockchain asset

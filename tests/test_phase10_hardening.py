@@ -253,10 +253,12 @@ def test_estimate_the_form_and_the_public_pages_agree_it_is_public_and_the_selle
 MIGRATION = ROOT / "migrations" / "versions" / "g17resubmission01_resubmission_allowed.py"
 
 
-def test_migration_there_is_exactly_one_head_and_it_is_this_one():
+def test_migration_there_is_exactly_one_head_and_it_includes_this_one():
     cfg = Config()
     cfg.set_main_option("script_location", str(ROOT / "migrations"))
-    assert ScriptDirectory.from_config(cfg).get_heads() == ["g17resubmission01"]
+    script = ScriptDirectory.from_config(cfg)
+    (head,) = script.get_heads()
+    assert "g17resubmission01" in {rev.revision for rev in script.iterate_revisions(head, "base")}
 
 
 def test_migration_adds_the_column_as_true_for_existing_rows_and_removes_it_again():

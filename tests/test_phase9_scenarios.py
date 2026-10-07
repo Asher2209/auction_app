@@ -40,7 +40,7 @@ from app.services import auction_validation_service as avs
 from app.services import blockchain_ownership_service as ownership
 from app.services import card_status_service as status
 
-from .conftest import login, make_user
+from .conftest import login, make_user, prove_wallet
 from .test_card_auction import create as create_auction_post, form as auction_form, ready_card
 from .test_card_settlement import authorize_on_chain, jpost, pay, pay_url, prepare_payment, reverts_with, sale_url
 from .test_listing_validation import CHECKS, WALLET_A, WALLET_B, cat, card_type, complete_checklist, make_card, seller  # noqa: F401 (fixtures)
@@ -63,9 +63,14 @@ def test_the_whole_journey(app, client, users, cat, card_type, chain, static_dir
     app.config["LISTING_REQUIRES_MINTED_TOKEN"] = True
     seller_user, buyer = users["seller"], users["buyer"]
     rival = make_user("rival@t.test", "buyer")
-    seller_user.wallet_address, buyer.wallet_address = chain.seller_wallet, chain.w3.eth.accounts[3]
-    rival.wallet_address = chain.w3.eth.accounts[4]
-    db.session.commit()
+
+    # 0. everyone proves they control their wallet by signing the site one-time message (keys of the test chain)
+    keys = chain.w3.provider.ethereum_tester.backend.account_keys
+    for email, index in (("seller@t.test", 1), ("buyer@t.test", 3), ("rival@t.test", 4)):
+        switch(client, email)
+        assert prove_wallet(client, keys[index].to_bytes()).get_json()["ok"]
+    db.session.expire_all()
+    assert (seller_user.verified_wallet, buyer.verified_wallet) == (chain.seller_wallet, chain.w3.eth.accounts[3])
 
     # 1. the seller submits a graded Pokemon card
     switch(client, "seller@t.test")
@@ -155,7 +160,7 @@ def test_the_whole_journey(app, client, users, cat, card_type, chain, static_dir
 def test_duplicate_card_across_sellers(client, users, seller, cat, card_type):
     """Two sellers register the same graded card: the second cannot list it while the first listing is live."""
     other = make_user("seller2@t.test", "seller")
-    other.wallet_address = WALLET_B
+    other.link_wallet(WALLET_B)
     db.session.commit()
     first = ready_card(users["seller"], cat, card_type, cert="55512345")
     second = ready_card(other, cat, card_type, cert="55512345", owner=WALLET_B)
@@ -171,7 +176,7 @@ def test_duplicate_card_across_sellers(client, users, seller, cat, card_type):
 
 def test_duplicate_card_is_free_once_the_first_listing_is_gone_but_flagged(client, users, seller, cat, card_type):
     other = make_user("seller2@t.test", "seller")
-    other.wallet_address = WALLET_B
+    other.link_wallet(WALLET_B)
     db.session.commit()
     first = ready_card(users["seller"], cat, card_type, cert="66612345")
     second = ready_card(other, cat, card_type, cert="66612345", owner=WALLET_B)
@@ -184,14 +189,11 @@ def test_duplicate_card_is_free_once_the_first_listing_is_gone_but_flagged(clien
 
 
 # =================================== wrong owner and wrong wallet ============================================================
-def change_wallet(client, user, wallet):
-    return client.post("/auth/profile", data={"name": user.name, "phone": "9000000000", "address": "Somewhere", "wallet_address": wallet})
-
-
-def test_wrong_wallet_a_seller_who_changes_profile_wallet_cannot_list(client, users, seller, cat, card_type):
+def test_wrong_wallet_a_seller_who_links_another_wallet_cannot_list(client, users, seller, cat, card_type):
     p = ready_card(users["seller"], cat, card_type)
+    users["seller"].link_wallet(WALLET_B)  # proven, but not the wallet the card is registered to
+    db.session.commit()
     switch(client, "seller@t.test")
-    assert change_wallet(client, users["seller"], WALLET_B).status_code == 302
     r = create_auction_post(client, p)
     assert r.status_code == 409 and "not the registered owner" in r.get_data(as_text=True) and Auction.query.count() == 0
 
@@ -199,16 +201,17 @@ def test_wrong_wallet_a_seller_who_changes_profile_wallet_cannot_list(client, us
 def test_wrong_wallet_removing_the_wallet_also_blocks_listing(client, users, seller, cat, card_type):
     p = ready_card(users["seller"], cat, card_type)
     switch(client, "seller@t.test")
-    change_wallet(client, users["seller"], "")
+    assert client.post("/auth/wallet/remove").status_code == 302
     r = create_auction_post(client, p)
     assert r.status_code == 409 and "not connected a wallet" in r.get_data(as_text=True)
 
 
-def test_wrong_wallet_a_private_key_pasted_as_a_wallet_is_refused(client, users, seller):
+def test_wrong_wallet_a_private_key_offered_as_a_wallet_is_refused(client, users, seller):
     switch(client, "seller@t.test")
     before = users["seller"].wallet_address
-    r = change_wallet(client, users["seller"], "0x" + "ab" * 32)  # 64 hex characters: looks like a private key
-    assert r.status_code == 200 and b"private key" in r.data
+    secret = "0x" + "ab" * 32  # 64 hex characters: looks like a private key
+    r = client.post("/auth/wallet/challenge", json={"address": secret})
+    assert r.status_code == 400 and "private key" in r.get_json()["error"] and ("ab" * 32) not in r.get_data(as_text=True)
     assert db.session.get(User, users["seller"].id).wallet_address == before
 
 
@@ -216,7 +219,8 @@ def test_wrong_wallet_after_the_auction_the_payout_must_still_go_to_the_register
     from .test_card_settlement import sold_card
     s = sold_card(users, cat, card_type, chain)
     switch(client, "seller@t.test")
-    change_wallet(client, users["seller"], chain.stranger)  # the profile now points at another wallet
+    users["seller"].link_wallet(chain.stranger)  # the seller now holds another (proven) wallet
+    db.session.commit()
     r = jpost(client, sale_url(s, "/prepare"), {"wallet_address": chain.seller_wallet})
     assert r.status_code == 409 and "no longer matches the registered owner" in r.get_json()["error"]
     assert CryptoPayment.query.count() == 0

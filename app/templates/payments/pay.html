@@ -109,7 +109,7 @@
             {% if crypto.waiting %}
               <div class="alert alert-info mb-0" role="status">{{ crypto.waiting }}</div>
             {% elif not crypto.seller_wallet %}
-              <div class="alert alert-warning mb-0">The seller has not added a payout wallet yet, so this auction cannot be paid with cryptocurrency. Please use another method.</div>
+              <div class="alert alert-warning mb-0">The seller has not verified a wallet yet, so this auction cannot be paid with cryptocurrency. Please use another method.</div>
             {% else %}
               <div class="card card-body mb-3">
                 <div class="small text-muted">You will send</div>

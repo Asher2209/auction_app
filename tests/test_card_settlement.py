@@ -171,7 +171,10 @@ PRICE_WEI = 25 * 10**16
 
 def sold_card(users, cat, card_type, chain, minted=True, winner_wallet=True):
     """A minted card whose auction has closed with a winner who owes the payment."""
-    users["buyer"].wallet_address = chain.w3.eth.accounts[3] if winner_wallet else None
+    if winner_wallet:
+        users["buyer"].link_wallet(chain.w3.eth.accounts[3])
+    else:
+        users["buyer"].unlink_wallet()
     db.session.commit()
     asset = verified_asset(users["seller"], cat, card_type, chain)
     product = asset.collectible_card.product
@@ -247,7 +250,7 @@ def test_authorization_is_refused_when_the_sale_cannot_go_ahead(client, users, c
     login(client, "seller@t.test")
     nowallet = sold_card(users, cat, card_type, chain, winner_wallet=False)
     r = jpost(client, sale_url(nowallet, "/prepare"), {"wallet_address": chain.seller_wallet})
-    assert r.status_code == 409 and "has not added a wallet" in r.get_json()["error"]
+    assert r.status_code == 409 and "has not verified a wallet" in r.get_json()["error"]
     unminted = sold_card(users, cat, card_type, chain, minted=False)
     r = jpost(client, sale_url(unminted, "/prepare"), {"wallet_address": chain.seller_wallet})
     assert r.status_code == 409 and "no minted blockchain token" in r.get_json()["error"]
@@ -470,4 +473,4 @@ def test_the_sale_page_says_what_blocks_the_seller(client, users, cat, card_type
     nowallet = sold_card(users, cat, card_type, chain, winner_wallet=False)
     login(client, "seller@t.test")
     html = client.get(sale_url(nowallet)).get_data(as_text=True)
-    assert "has not added a wallet to their profile" in html and "Authorize transfer</button>" not in html
+    assert "has not verified a wallet" in html and "Authorize transfer</button>" not in html

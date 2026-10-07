@@ -386,6 +386,11 @@
         <div class="small text-muted mb-1">Email</div>
         <a href="mailto:{{ seller.email }}" style="color: var(--cb-link); text-decoration: none;">{{ seller.email }}</a>
       </div>
+      <div class="mb-3" id="seller-wallet">
+        <div class="small text-muted mb-1">Wallet</div>
+        {% if seller.has_verified_wallet %}<code class="text-break">{{ seller.wallet_address }}</code> <span class="small">(verified)</span>
+        {% else %}<span class="small">No verified wallet. Approval still works; the blockchain record is created when the seller verifies one.</span>{% endif %}
+      </div>
       {% if seller.phone %}
       <div class="mb-3">
         <div class="small text-muted mb-1">Phone</div>
