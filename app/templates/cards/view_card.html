@@ -45,7 +45,7 @@
     <div class="product-auction-info">
       <div class="product-auction-bid">
         <div class="product-auction-bid-label">Estimated Value</div>
-        <div class="product-auction-bid-value">{{ card.estimated_value|money }}</div>
+        <div class="product-auction-bid-value">{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</div>
       </div>
       
       <div style="display: grid; gap: var(--dt-space-md); padding-top: var(--dt-space-xl); border-top: 1px solid var(--dt-border);">
@@ -79,7 +79,7 @@
         <div class="product-seller-avatar">{{ product.seller.name[0].upper() }}</div>
         <div style="flex: 1;">
           <div class="product-seller-name">{{ product.seller.name }}</div>
-          <div class="product-seller-rating">Verified Seller</div>
+          <div class="product-seller-rating">Seller</div>
         </div>
       </div>
     </div>
@@ -114,7 +114,7 @@
         <h3 class="auction-card-title">{{ item.card_name }}</h3>
         <div class="auction-card-bid">
           <div class="auction-card-bid-label">Value</div>
-          <div class="auction-card-bid-amount">{{ item.estimated_value|money }}</div>
+          <div class="auction-card-bid-amount">{{ item.estimated_value|money if item.estimated_value else 'Not given' }}</div>
         </div>
         <div class="auction-card-meta">
           <a href="{{ url_for('main.view_card', card_id=item.id) }}" class="btn btn-sm btn-primary">View</a>

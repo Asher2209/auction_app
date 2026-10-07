@@ -310,7 +310,7 @@ def view_card(card_id):
 def api_search_cards():
     """API endpoint for card search autocomplete"""
     q = request.args.get('q', '').strip()
-    limit = request.args.get('limit', 10, type=int)
+    limit = min(max(request.args.get('limit', 10, type=int), 1), 50)  # never let a caller page through the whole table
     
     if len(q) < 2:
         return jsonify([])

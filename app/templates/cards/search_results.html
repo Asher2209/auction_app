@@ -119,7 +119,7 @@
         <div class="auction-card-info">
           <div class="auction-card-bid">
             <div class="auction-card-bid-label">Est. Value</div>
-            <div class="auction-card-bid-amount">{{ card.estimated_value|money }}</div>
+            <div class="auction-card-bid-amount">{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</div>
           </div>
         </div>
         

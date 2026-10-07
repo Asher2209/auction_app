@@ -43,7 +43,7 @@
         <div class="auction-card-info">
           <div class="auction-card-bid">
             <div class="auction-card-bid-label">Est. Value</div>
-            <div class="auction-card-bid-amount" style="color: var(--dt-accent); font-size: 1.25rem; font-weight: 600;">${{ "%.2f"|format(card.estimated_value) }}</div>
+            <div class="auction-card-bid-amount" style="color: var(--dt-accent); font-size: 1.25rem; font-weight: 600;">{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</div>
           </div>
         </div>
         

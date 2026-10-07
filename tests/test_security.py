@@ -529,7 +529,10 @@ def test_unique_rules_hold_at_the_database_level(app, users, cats):  # noqa: F81
 
 # ============================ default deny and roles =======================================================================
 PUBLIC = {"main.index", "main.health", "auctions.browse", "auctions.detail", "auctions.state", "auth.login", "auth.register",
-          "auth.forgot_password", "auth.reset_password", "invoices.verify", "static"}
+          "auth.forgot_password", "auth.reset_password", "invoices.verify", "static",
+          "main.privacy_policy", "main.terms_of_service", "main.refund_policy", "main.cookie_policy",  # the legal pages
+          "main.shop", "main.browse_cards", "main.search_cards", "main.api_search_cards", "main.view_card",  # the public card catalogue
+          "collectibles.verify_card"}  # the public QR record
 FILL = {"integer": 1, "string": "x", "path": "x", "uuid": "00000000-0000-0000-0000-000000000000"}
 
 
@@ -714,7 +717,7 @@ def test_stored_text_is_escaped_on_every_page_that_shows_it(app, users, cats, pa
     db.session.commit()
     pages = [(anon(app), p) for p in ("/", "/auctions/", f"/auctions/{a.id}", f"/auctions/?q=x&category={cats['Books'].id}")]
     pages += [(client_for(app, "buyer@t.test"), p) for p in ("/notifications/", "/buyer/", "/buyer/bids", "/auth/profile", "/feedback")]
-    pages += [(client_for(app, "seller@t.test"), p) for p in ("/seller/", f"/seller/products/{a.product_id}", "/seller/reviews")]
+    pages += [(client_for(app, "seller@t.test"), p) for p in ("/seller/collectibles", f"/seller/products/{a.product_id}", "/seller/reviews")]
     pages += [(client_for(app, "admin@t.test"), p) for p in ("/admin/products?status=all", f"/admin/products/{a.product_id}", "/admin/users",
                                                           "/admin/categories", "/admin/reviews", "/admin/feedback", "/admin/reports/top-products?from=2000-01-01")]
     for c, path in pages:
