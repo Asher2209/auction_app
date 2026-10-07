@@ -1,11 +1,9 @@
-{
+﻿{
   "version": "0.0.1",
   "configurations": [
     {
       "name": "ChainBid Dev Server",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "flask", "run"],
-      "port": 5000
+      "url": "http://localhost:5000"
     }
   ]
 }
