@@ -10,3 +10,4 @@ flask*.log
 IMAGES_IMPLEMENTATION_REPORT.md
 IMAGE_AUDIT.md
 PROJECT_PLAN.md
+node_modules/

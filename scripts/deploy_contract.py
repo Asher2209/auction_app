@@ -2,7 +2,9 @@
 
     $env:RPC_URL = "https://sepolia.infura.io/v3/<project id>"
     $env:DEPLOYER_PRIVATE_KEY = "<private key of a TEST-ONLY wallet>"
-    python scripts/deploy_contract.py
+    python scripts/deploy_contract.py            # the AuctionPayment contract
+    $env:PLATFORM_ADMIN_WALLET = "<PUBLIC address of the admin wallet that will mint in MetaMask>"
+    python scripts/deploy_contract.py token      # the CollectibleCardToken contract (owner = that wallet)
 
 Security notes
 * Use a throwaway wallet that holds only free test ETH, never a wallet with real funds.
@@ -20,9 +22,10 @@ from web3 import Web3
 
 ROOT = Path(__file__).resolve().parent.parent
 ARTIFACT = ROOT / "contracts" / "build" / "AuctionPayment.json"
+TOKEN_ARTIFACT = ROOT / "contracts" / "build" / "CollectibleCardToken.json"
 
 
-def deploy(w3, key):
+def deploy(w3, key, artifact=ARTIFACT, constructor_args=()):
     """Sign and send the deployment with `key`; return (contract_address, chain_id). Exits on unsafe conditions."""
     chain_id = w3.eth.chain_id
     account = Account.from_key(key)
@@ -34,9 +37,9 @@ def deploy(w3, key):
     if balance == 0:
         sys.exit("The deployer has no test ETH. Get some from a faucet first.")
 
-    art = json.loads(ARTIFACT.read_text())
+    art = json.loads(artifact.read_text())
     contract = w3.eth.contract(abi=art["abi"], bytecode=art["bytecode"])
-    tx = contract.constructor().build_transaction({
+    tx = contract.constructor(*constructor_args).build_transaction({
         "from": account.address, "nonce": w3.eth.get_transaction_count(account.address), "chainId": chain_id,
     })
     signed = account.sign_transaction(tx)
@@ -49,17 +52,28 @@ def deploy(w3, key):
 
 
 def main():
+    which = sys.argv[1] if len(sys.argv) > 1 else "payment"
+    if which not in ("payment", "token"):
+        sys.exit("Usage: python scripts/deploy_contract.py [payment|token]")
     rpc, key = os.environ.get("RPC_URL"), os.environ.get("DEPLOYER_PRIVATE_KEY")
     if not rpc or not key:
         sys.exit("Set RPC_URL and DEPLOYER_PRIVATE_KEY in the environment first (see the docstring).")
     w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 30}))
     if not w3.is_connected():
         sys.exit("Could not connect to RPC_URL.")
-    address, chain_id = deploy(w3, key)
+    if which == "token":
+        admin = os.environ.get("PLATFORM_ADMIN_WALLET", "")
+        if not Web3.is_address(admin):
+            sys.exit("Set PLATFORM_ADMIN_WALLET to the PUBLIC address (0x + 40 hex) of the wallet that will sign mints in MetaMask.")
+        address, chain_id = deploy(w3, key, TOKEN_ARTIFACT, (Web3.to_checksum_address(admin),))
+        variable = "COLLECTIBLE_CONTRACT_ADDRESS"
+    else:
+        address, chain_id = deploy(w3, key)
+        variable = "CONTRACT_ADDRESS"
     print()
     print("Deployed. Put these in your .env file:")
     print(f"  RPC_URL={rpc}")
-    print(f"  CONTRACT_ADDRESS={address}")
+    print(f"  {variable}={address}")
     print(f"  CHAIN_ID={chain_id}")
 
 
