@@ -52,3 +52,20 @@ def lifecycle_code(card):
 def lifecycle(card):
     code = lifecycle_code(card)
     return {"code": code, "label": LABELS[code]}
+
+
+def edit_blocker(card):
+    """Why the seller cannot edit this card right now, or None when they can.
+
+    One rule for the edit route and for every page that offers the Edit button, so they cannot disagree.
+    """
+    product = card.product
+    verification = product.collectible_verification
+    status = verification.verification_status if verification else "pending"
+    if status == "verified":
+        return "You cannot edit a verified card listing."
+    if product.auction is not None and product.auction.status in ("active", "closed"):
+        return "You cannot edit a card once the auction has started."
+    if status == "rejected" and verification is not None and not verification.resubmission_allowed:
+        return "This card was rejected and the reviewer did not allow it to be resubmitted."
+    return None

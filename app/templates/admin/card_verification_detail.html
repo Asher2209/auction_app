@@ -350,10 +350,16 @@
       <!-- Approve Button -->
       <form method="POST" action="{{ url_for('admin.approve_card', verification_id=verification.id) }}" class="mb-3">
         {{ approval_form.hidden_tag() }}
+        {% if approval_blockers %}
+        <div class="small mb-3" id="approval-blockers">
+          <strong>Cannot be approved yet</strong>
+          <ul class="mb-0 ps-3">{% for reason in approval_blockers %}<li>{{ reason }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
         <div class="mb-3">
           {{ approval_form.approval_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Optional approval notes') }}
         </div>
-        <button type="submit" class="btn btn-success btn-sm w-100" style="border-radius: 0.5rem; background: #10b981; border: none;">
+        <button type="submit" class="btn btn-success btn-sm w-100" style="border-radius: 0.5rem; background: #10b981; border: none;"{% if approval_blockers or verification.verification_status == 'verified' %} disabled{% endif %}>
           ✓ Approve Card
         </button>
       </form>
@@ -478,17 +484,4 @@
     </div>
   </div>
 </div>
-
-<script>
-// Pass the forms to the template context
-var approval_form = {
-  hidden_tag: function() { return ''; }
-};
-var rejection_form = {
-  hidden_tag: function() { return ''; }
-};
-var info_form = {
-  hidden_tag: function() { return ''; }
-};
-</script>
 {% endblock %}

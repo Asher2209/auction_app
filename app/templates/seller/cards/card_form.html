@@ -143,8 +143,8 @@
         <!-- Estimated Value -->
         <div class="mb-3">
           <label class="form-label fw-600" for="estimated_value">Your Estimated Value (₹)</label>
-          {{ form.estimated_value(class="form-control", placeholder="For admin reference - not public") }}
-          <small class="text-muted d-block mt-1">Helps admins verify the card's legitimacy</small>
+          {{ form.estimated_value(class="form-control", placeholder="Optional") }}
+          <small class="text-muted d-block mt-1">Shown publicly as your own estimate, not a platform valuation. It also helps admins check the listing.</small>
         </div>
 
         <!-- Type-Specific Fields -->
@@ -295,42 +295,5 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/card-forms.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Show/hide grading fields based on checkbox
-  const isGradedCheckbox = document.getElementById('is_graded');
-  function toggleGradingFields() {
-    const gradingFields = document.getElementById('grading-fields');
-    const certFields = document.getElementById('cert-fields');
-    if (isGradedCheckbox.checked) {
-      gradingFields.style.display = 'grid';
-      certFields.style.display = 'grid';
-    } else {
-      gradingFields.style.display = 'none';
-      certFields.style.display = 'none';
-    }
-  }
-  isGradedCheckbox.addEventListener('change', toggleGradingFields);
-  toggleGradingFields();
-
-  // Show/hide type-specific fields
-  const cardTypeSelect = document.getElementById('card_type_id');
-  function toggleTypeFields() {
-    const typeId = cardTypeSelect.value;
-    const selectedOption = cardTypeSelect.querySelector(`option[value="${typeId}"]`);
-    const typeName = selectedOption ? selectedOption.textContent.toLowerCase() : '';
-
-    document.getElementById('pokemon-fields').style.display = 'none';
-    document.getElementById('football-fields').style.display = 'none';
-
-    if (typeName.includes('pokémon') || typeName.includes('pokemon')) {
-      document.getElementById('pokemon-fields').style.display = 'block';
-    } else if (typeName.includes('football') || typeName.includes('soccer')) {
-      document.getElementById('football-fields').style.display = 'block';
-    }
-  }
-  cardTypeSelect.addEventListener('change', toggleTypeFields);
-  toggleTypeFields();
-});
-</script>
+<script src="{{ url_for('static', filename='js/card-form-toggles.js') }}"></script>
 {% endblock %}

@@ -14,13 +14,14 @@ CDN_HOSTS = "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com"
 
 
 def content_security_policy(host):
-    """No inline scripts or handlers, scripts only from this site and two pinned CDNs (which also carry SRI hashes)."""
+    """No inline scripts or handlers (script-src has no 'unsafe-inline'). Scripts come only from this site and two pinned
+    CDNs, and every CDN asset carries an SRI hash (a test checks all of this against the templates)."""
     return "; ".join([
         "default-src 'self'",
-        f"script-src 'self' 'unsafe-inline' {CDN_HOSTS}",
+        f"script-src 'self' {CDN_HOSTS}",
         f"style-src 'self' 'unsafe-inline' {CDN_HOSTS}",  # inline style="" attributes are used for sizing
         "img-src 'self' data: https://raw.githubusercontent.com https://images.pokemontcg.io",  # allow external card images
-        "font-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+        "font-src 'self' https://cdn.jsdelivr.net",  # the fonts themselves are served from /static/fonts
         f"connect-src 'self' ws://{host} wss://{host}",  # Socket.IO
         "object-src 'none'",
         "base-uri 'self'",

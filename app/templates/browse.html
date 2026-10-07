@@ -8,11 +8,11 @@
 </div>
 
 <!-- Filters -->
-<div style="display: flex; gap: var(--dt-space-lg); margin-bottom: var(--dt-space-2xl); flex-wrap: wrap; align-items: center;">
+<div style="display: flex; gap: var(--dt-space-lg); margin-bottom: var(--dt-space-2xl); flex-wrap: wrap; align-items: center;" data-shop-url="{{ url_for('main.shop') }}">
   <!-- Category Filter -->
   <div style="display: flex; align-items: center; gap: var(--dt-space-md);">
     <label for="category-filter" style="font-weight: 600;">Category:</label>
-    <select id="category-filter" style="padding: var(--dt-space-sm) var(--dt-space-md); border-radius: var(--dt-radius-md); border: 1px solid var(--dt-border); background: var(--dt-bg-1);" onchange="updateFilters()">
+    <select id="category-filter" data-shop-filter="category" style="padding: var(--dt-space-sm) var(--dt-space-md); border-radius: var(--dt-radius-md); border: 1px solid var(--dt-border); background: var(--dt-bg-1);">
       <option value="all" {% if category == 'all' %}selected{% endif %}>All Items</option>
       <option value="auctions" {% if category == 'auctions' %}selected{% endif %}>Auctions Only</option>
       <option value="cards" {% if category == 'cards' %}selected{% endif %}>Trading Cards Only</option>
@@ -23,7 +23,7 @@
   {% if category in ('cards', 'all') %}
   <div style="display: flex; align-items: center; gap: var(--dt-space-md);">
     <label for="card-type-filter" style="font-weight: 600;">Card Type:</label>
-    <select id="card-type-filter" style="padding: var(--dt-space-sm) var(--dt-space-md); border-radius: var(--dt-radius-md); border: 1px solid var(--dt-border); background: var(--dt-bg-1);" onchange="updateFilters()">
+    <select id="card-type-filter" data-shop-filter="card_type" style="padding: var(--dt-space-sm) var(--dt-space-md); border-radius: var(--dt-radius-md); border: 1px solid var(--dt-border); background: var(--dt-bg-1);">
       <option value="">All Types</option>
       {% for ct in all_card_types %}
       <option value="{{ ct.slug }}" {% if card_type and card_type.id == ct.id %}selected{% endif %}>{{ ct.name }}</option>
@@ -35,27 +35,13 @@
   <!-- Sort Filter -->
   <div style="display: flex; align-items: center; gap: var(--dt-space-md); margin-left: auto;">
     <label for="sort-filter" style="font-weight: 600;">Sort:</label>
-    <select id="sort-filter" style="padding: var(--dt-space-sm) var(--dt-space-md); border-radius: var(--dt-radius-md); border: 1px solid var(--dt-border); background: var(--dt-bg-1);" onchange="updateFilters()">
+    <select id="sort-filter" data-shop-filter="sort" style="padding: var(--dt-space-sm) var(--dt-space-md); border-radius: var(--dt-radius-md); border: 1px solid var(--dt-border); background: var(--dt-bg-1);">
       <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
       <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
       <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
     </select>
   </div>
 </div>
-
-<script>
-function updateFilters() {
-  const category = document.getElementById('category-filter').value;
-  const cardType = document.getElementById('card-type-filter')?.value || '';
-  const sort = document.getElementById('sort-filter').value;
-  
-  let url = '/browse?category=' + category + '&sort=' + sort;
-  if (cardType) {
-    url += '&card_type=' + cardType;
-  }
-  window.location.href = url;
-}
-</script>
 
 <!-- Items Grid -->
 {% if items %}
@@ -113,7 +99,7 @@ function updateFilters() {
           
           <div class="auction-card-info">
             <div class="auction-card-bid">
-              <div class="auction-card-bid-label">Est. Value</div>
+              <div class="auction-card-bid-label">Seller's estimate</div>
               <div class="auction-card-bid-amount" style="color: var(--dt-accent); font-size: 1.25rem; font-weight: 600;">{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</div>
             </div>
           </div>
@@ -136,4 +122,5 @@ function updateFilters() {
 </div>
 {% endif %}
 
+<script src="{{ url_for('static', filename='js/shop-filters.js') }}"></script>
 {% endblock %}

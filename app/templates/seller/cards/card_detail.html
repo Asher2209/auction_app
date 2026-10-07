@@ -8,7 +8,7 @@
     <p class="lead text-muted">{{ card.card_type.name }} • {{ card.set_name or 'Unspecified Set' }}</p>
   </div>
   <div class="col-auto">
-    {% if product.seller_id == current_user.id %}
+    {% if product.seller_id == current_user.id and can_edit %}
       <a href="{{ url_for('seller.edit_card', card_id=card.id) }}" class="btn btn-outline-primary">Edit Card</a>
     {% endif %}
   </div>
@@ -71,6 +71,9 @@
       <p class="small text-muted mb-0">{{ verification.rejection_reason }}</p>
       {% elif verification.admin_notes %}
       <p class="small text-muted mb-0">{{ verification.admin_notes }}</p>
+      {% endif %}
+      {% if verification.verification_status == 'rejected' %}
+      <p class="small mt-2 mb-0" id="resubmission-note">{% if verification.resubmission_allowed %}You can edit the card and send it for verification again.{% else %}The reviewer did not allow this card to be resubmitted.{% endif %}</p>
       {% endif %}
     </div>
     {% endif %}

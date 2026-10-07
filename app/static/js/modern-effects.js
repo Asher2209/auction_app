@@ -35,13 +35,6 @@ function initScrollFadeIn() {
   });
 }
 
-// 3. Lucide Icons Initialization
-function initLucideIcons() {
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-  }
-}
-
 // 4. Button Hover Effects
 function initButtonEffects() {
   const buttons = document.querySelectorAll('.btn-hover-fade');
@@ -104,23 +97,11 @@ function initIconBoxes() {
 // 8. Initialize All Effects
 document.addEventListener('DOMContentLoaded', function() {
   initScrollFadeIn();
-  initLucideIcons();
   initButtonEffects();
   initCardEffects();
   initGradientText();
   initIconBoxes();
 });
-
-// 9. Reinitialize Lucide Icons after AJAX/DOM updates
-const originalFetch = window.fetch;
-window.fetch = function(...args) {
-  return originalFetch.apply(this, args).then(response => {
-    response.clone().text().then(() => {
-      setTimeout(initLucideIcons, 100);
-    });
-    return response;
-  });
-};
 
 // 10. Dark Mode Detection
 function detectDarkMode() {

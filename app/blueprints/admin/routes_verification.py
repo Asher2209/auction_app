@@ -12,7 +12,7 @@ from ...models import (
     CollectibleVerification, CollectibleCard, CardVerificationChecklist,
     CardVerificationHistory, Product, User, utcnow, BlockchainAsset
 )
-from ...services import auction_validation_service, card_identity_service, qrcode_service
+from ...services import auction_validation_service, card_identity_service, qrcode_service, verification_checklist_service
 from ...services.verification_completion_service import complete_verification_and_create_blockchain_asset
 from ...utils import role_required
 from . import bp
@@ -20,6 +20,9 @@ from .forms_verification import (
     CardVerificationChecklistForm, CardApprovalForm, CardRejectionForm,
     CardMoreInfoForm
 )
+
+
+OPEN_STATUSES = ('pending', 'submitted', 'under_review', 'more_info_needed')  # no decision has been made yet
 
 
 @bp.route("/cards/verify", methods=["GET"])
@@ -111,9 +114,11 @@ def card_verification_detail(verification_id):
     rejection_form = CardRejectionForm()
     info_form = CardMoreInfoForm()
     signals = auction_validation_service.find_duplicate_signals(card)
+    decided = verification.verification_status == 'verified'
 
     return render_template(
         'admin/card_verification_detail.html',
+        approval_blockers=[] if decided else verification_checklist_service.blockers(verification),
         duplicate_issues=signals.violations + signals.warnings,
         verification=verification,
         card=card,
@@ -136,6 +141,11 @@ def save_verification_checklist(verification_id):
     """Save verification checklist"""
     verification = CollectibleVerification.query.get_or_404(verification_id)
     form = CardVerificationChecklistForm()
+
+    if verification.verification_status not in OPEN_STATUSES:
+        # a decided card keeps the checks it was decided on; saving again would silently reopen it
+        flash('This card has already been decided, so its checklist can no longer be changed.', 'warning')
+        return redirect(url_for('admin.card_verification_detail', verification_id=verification_id))
 
     if form.validate_on_submit():
         # Delete existing checklist items
@@ -184,6 +194,14 @@ def approve_card(verification_id):
     form = CardApprovalForm()
 
     if form.validate_on_submit():
+        if verification.verification_status == 'verified':
+            flash('This card is already platform verified.', 'info')
+            return redirect(url_for('admin.card_verification_detail', verification_id=verification_id))
+        reasons = verification_checklist_service.blockers(verification)
+        if reasons:
+            flash('The card cannot be approved yet. ' + ' '.join(reasons), 'danger')
+            return redirect(url_for('admin.card_verification_detail', verification_id=verification_id))
+
         # Create history entry
         history = CardVerificationHistory(
             verification_id=verification_id,
@@ -240,6 +258,7 @@ def reject_card(verification_id):
         verification.verification_date = utcnow()
         verification.verified_by = current_user.id
         verification.rejection_reason = form.rejection_reason.data
+        verification.resubmission_allowed = bool(form.allow_resubmit.data)
         verification.admin_notes = form.rejection_details.data
 
         # Update product status

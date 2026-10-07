@@ -16,11 +16,11 @@
       <img id="gallery-main" src="{{ card.images[0].get_image_src() }}" alt="{{ card.card_name }}" style="height: 400px; object-fit: contain; background: #f5f5f5; padding: 10px;">
     </div>
     {% if card.images|length > 1 %}
-    <div class="product-detail-gallery-thumbs">
+    <div class="product-detail-gallery-thumbs" id="gallery-thumbs">
       {% for img in card.images[:4] %}
-      <div class="product-detail-gallery-thumb" onclick="document.getElementById('gallery-main').src='{{ img.get_image_src() }}';">
-        <img src="{{ img.get_image_src() }}" alt="thumbnail" style="height: 60px; object-fit: contain;">
-      </div>
+      <button type="button" class="product-detail-gallery-thumb" data-gallery-src="{{ img.get_image_src() }}" aria-label="Show image {{ loop.index }}">
+        <img src="{{ img.get_image_src() }}" alt="" style="height: 60px; object-fit: contain;">
+      </button>
       {% endfor %}
     </div>
     {% endif %}
@@ -44,7 +44,7 @@
     
     <div class="product-auction-info">
       <div class="product-auction-bid">
-        <div class="product-auction-bid-label">Estimated Value</div>
+        <div class="product-auction-bid-label">Seller's estimate</div>
         <div class="product-auction-bid-value">{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</div>
       </div>
       
@@ -113,7 +113,7 @@
         <div class="auction-card-category">{{ item.card_type.name }}</div>
         <h3 class="auction-card-title">{{ item.card_name }}</h3>
         <div class="auction-card-bid">
-          <div class="auction-card-bid-label">Value</div>
+          <div class="auction-card-bid-label">Seller's estimate</div>
           <div class="auction-card-bid-amount">{{ item.estimated_value|money if item.estimated_value else 'Not given' }}</div>
         </div>
         <div class="auction-card-meta">
@@ -125,4 +125,5 @@
   </div>
 </section>
 {% endif %}
+<script src="{{ url_for('static', filename='js/card-gallery.js') }}"></script>
 {% endblock %}

@@ -43,7 +43,7 @@ from app.services import card_status_service as status
 from .conftest import login, make_user
 from .test_card_auction import create as create_auction_post, form as auction_form, ready_card
 from .test_card_settlement import authorize_on_chain, jpost, pay, pay_url, prepare_payment, reverts_with, sale_url
-from .test_listing_validation import WALLET_A, WALLET_B, cat, card_type, make_card, seller  # noqa: F401 (fixtures)
+from .test_listing_validation import CHECKS, WALLET_A, WALLET_B, cat, card_type, complete_checklist, make_card, seller  # noqa: F401 (fixtures)
 from .test_minting import chain  # noqa: F401 (fixture)
 from .test_phase1_card_identity import ID_RE, card_form, static_dir  # noqa: F401 (fixture)
 
@@ -81,6 +81,10 @@ def test_the_whole_journey(app, client, users, cat, card_type, chain, static_dir
     switch(client, "admin@t.test")
     vid = card.product.collectible_verification.id
     assert client.get(f"/admin/cards/verify/{vid}").status_code == 200
+    client.post(f"/admin/cards/verify/{vid}/approve", data={"approval_notes": "Skipped the checklist"})
+    db.session.expire_all()
+    assert card.product.collectible_verification.verification_status == "pending"  # not without the checklist
+    complete_checklist(client, vid)
     client.post(f"/admin/cards/verify/{vid}/approve", data={"approval_notes": "Checked"})
     db.session.expire_all()
     assert card.product.collectible_verification.verification_status == "verified"
@@ -558,8 +562,6 @@ def test_payment_replay_a_settled_auction_cannot_be_authorized_or_paid_again(cli
 
 
 # =================================== verification manipulation and self-verification =========================================
-CHECKS = ("card_identity", "set_checked", "card_number", "manufacturer", "images_reviewed", "condition_reviewed",
-          "seller_info_reviewed", "counterfeit_check")
 DECISIONS = {
     "approve": {"approval_notes": "Looks fine"},
     "reject": {"rejection_reason": "Other reason", "rejection_details": "Not acceptable to the platform."},

@@ -15,6 +15,19 @@ WALLET_A = "0x" + "a1" * 20
 WALLET_B = "0x" + "b2" * 20
 CONTRACT = "0x" + "c3" * 20
 
+CHECKS = ("card_identity", "set_checked", "card_number", "manufacturer", "images_reviewed", "condition_reviewed",
+          "seller_info_reviewed", "counterfeit_check")
+
+
+def complete_checklist(client, verification_id, **results):
+    """The admin records the review: every check passes, grading included, unless a result is overridden (name=result).
+
+    Pass grading_checked="" to leave the grading certificate unchecked. It only matters for a graded card.
+    """
+    data = {f"{check}_result": "verified" for check in (*CHECKS, "grading_checked")}
+    data.update({f"{name}_result": value for name, value in results.items()})
+    return client.post(f"/admin/cards/verify/{verification_id}/checklist", data=data)
+
 
 class FakeChain:
     """Stands in for Web3: ownerOf(token).call() returns the owner, or raises the given error."""
@@ -258,6 +271,7 @@ def test_approving_a_card_registers_its_blockchain_identity(app, client, users, 
     p = make_card(seller, cat, card_type, asset=False, verified=False)
     v = p.collectible_verification
     login(client, "admin@t.test")
+    complete_checklist(client, v.id)
     client.post(f"/admin/cards/verify/{v.id}/approve", data={"approval_notes": "ok"})
     v = db.session.get(CollectibleVerification, v.id)
     asset = p.collectible_card.blockchain_asset
@@ -269,5 +283,8 @@ def test_approving_a_card_without_seller_wallet_creates_no_asset(app, client, us
     app.config["COLLECTIBLE_CONTRACT_ADDRESS"] = CONTRACT
     p = make_card(users["seller"], cat, card_type, asset=False, verified=False)
     login(client, "admin@t.test")
+    complete_checklist(client, p.collectible_verification.id)
     client.post(f"/admin/cards/verify/{p.collectible_verification.id}/approve", data={})
+    db.session.expire_all()
+    assert p.collectible_verification.verification_status == "verified"  # approved, but nothing to register without a wallet
     assert BlockchainAsset.query.count() == 0

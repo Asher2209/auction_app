@@ -46,7 +46,7 @@ def _row(card):
         "verification": (verification.verification_status if verification else "pending").replace("_", " "),
         "blockchain": blockchain_label(card.blockchain_asset), "auction": auction,
         "bids": len(auction.bids) if auction is not None else 0,
-        "can_edit": lifecycle["code"] in EDITABLE and auction is None,
+        "can_edit": lifecycle["code"] in EDITABLE and auction is None and status.edit_blocker(card) is None,
         "can_list": lifecycle["code"] in LISTABLE and auction is None,
         "can_authorize": lifecycle["code"] == "PAYMENT_PENDING" and payment is not None and payment.awaiting_payment,
     }

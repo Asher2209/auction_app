@@ -10,11 +10,12 @@ from decimal import Decimal
 from ...extensions import db
 from ...models import (
     Category, Notification, Product, ProductImage, ProductDetails, CollectibleCard, CardType, CardImage,
-    CollectibleVerification, utcnow
+    CollectibleVerification, CardVerificationHistory, utcnow
 )
 from ...ratelimit import limited
 from ...services import (auction_validation_service, blockchain_minting_service, blockchain_service,
-                         card_auction_service, card_settlement_service, card_status_service, seller_cards_service, uploads)
+                         card_auction_service, card_settlement_service, card_status_service, seller_cards_service, uploads,
+                         verification_checklist_service)
 from ...services.notifications import notify
 from ...services.card_identity_service import assign_platform_card_id
 from ...services.qrcode_service import save_qr_code_to_file
@@ -219,6 +220,7 @@ def view_card(card_id):
         auction=card.product.auction,
         listing=auction_validation_service.check_listing(card.product),
         lifecycle=card_status_service.lifecycle(card),
+        can_edit=card_status_service.edit_blocker(card) is None,
     )
 
 
@@ -319,14 +321,11 @@ def edit_card(card_id):
     if card.product.seller_id != current_user.id:
         abort(403)
 
-    # Prevent editing if verified or auction active
+    # Verified, on auction, or rejected for good: the details are no longer the seller's to change
     verification = card.product.collectible_verification
-    if verification and verification.verification_status == 'verified':
-        flash("You cannot edit a verified card listing.", "warning")
-        return redirect(url_for('seller.view_card', card_id=card_id))
-
-    if card.product.auction and card.product.auction.status in ('active', 'closed'):
-        flash("You cannot edit a card once the auction has started.", "warning")
+    blocker = card_status_service.edit_blocker(card)
+    if blocker:
+        flash(blocker, "warning")
         return redirect(url_for('seller.view_card', card_id=card_id))
 
     form = CollectibleCardForm()
@@ -358,10 +357,15 @@ def edit_card(card_id):
         card.product.starting_price = form.estimated_value.data or Decimal("1.00")
         card.product.approval_status = "pending"  # Reset to pending for re-verification
 
-        # Reset verification on edit
+        # Reset verification on edit: the recorded checks described the old details, so the admin starts again
         if verification:
+            previous_status = verification.verification_status
             verification.verification_status = "pending"
             verification.submission_count += 1
+            verification_checklist_service.clear(verification)
+            db.session.add(CardVerificationHistory(
+                verification_id=verification.id, previous_status=previous_status, new_status="pending",
+                changed_by=current_user.id, change_reason="Seller edited the card and resubmitted it"))
 
         db.session.commit()
         flash("Card listing updated and resubmitted for verification.", "success")
