@@ -3,6 +3,7 @@ Admin routes for collectible card verification workflow
 """
 
 from flask import abort, current_app, flash, redirect, render_template, request, url_for
+from flask_login import current_user
 from sqlalchemy import func
 from datetime import timedelta
 
@@ -189,7 +190,7 @@ def approve_card(verification_id):
             verification_id=verification_id,
             previous_status=verification.verification_status,
             new_status='verified',
-            changed_by=request.current_user.id if hasattr(request, 'current_user') else None,
+            changed_by=current_user.id,
             change_reason=form.approval_notes.data
         )
         db.session.add(history)
@@ -197,7 +198,7 @@ def approve_card(verification_id):
         # Update verification
         verification.verification_status = 'verified'
         verification.verification_date = utcnow()
-        verification.verified_by = request.current_user.id if hasattr(request, 'current_user') else None
+        verification.verified_by = current_user.id
         verification.admin_notes = form.approval_notes.data
 
         # Update product status
@@ -206,6 +207,9 @@ def approve_card(verification_id):
         db.session.commit()
 
         flash(f"Card '{verification.collectible_card.card_name}' approved! âœ“", 'success')
+
+        result = complete_verification_and_create_blockchain_asset(verification, verification.product.seller.wallet_address)
+        flash(result['message'], 'info' if result['success'] else 'warning')
     else:
         flash('Error approving card.', 'danger')
 
@@ -225,7 +229,7 @@ def reject_card(verification_id):
             verification_id=verification_id,
             previous_status=verification.verification_status,
             new_status='rejected',
-            changed_by=request.current_user.id if hasattr(request, 'current_user') else None,
+            changed_by=current_user.id,
             change_reason=form.rejection_details.data
         )
         db.session.add(history)
@@ -233,7 +237,7 @@ def reject_card(verification_id):
         # Update verification
         verification.verification_status = 'rejected'
         verification.verification_date = utcnow()
-        verification.verified_by = request.current_user.id if hasattr(request, 'current_user') else None
+        verification.verified_by = current_user.id
         verification.rejection_reason = form.rejection_reason.data
         verification.admin_notes = form.rejection_details.data
 
@@ -263,7 +267,7 @@ def request_card_info(verification_id):
             verification_id=verification_id,
             previous_status=verification.verification_status,
             new_status='more_info_needed',
-            changed_by=request.current_user.id if hasattr(request, 'current_user') else None,
+            changed_by=current_user.id,
             change_reason=form.message.data
         )
         db.session.add(history)

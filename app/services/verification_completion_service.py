@@ -42,9 +42,9 @@ def complete_verification_and_create_blockchain_asset(verification: CollectibleV
             }
         
         # Get contract address from config
-        contract_address = current_app.config.get('SMART_CONTRACT_ADDRESS')
+        contract_address = current_app.config.get('COLLECTIBLE_CONTRACT_ADDRESS')
         if not contract_address:
-            logger.warning("SMART_CONTRACT_ADDRESS not configured - blockchain asset creation skipped")
+            logger.warning("COLLECTIBLE_CONTRACT_ADDRESS not configured - blockchain asset creation skipped")
             return {
                 'success': False,
                 'asset': None,
@@ -67,7 +67,7 @@ def complete_verification_and_create_blockchain_asset(verification: CollectibleV
                 collectible_card=card,
                 owner_wallet=owner_wallet,
                 contract_address=contract_address,
-                network=current_app.config.get('BLOCKCHAIN_NETWORK', 'sepolia')
+                network=current_app.config['CHAIN_NAME'].lower()
             )
             
             logger.info(f"Created blockchain asset for card {card.id} (Platform ID: {card.platform_card_id})")

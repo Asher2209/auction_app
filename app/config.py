@@ -45,6 +45,8 @@ class Config:
     CONFIRMATIONS_REQUIRED = int(os.environ.get("CONFIRMATIONS_REQUIRED", "2"))
     INR_PER_ETH = Decimal(os.environ.get("INR_PER_ETH", "320000"))  # the configured exchange rate
     CRYPTO_NOT_FOUND_TIMEOUT_MINUTES = 30  # a submitted transaction the network never shows is failed after this
+    # Collectible-card identity token contract (separate from the AuctionPayment contract above).
+    COLLECTIBLE_CONTRACT_ADDRESS = os.environ.get("COLLECTIBLE_CONTRACT_ADDRESS")
     # Development only: run an in-process test chain with a built-in demo wallet (no MetaMask needed).
     LOCAL_CHAIN = os.environ.get("LOCAL_CHAIN", "0") == "1"
     SIMULATED_SETTLE_SECONDS = 20  # how long a gateway-"pending" simulated payment takes to settle
