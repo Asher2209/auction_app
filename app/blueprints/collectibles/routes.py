@@ -1,7 +1,7 @@
 """Routes for public collectible card views and verification"""
 
 from flask import render_template, abort, request
-from ...models import CollectibleCard, CollectibleVerification, BlockchainAsset
+from ...models import CollectibleCard, CollectibleVerification, BlockchainAsset, utcnow
 from ...services import qrcode_service
 from . import bp
 
@@ -47,5 +47,6 @@ def verify_card(platform_card_id: str):
         seller=seller,
         active_auction=active_auction,
         qr_svg=qr_svg,
-        platform_card_id=platform_card_id
+        platform_card_id=platform_card_id,
+        utcnow=utcnow
     )

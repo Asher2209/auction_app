@@ -12,6 +12,7 @@ from ...models import (
     CardVerificationHistory, Product, User, utcnow, BlockchainAsset
 )
 from ...services import card_identity_service, qrcode_service
+from ...services.verification_completion_service import complete_verification_and_create_blockchain_asset
 from ...utils import role_required
 from . import bp
 from .forms_verification import (
