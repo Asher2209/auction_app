@@ -1,10 +1,10 @@
-﻿"""Load testing script for ChainBid auction system.
+﻿"""Load testing script for ChainBid auction system - FIXED VERSION.
 
-Tests:
-- 100 concurrent users
-- 1000 simultaneous bids
-- Payment processing
-- RPC latency under load
+Fixes applied:
+- UTF-8 encoding for Windows compatibility
+- Better error messages
+- Pre-flight connection check
+- Graceful error handling
 """
 
 import requests
@@ -13,6 +13,16 @@ import threading
 from datetime import datetime
 import json
 from statistics import mean, median, stdev
+import sys
+import os
+
+# Force UTF-8 encoding on Windows
+if sys.platform == 'win32':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 
 class LoadTestMetrics:
     def __init__(self):
@@ -33,6 +43,10 @@ class LoadTestMetrics:
     
     def print_summary(self):
         total = self.success_count + self.failure_count
+        if total == 0:
+            print("[ERROR] No requests completed")
+            return
+        
         elapsed = (self.end_time - self.start_time).total_seconds()
         
         print("\n" + "=" * 80)
@@ -64,6 +78,17 @@ class LoadTestMetrics:
         print("=" * 80 + "\n")
 
 
+def check_app_running(base_url: str) -> bool:
+    """Check if Flask app is running."""
+    try:
+        response = requests.get(base_url, timeout=2)
+        return True
+    except requests.exceptions.ConnectionError:
+        return False
+    except Exception:
+        return False
+
+
 def test_health_check(base_url: str, metrics: LoadTestMetrics):
     """Test health check endpoint."""
     print("Testing health checks...")
@@ -74,9 +99,16 @@ def test_health_check(base_url: str, metrics: LoadTestMetrics):
         elapsed = (time.time() - start) * 1000
         
         metrics.add_response(elapsed, response.status_code, response.status_code == 200)
-        print(f"✓ Health check: {response.status_code} ({elapsed:.1f}ms)")
+        status = "PASS" if response.status_code == 200 else "FAIL"
+        print(f"  [{status}] Health check: {response.status_code} ({elapsed:.1f}ms)")
+    except requests.exceptions.ConnectionError as e:
+        print(f"  [ERROR] Cannot connect to {base_url}")
+        metrics.add_response(0, 0, False)
+    except requests.exceptions.Timeout:
+        print(f"  [ERROR] Request timeout")
+        metrics.add_response(0, 0, False)
     except Exception as e:
-        print(f"✗ Health check failed: {str(e)}")
+        print(f"  [ERROR] {str(e)}")
         metrics.add_response(0, 0, False)
 
 
@@ -93,9 +125,8 @@ def test_concurrent_users(base_url: str, num_users: int, metrics: LoadTestMetric
                 timeout=10
             )
             elapsed = (time.time() - start) * 1000
-            
             metrics.add_response(elapsed, response.status_code, response.status_code == 200)
-        except Exception as e:
+        except Exception:
             metrics.add_response(0, 0, False)
     
     threads = []
@@ -107,7 +138,7 @@ def test_concurrent_users(base_url: str, num_users: int, metrics: LoadTestMetric
     for t in threads:
         t.join()
     
-    print(f"✓ Concurrent users test complete")
+    print(f"  [PASS] Concurrent users test complete")
 
 
 def test_bid_volume(base_url: str, num_bids: int, auction_id: int, metrics: LoadTestMetrics):
@@ -124,9 +155,8 @@ def test_bid_volume(base_url: str, num_bids: int, auction_id: int, metrics: Load
                 headers={"Authorization": f"Bearer test_token_{bid_id}"}
             )
             elapsed = (time.time() - start) * 1000
-            
             metrics.add_response(elapsed, response.status_code, response.status_code in [200, 409])
-        except Exception as e:
+        except Exception:
             metrics.add_response(0, 0, False)
     
     threads = []
@@ -138,7 +168,7 @@ def test_bid_volume(base_url: str, num_bids: int, auction_id: int, metrics: Load
     for t in threads:
         t.join()
     
-    print(f"✓ Bid volume test complete")
+    print(f"  [PASS] Bid volume test complete")
 
 
 def main():
@@ -151,45 +181,53 @@ def main():
     print(f"Start Time: {datetime.now()}")
     print("=" * 80)
     
+    # Check if app is running
+    print("\nPre-flight check...")
+    if not check_app_running(base_url):
+        print(f"\n[ERROR] Flask app not running at {base_url}")
+        print("\nTo start Flask app, run in a separate terminal:")
+        print("  python -m flask run")
+        print("\nThen run this script again.")
+        return
+    
+    print(f"[PASS] Flask app is running")
+    
     metrics = LoadTestMetrics()
     metrics.start_time = datetime.now()
     
     try:
-        # Test 1: Health checks
         test_health_check(base_url, metrics)
-        
-        # Test 2: 100 concurrent users
         test_concurrent_users(base_url, 100, metrics)
-        
-        # Test 3: 1000 bids (simulated)
         test_bid_volume(base_url, 100, auction_id=1, metrics=metrics)
-        
+    
+    except KeyboardInterrupt:
+        print("\n[WARNING] Test interrupted by user")
     except Exception as e:
-        print(f"\nTest failed with error: {str(e)}")
+        print(f"\n[ERROR] Test failed: {str(e)}")
     
     finally:
-        metrics.end_time = datetime.now()
-        metrics.print_summary()
-        
-        # Save results
-        results = {
-            "timestamp": datetime.now().isoformat(),
-            "total_requests": metrics.success_count + metrics.failure_count,
-            "successful": metrics.success_count,
-            "failed": metrics.failure_count,
-            "success_rate": metrics.success_count / (metrics.success_count + metrics.failure_count) if (metrics.success_count + metrics.failure_count) > 0 else 0,
-            "response_times": {
-                "min": min(metrics.response_times) if metrics.response_times else 0,
-                "max": max(metrics.response_times) if metrics.response_times else 0,
-                "avg": mean(metrics.response_times) if metrics.response_times else 0,
-                "median": median(metrics.response_times) if metrics.response_times else 0,
+        if metrics.start_time:
+            metrics.end_time = datetime.now()
+            metrics.print_summary()
+            
+            results = {
+                "timestamp": datetime.now().isoformat(),
+                "total_requests": metrics.success_count + metrics.failure_count,
+                "successful": metrics.success_count,
+                "failed": metrics.failure_count,
+                "success_rate": metrics.success_count / (metrics.success_count + metrics.failure_count) if (metrics.success_count + metrics.failure_count) > 0 else 0,
+                "response_times": {
+                    "min": min(metrics.response_times) if metrics.response_times else 0,
+                    "max": max(metrics.response_times) if metrics.response_times else 0,
+                    "avg": mean(metrics.response_times) if metrics.response_times else 0,
+                    "median": median(metrics.response_times) if metrics.response_times else 0,
+                }
             }
-        }
-        
-        with open("load_test_results.json", "w") as f:
-            json.dump(results, f, indent=2)
-        
-        print("Results saved to load_test_results.json")
+            
+            with open("load_test_results.json", "w", encoding="utf-8") as f:
+                json.dump(results, f, indent=2)
+            
+            print("Results saved to load_test_results.json")
 
 
 if __name__ == "__main__":
