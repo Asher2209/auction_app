@@ -66,3 +66,8 @@ class TestConfig(Config):
     MAIL_ASYNC = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     WTF_CSRF_ENABLED = False
+    # The real .env is still loaded, but tests never reach a real blockchain or depend on the contracts deployed
+    # there. Tests that need a chain start their own (see tests/test_crypto.py and tests/test_minting.py).
+    RPC_URL = None
+    CONTRACT_ADDRESS = None
+    COLLECTIBLE_CONTRACT_ADDRESS = None

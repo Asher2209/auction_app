@@ -410,9 +410,13 @@ def test_each_unsafe_production_setting_stops_the_app(over, phrase):
 
 
 def test_all_problems_are_reported_together():
-    class Bad(TestConfig):
+    class Bad(TestConfig):  # every unsafe value is explicit, so the real .env cannot make the test pass or fail
         APP_ENV = "production"
+        SECRET_KEY = "dev-only-secret"
+        SESSION_COOKIE_SECURE = False
         ALLOW_TEST_EMAILS = True
+        LOCAL_CHAIN = False
+        APP_BASE_URL = "http://localhost:5000"
 
     with pytest.raises(RuntimeError) as e:
         create_app(Bad)
@@ -845,3 +849,11 @@ def test_referer_based_redirects_ignore_foreign_origins(app, users, cats):  # no
     assert r.location == f"/auctions/{a.id}"
     r = c.post(f"/buyer/watchlist/{a.id}/toggle", headers={"Referer": "http://localhost/auctions/?q=x"})
     assert r.location == "/auctions/?q=x"
+
+
+# ---- the test app never reaches a real chain, whatever .env contains ------------------------------------------------
+def test_the_test_app_never_connects_to_a_real_blockchain(app):
+    from app.services import blockchain_service as bc
+    assert app.config["RPC_URL"] is None and app.config["CONTRACT_ADDRESS"] is None
+    assert app.config["COLLECTIBLE_CONTRACT_ADDRESS"] is None
+    assert bc.get_web3() is None and not bc.crypto_enabled()
