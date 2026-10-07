@@ -10,6 +10,14 @@
 >    then `python scripts/deploy_contract.py token`
 > 3. Put the printed address in `.env` as `COLLECTIBLE_CONTRACT_ADDRESS` (not `CONTRACT_ADDRESS`, which is the payment contract)
 > 4. Sign in as admin, open **Card tokens**, and mint each verified card with the admin wallet
+>
+> **Selling a card (atomic settlement).** After an auction ends:
+> 1. The winner must have a wallet in their profile.
+> 2. The seller opens the card, clicks **Authorize transfer** and signs `authorizeSale(tokenId, auctionId, winner, price)`
+>    in MetaMask with the wallet that owns the token. This fixes the buyer and the exact price on-chain.
+> 3. The winner then pays from the Cryptocurrency tab. One transaction, `settle(auctionId, tokenId)`, pays the seller
+>    and moves the token to the winner, or reverts so that nothing is lost. The server verifies the `CardSold` event.
+> Tokens that were never minted cannot be paid for in cryptocurrency. Redeploy the contract after any change to it.
 
 ## Deployed Contract
 - **Address**: `0xC3240cFD2c9ec199Be2715F27816a1f538629307`

@@ -3,16 +3,19 @@ Trading card creation and management routes
 Handles seller workflow for collectible cards
 """
 
-from flask import abort, current_app, flash, redirect, render_template, request, url_for
+from flask import abort, current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user
 from decimal import Decimal
 
 from ...extensions import db
 from ...models import (
-    Category, Product, ProductImage, ProductDetails, CollectibleCard, CardType, CardImage,
+    Category, Notification, Product, ProductImage, ProductDetails, CollectibleCard, CardType, CardImage,
     CollectibleVerification, utcnow
 )
-from ...services import auction_validation_service, card_auction_service, uploads
+from ...ratelimit import limited
+from ...services import (auction_validation_service, blockchain_minting_service, blockchain_service,
+                         card_auction_service, card_settlement_service, uploads)
+from ...services.notifications import notify
 from ...services.card_identity_service import assign_platform_card_id
 from ...services.qrcode_service import save_qr_code_to_file
 from ...utils import role_required
@@ -253,6 +256,63 @@ def view_card(card_id):
         auction=card.product.auction,
         listing=auction_validation_service.check_listing(card.product),
     )
+
+
+def _json_body():
+    data = request.get_json(silent=True)
+    return data if isinstance(data, dict) else {}
+
+
+def _sold_card_or_404(card_id):
+    card = db.session.get(CollectibleCard, card_id)
+    if card is None or card.product.seller_id != current_user.id:
+        abort(404)
+    auction = card.product.auction
+    if auction is None or auction.payment is None:
+        abort(404)  # nothing to settle until an auction has closed with a winner
+    return card, auction, auction.payment
+
+
+@bp.route("/cards/<int:card_id>/sale")
+@role_required("seller")
+def card_sale(card_id):
+    """The seller authorizes the on-chain transfer of the token to the auction winner."""
+    card, auction, payment = _sold_card_or_404(card_id)
+    waiting = payment.awaiting_payment
+    return render_template(
+        "seller/cards/card_sale.html", card=card, auction=auction, payment=payment,
+        blocker=card_settlement_service.authorization_blockers(payment) if waiting else None,
+        state=card_settlement_service.authorization_state(payment) if waiting else None,
+        chain=blockchain_minting_service.chain_info())
+
+
+@bp.route("/cards/<int:card_id>/sale/prepare", methods=["POST"])
+@role_required("seller")
+@limited("sale", 20, 60, by="user")
+def card_sale_prepare(card_id):
+    card, auction, payment = _sold_card_or_404(card_id)
+    try:
+        prep = card_settlement_service.prepare_authorization(payment, _json_body().get("wallet_address"))
+    except blockchain_service.CryptoError as e:
+        return jsonify(ok=False, error=e.message), e.status
+    return jsonify(ok=True, **prep)
+
+
+@bp.route("/cards/<int:card_id>/sale/check", methods=["POST"])
+@role_required("seller")
+@limited("sale", 40, 60, by="user")
+def card_sale_check(card_id):
+    """Read the authorization back from the chain; once it is there, tell the winner they can pay."""
+    card, auction, payment = _sold_card_or_404(card_id)
+    state = card_settlement_service.authorization_state(payment)
+    if state["state"] == "authorized":
+        title, url = "The seller authorized the transfer: you can pay now", f"/payments/{payment.auction_id}"
+        if not Notification.query.filter_by(user_id=payment.buyer_id, title=title, url=url).first():
+            notify(payment.buyer_id, title,
+                   f'The seller has authorized the transfer of "{card.product.title}". You can now pay in cryptocurrency.',
+                   url=url, email=True)
+            db.session.commit()
+    return jsonify(ok=True, **state)
 
 
 @bp.route("/cards/<int:card_id>/auction", methods=["GET", "POST"])

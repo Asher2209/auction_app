@@ -5,6 +5,7 @@ from ...extensions import db
 from ...models import Payment, utcnow
 from ...ratelimit import limited
 from ...services import blockchain_service as bc
+from ...services import card_settlement_service as css
 from ...services import payment_service as ps
 from ...services.payment_service import PaymentError
 from ...utils import role_required
@@ -22,6 +23,8 @@ def _own_payment_or_404(auction_id):
 
 def _crypto_context(payment):
     """What the crypto tab needs to render. Empty/disabled when crypto is not configured."""
+    if css.applies(payment):
+        return css.pay_context(payment)
     if not bc.crypto_enabled():
         return {"enabled": False}
     wei, eth, rate = bc.quote(payment.amount)

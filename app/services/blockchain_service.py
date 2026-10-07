@@ -126,6 +126,9 @@ def quote(inr_amount):
 # ---- step 1: prepare -----------------------------------------------------------------------
 def prepare(payment, buyer_wallet_raw):
     """Lock a quote and build the transaction for the buyer's wallet to sign."""
+    from . import card_settlement_service as css
+    if css.applies(payment):  # a card: pay and receive the token in one settle() transaction
+        return css.prepare_payment(payment, buyer_wallet_raw)
     if not crypto_enabled():
         raise CryptoError("Cryptocurrency payments are not available right now.", 503)
     if not payment.awaiting_payment:
@@ -200,6 +203,14 @@ def submit(payment, tx_hash_raw, now=None):
 
 
 # ---- step 4: verify on chain --------------------------------------------------------------
+def _finish(w3, receipt, paid, required):
+    confirmations = max(0, w3.eth.block_number - receipt["blockNumber"] + 1)
+    if confirmations < required:
+        return Check("pending", f"Waiting for confirmations ({confirmations}/{required}).",
+                     confirmations, receipt["blockNumber"], paid)
+    return Check("confirmed", None, confirmations, receipt["blockNumber"], paid)
+
+
 def check_transaction(w3, row, payment, now):
     """Read the chain and decide. Pure with respect to the database: returns a Check."""
     cfg = current_app.config
@@ -233,6 +244,11 @@ def check_transaction(w3, row, payment, now):
     if tx["from"].lower() != row.wallet_address.lower():
         return Check("failed", "The transaction came from a different wallet than the one connected.")
 
+    from . import card_settlement_service as css
+    if css.applies(payment):  # a card: the CardSold event of the token contract
+        failure, paid = css.check_sale_event(w3, row, payment, receipt)
+        return failure or _finish(w3, receipt, paid, required)
+
     events = [e for e in _contract(w3).events.PaymentMade().process_receipt(receipt)
               if e["address"].lower() == contract_addr and e["args"]["auctionId"] == payment.auction_id]
     if len(events) != 1:
@@ -247,11 +263,7 @@ def check_transaction(w3, row, payment, now):
         return Check("failed", f"Underpaid: expected {Decimal(row.expected_wei) / 10**18:f} ETH, "
                                f"received {Decimal(paid) / 10**18:f} ETH.", amount_wei=paid)
 
-    confirmations = max(0, w3.eth.block_number - receipt["blockNumber"] + 1)
-    if confirmations < required:
-        return Check("pending", f"Waiting for confirmations ({confirmations}/{required}).",
-                     confirmations, receipt["blockNumber"], paid)
-    return Check("confirmed", None, confirmations, receipt["blockNumber"], paid)
+    return _finish(w3, receipt, paid, required)
 
 
 def verify_payment(payment, now=None):
@@ -308,8 +320,9 @@ def recheck(payment, now=None):
 
     Returns a Check, or None when the chain cannot be reached. Never writes to the database.
     """
+    from . import card_settlement_service as css
     row = payment.crypto
-    if not crypto_enabled() or row is None or not row.transaction_hash:
+    if row is None or not row.transaction_hash or not (css.applies(payment) or crypto_enabled()):
         return None
     try:
         return check_transaction(get_web3(), row, payment, now or utcnow())
@@ -320,7 +333,8 @@ def recheck(payment, now=None):
 
 def verify_pending(now=None):
     """Scheduler/background check of every submitted-but-unresolved crypto payment. Never raises."""
-    if not crypto_enabled():
+    from . import card_settlement_service as css
+    if get_web3() is None:
         return 0
     now = now or utcnow()
     checked = 0
@@ -330,6 +344,8 @@ def verify_pending(now=None):
         # (a real network does this by itself) and confirmations accrue while payments wait.
         get_web3().provider.ethereum_tester.mine_blocks(1)
     for payment in pending:
+        if not (css.applies(payment) or crypto_enabled()):
+            continue
         if payment.crypto and payment.crypto.transaction_hash:
             try:
                 verify_payment(payment, now)

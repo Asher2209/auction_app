@@ -81,6 +81,14 @@
       {% if auction %}
         <p class="mb-2">Status: <strong>{{ auction.status }}</strong> &middot; current bid {{ auction.current_bid|money }}</p>
         <a href="{{ url_for('auctions.detail', auction_id=auction.id) }}" class="btn btn-sm btn-outline-primary">View auction</a>
+        {% if auction.status == 'closed' and auction.payment %}
+          {% if auction.payment.payment_status == 'successful' %}
+            <p class="small mt-3 mb-0">Sold and paid.</p>
+          {% else %}
+            <p class="small mt-3 mb-2">The auction has a winner. To be paid in cryptocurrency, authorize the transfer of the token to the winner.</p>
+            <a href="{{ url_for('seller.card_sale', card_id=card.id) }}" class="btn btn-sm btn-primary">Authorize transfer</a>
+          {% endif %}
+        {% endif %}
       {% elif listing.ok %}
         <p class="small text-muted">This card is verified and linked to your wallet. You can put it up for auction.</p>
         <a href="{{ url_for('seller.create_card_auction', card_id=card.id) }}" class="btn btn-sm btn-primary">Create auction</a>
