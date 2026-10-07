@@ -305,6 +305,9 @@ def verify_payment(payment, now=None):
         row.status = "confirmed"
         row.amount = Decimal(result.amount_wei) / Decimal(10) ** 18
         row.failure_reason = None
+        from . import card_settlement_service as css, ownership_transfer_service as ots
+        if css.applies(payment):  # the token moved in the settlement: bring MySQL in line, in this same transaction
+            ots.record_settlement(payment, row, now)
         payment_service.on_success(payment, now)
     else:
         row.status, row.failure_reason = "failed", result.reason

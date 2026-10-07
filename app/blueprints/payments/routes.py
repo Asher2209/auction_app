@@ -6,6 +6,7 @@ from ...models import Payment, utcnow
 from ...ratelimit import limited
 from ...services import blockchain_service as bc
 from ...services import card_settlement_service as css
+from ...services import ownership_transfer_service as ots
 from ...services import payment_service as ps
 from ...services.payment_service import PaymentError
 from ...utils import role_required
@@ -41,11 +42,21 @@ def _crypto_context(payment):
     }
 
 
+def _ownership(payment):
+    """The recorded token transfer for a completed card sale, or None."""
+    if payment.payment_status != "successful" or not css.applies(payment):
+        return None
+    transfer = ots.transfer_for_payment(payment)
+    if transfer is None:
+        return None
+    return {"transfer": transfer, "asset": transfer.blockchain_asset, "explorer": bc.explorer_url(transfer.transaction_hash)}
+
+
 def _render(payment, active="card", forms=None):
     forms = forms or {k: cls(formdata=None) for k, cls in FORMS.items()}
     return render_template("payments/pay.html", payment=payment, auction=payment.auction,
                            product=payment.auction.product, forms=forms, active=active,
-                           crypto=_crypto_context(payment))
+                           crypto=_crypto_context(payment), ownership=_ownership(payment))
 
 
 @bp.route("/<int:auction_id>")

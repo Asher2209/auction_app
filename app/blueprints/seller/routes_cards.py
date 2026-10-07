@@ -14,7 +14,7 @@ from ...models import (
 )
 from ...ratelimit import limited
 from ...services import (auction_validation_service, blockchain_minting_service, blockchain_service,
-                         card_auction_service, card_settlement_service, uploads)
+                         card_auction_service, card_settlement_service, card_status_service, uploads)
 from ...services.notifications import notify
 from ...services.card_identity_service import assign_platform_card_id
 from ...services.qrcode_service import save_qr_code_to_file
@@ -255,6 +255,7 @@ def view_card(card_id):
         type_details=type_details,
         auction=card.product.auction,
         listing=auction_validation_service.check_listing(card.product),
+        lifecycle=card_status_service.lifecycle(card),
     )
 
 

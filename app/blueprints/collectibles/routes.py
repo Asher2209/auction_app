@@ -2,7 +2,7 @@
 
 from flask import render_template, abort, request
 from ...models import CollectibleCard, CollectibleVerification, BlockchainAsset, utcnow
-from ...services import qrcode_service
+from ...services import blockchain_service, ownership_transfer_service, qrcode_service
 from . import bp
 
 
@@ -43,6 +43,8 @@ def verify_card(platform_card_id: str):
         product=product,
         verification=verification,
         is_verified=is_verified,
+        transfers=ownership_transfer_service.history(blockchain_asset) if blockchain_asset else [],
+        tx_url=blockchain_service.explorer_url,
         blockchain_asset=blockchain_asset,
         card_images=card_images,
         type_details=type_details,

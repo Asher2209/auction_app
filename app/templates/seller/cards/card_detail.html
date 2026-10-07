@@ -78,12 +78,13 @@
     <!-- PHASE 5: Auction -->
     <div class="glass p-4 mb-4" style="border-radius: 1.25rem;" id="card-auction-panel">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">Auction</h6>
+      <p class="small mb-2">Card status: <strong id="card-lifecycle">{{ lifecycle.label }}</strong></p>
       {% if auction %}
         <p class="mb-2">Status: <strong>{{ auction.status }}</strong> &middot; current bid {{ auction.current_bid|money }}</p>
         <a href="{{ url_for('auctions.detail', auction_id=auction.id) }}" class="btn btn-sm btn-outline-primary">View auction</a>
         {% if auction.status == 'closed' and auction.payment %}
           {% if auction.payment.payment_status == 'successful' %}
-            <p class="small mt-3 mb-0">Sold and paid.</p>
+            <p class="small mt-3 mb-0">Sold and paid.{% if lifecycle.code == 'TRANSFERRED' %} The token now belongs to the winner wallet.{% endif %}</p>
           {% else %}
             <p class="small mt-3 mb-2">The auction has a winner. To be paid in cryptocurrency, authorize the transfer of the token to the winner.</p>
             <a href="{{ url_for('seller.card_sale', card_id=card.id) }}" class="btn btn-sm btn-primary">Authorize transfer</a>

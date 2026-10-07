@@ -207,6 +207,12 @@ def render_pdf(invoice):
             ("Block / confirmations", f"{crypto.block_number} / {crypto.confirmations}"),
             ("Buyer wallet", crypto.wallet_address), ("Seller wallet", crypto.seller_address or "-"),
         ]
+        from .ownership_transfer_service import transfer_for_payment
+        transfer = transfer_for_payment(payment)
+        if transfer is not None:  # a card: the token and its change of owner are part of the proof of purchase
+            chain_rows += [("Card token", f"#{transfer.blockchain_asset.token_id}"),
+                           ("Token contract", transfer.blockchain_asset.contract_address),
+                           ("Previous owner", transfer.from_wallet), ("New owner", transfer.to_wallet)]
         chain = Table(
             [[Paragraph(_t(k), st["label"]), Paragraph(_t(v), st["mono"])] for k, v in chain_rows]
             + [[Paragraph("Transaction hash", st["label"]), Paragraph(_t(crypto.transaction_hash), st["mono"])]],

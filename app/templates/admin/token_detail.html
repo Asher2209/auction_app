@@ -19,6 +19,34 @@
         <dd class="col-7">{% if asset.mint_transaction_hash %}{% if tx_url %}<a href="{{ tx_url }}" target="_blank" rel="noopener"><code class="text-break">{{ asset.mint_transaction_hash }}</code></a>{% else %}<code class="text-break">{{ asset.mint_transaction_hash }}</code>{% endif %}{% else %}&mdash;{% endif %}</dd>
       </dl>
     </div></div>
+    <div class="card mt-3" id="ownership-panel"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Ownership</h2>
+      {% if sync is none %}
+        <p class="small text-muted mb-0">Available once the token is minted and the blockchain is configured.</p>
+      {% elif sync.status == 'in_sync' %}
+        <p class="small mb-2"><span class="badge text-bg-success">in sync</span> MySQL and the blockchain agree on the owner.</p>
+      {% elif sync.status == 'sync_error' %}
+        <div class="alert alert-danger small" role="alert"><strong>OWNERSHIP SYNC ERROR.</strong> {{ sync.reason }}
+          {% if sync.onchain_owner %}<div class="mt-1">MySQL: <code class="text-break">{{ sync.db_owner }}</code><br>Blockchain: <code class="text-break">{{ sync.onchain_owner }}</code></div>{% endif %}
+          This card cannot be listed until the two agree. Nothing was changed automatically.</div>
+        <form method="post" action="{{ url_for('admin.token_reconcile', asset_id=asset.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Adopt the on-chain owner</button>
+        </form>
+      {% else %}
+        <p class="small text-muted mb-2">The blockchain could not be read just now, so ownership is unverified.</p>
+      {% endif %}
+      {% if transfers %}
+      <div class="small text-muted mt-3 mb-1">Ownership history</div>
+      <ul class="list-unstyled small mb-0">
+        {% for t in transfers %}
+        <li class="mb-1"><code>{{ t.from_wallet[:6] }}...{{ t.from_wallet[-4:] }}</code> &rarr; <code>{{ t.to_wallet[:6] }}...{{ t.to_wallet[-4:] }}</code>
+          &middot; {{ t.confirmed_at|utc }}{% if t.auction_id %} &middot; auction #{{ t.auction_id }}{% endif %}
+          {% if explorer(t.transaction_hash) %}&middot; <a href="{{ explorer(t.transaction_hash) }}" target="_blank" rel="noopener">transaction</a>{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div></div>
     <p class="small text-muted mt-3">The token records a digital identity and ownership. Physical-card authenticity is established by platform verification (and third-party grading where it exists), not by the blockchain.</p>
   </div>
 

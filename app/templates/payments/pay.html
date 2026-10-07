@@ -37,6 +37,21 @@
     {% if payment.payment_status == 'successful' %}
       <div class="alert alert-success">Payment complete. Your seller has been notified.</div>
       <a class="btn btn-primary" href="{{ url_for('invoices.download', auction_id=auction.id) }}">Download invoice (PDF)</a>
+      {% if ownership %}
+      <div class="card mt-4" id="ownership-record"><div class="card-body">
+        <h2 class="h6 text-uppercase text-muted">Blockchain transaction</h2>
+        <dl class="row small mb-0">
+          <dt class="col-4">Token ID</dt><dd class="col-8">#{{ ownership.asset.token_id }}</dd>
+          <dt class="col-4">Previous owner</dt><dd class="col-8"><code class="text-break">{{ ownership.transfer.from_wallet }}</code></dd>
+          <dt class="col-4">New owner</dt><dd class="col-8"><code class="text-break">{{ ownership.transfer.to_wallet }}</code> (your wallet)</dd>
+          <dt class="col-4">Network</dt><dd class="col-8">{{ ownership.transfer.network }}</dd>
+          <dt class="col-4">Status</dt><dd class="col-8">Confirmed &middot; ownership transferred</dd>
+          <dt class="col-4">Transaction</dt>
+          <dd class="col-8">{% if ownership.explorer %}<a href="{{ ownership.explorer }}" target="_blank" rel="noopener"><code class="text-break">{{ ownership.transfer.transaction_hash }}</code></a>{% else %}<code class="text-break">{{ ownership.transfer.transaction_hash }}</code>{% endif %}</dd>
+        </dl>
+        <p class="small text-muted mt-3 mb-0">The token is a digital ownership record. The physical card is handed over by the seller.</p>
+      </div></div>
+      {% endif %}
     {% elif payment.processing and payment.payment_method == 'crypto' %}
       <div class="alert alert-info">
         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
