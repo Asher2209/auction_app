@@ -47,6 +47,9 @@ class Config:
     CRYPTO_NOT_FOUND_TIMEOUT_MINUTES = 30  # a submitted transaction the network never shows is failed after this
     # Collectible-card identity token contract (separate from the AuctionPayment contract above).
     COLLECTIBLE_CONTRACT_ADDRESS = os.environ.get("COLLECTIBLE_CONTRACT_ADDRESS")
+    # False: a registered BlockchainAsset with a matching owner wallet is enough to list a card.
+    # True: the token must also be minted and the on-chain owner must match (fails closed if the chain is unreachable).
+    LISTING_REQUIRES_MINTED_TOKEN = os.environ.get("LISTING_REQUIRES_MINTED_TOKEN", "0") == "1"
     # Development only: run an in-process test chain with a built-in demo wallet (no MetaMask needed).
     LOCAL_CHAIN = os.environ.get("LOCAL_CHAIN", "0") == "1"
     SIMULATED_SETTLE_SECONDS = 20  # how long a gateway-"pending" simulated payment takes to settle

@@ -12,7 +12,7 @@ from ...models import (
     CollectibleVerification, CollectibleCard, CardVerificationChecklist,
     CardVerificationHistory, Product, User, utcnow, BlockchainAsset
 )
-from ...services import card_identity_service, qrcode_service
+from ...services import auction_validation_service, card_identity_service, qrcode_service
 from ...services.verification_completion_service import complete_verification_and_create_blockchain_asset
 from ...utils import role_required
 from . import bp
@@ -208,6 +208,8 @@ def approve_card(verification_id):
 
         flash(f"Card '{verification.collectible_card.card_name}' approved! âœ“", 'success')
 
+        for warning in auction_validation_service.find_duplicate_signals(verification.collectible_card).warnings:
+            flash(warning.message, 'warning')
         result = complete_verification_and_create_blockchain_asset(verification, verification.product.seller.wallet_address)
         flash(result['message'], 'info' if result['success'] else 'warning')
     else:

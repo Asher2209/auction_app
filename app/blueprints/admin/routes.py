@@ -7,7 +7,7 @@ from sqlalchemy import func
 from ...extensions import db
 from ...models import Auction, Bid, Category, CryptoPayment, Feedback, Product, Review, User, utcnow, CollectibleVerification
 from ...services import analytics_service, payment_service, report_export, report_service
-from ...services import review_service
+from ...services import auction_validation_service, review_service
 from ...services.notifications import notify
 from ...utils import like_pattern, role_required, safe_redirect_target
 from . import bp
@@ -81,6 +81,13 @@ def approve_product(product_id):
     if product.approval_status != "pending" or product.auction is not None:
         flash("Only pending listings can be approved.", "warning")
         return redirect(url_for("admin.product_review", product_id=product.id))
+
+    listing = auction_validation_service.check_listing(product)
+    if not listing.ok:
+        flash("This card cannot be listed: " + " ".join(i.message for i in listing.violations), "danger")
+        return redirect(url_for("admin.product_review", product_id=product.id))
+    for warning in listing.warnings:
+        flash(warning.message, "warning")
 
     now = utcnow()
     if product.auction_end <= now:
