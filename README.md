@@ -21,6 +21,13 @@ python scripts/seed.py            # creates the tables and loads demo data
 python run.py                     # http://127.0.0.1:5000
 ```
 
+**With MySQL** (MySQL 8): create an empty database, set `DATABASE_URL=mysql+pymysql://user:pass@localhost/auction_db` in `.env`, and build the tables with the migrations instead of letting the seed script create them:
+
+```bash
+ENABLE_SCHEDULER=0 flask --app run db upgrade
+python scripts/seed.py
+```
+
 Use `python run.py`, not `flask run`: it serves the WebSocket connection for live bids and starts the auction scheduler.
 
 The demo accounts (admin, sellers, buyers) are listed at the top of `scripts/seed.py`. They exist for local development only. All demo data (users, products, bids) is synthetic.
@@ -84,7 +91,7 @@ Verified by automated tests: registration and login, roles, listing and the admi
 
 Not tested:
 
-- **MySQL.** Everything has run on SQLite only. The code avoids SQLite-only features and the migrations target MySQL, but no MySQL run has been done, and the migrations do not yet create `blockchain_assets`, `blockchain_transfers` or `collectible_cards.platform_card_id`.
+- **MySQL.** Everything has run on SQLite only. The migrations target MySQL, and `tests/test_migrations.py` runs the whole chain on SQLite and checks that the result matches the models (tables, columns, nullability, unique keys, foreign keys), but no MySQL server has been used yet.
 - **Real MetaMask on Sepolia.** The contracts have not been deployed to Sepolia yet; the card flow has only run on the local test chain.
 - **Real email delivery.** Emails are built and captured in tests, never sent through a real SMTP server.
 - **Load, multiple processes, screen readers and real mobile devices.** See the "Not covered" section of `docs/TEST_MATRIX.md`.
