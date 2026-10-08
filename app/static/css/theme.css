@@ -93,9 +93,10 @@ p { line-height: var(--dt-line-height-relaxed); color: var(--dt-text-secondary);
 
 .navbar .nav-link, .navbar .navbar-brand { display: inline-flex; align-items: center; gap: var(--dt-space-md); font-weight: var(--dt-font-weight-medium); color: var(--dt-text-secondary); transition: color var(--dt-transition-base); }
 
-.navbar .nav-link:hover { color: var(--dt-text-primary); }
+/* the bar is always dark (bg-dark in base.html), so its text must not follow the light theme's dark text colour */
+.navbar .nav-link:hover { color: var(--dt-accent); }
 
-.navbar .navbar-brand { font-weight: var(--dt-font-weight-bold); font-size: 1.25rem; color: var(--dt-text-primary); }
+.navbar .navbar-brand, .navbar .navbar-brand:hover { font-weight: var(--dt-font-weight-bold); font-size: 1.25rem; color: var(--dt-accent); }
 
 .btn {
   transition: all var(--dt-transition-base);
