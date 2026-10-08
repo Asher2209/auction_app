@@ -32,6 +32,8 @@ Use `python run.py`, not `flask run`: it serves the WebSocket connection for liv
 
 The demo accounts (admin, sellers, buyers) are listed at the top of `scripts/seed.py`. They exist for local development only. All demo data (users, products, bids) is synthetic.
 
+For demo trading cards, run `python scripts/seed_card_types.py` and then `python scripts/seed_collectible_cards.py [seller-email]`. This adds 10 cards (Pokemon and football) for the first seller, each with a platform card ID and a placeholder image. They are submitted, not verified: an administrator verifies them through the checklist like any other card. Running it again adds nothing.
+
 To try the whole card flow without MetaMask, set `LOCAL_CHAIN=1`: the app starts an in-process test chain with a built-in demo wallet at `/dev-wallet`.
 
 ## Policies and consent
