@@ -6,14 +6,14 @@ from flask import g
 
 from app import legal
 from app.extensions import db
-from app.models import CryptoPayment, Feedback, Payment, Product, User
+from app.models import CollectibleCard, CryptoPayment, Feedback, Payment, Product, User
 
 from .conftest import PASSWORD, login
 from .test_accessibility import audit
 from .test_auth import REG
 from .test_buyer import cats, make_auction  # noqa: F401  (cats is a fixture)
 from .test_payments import card, client_for, pay, won
-from .test_seller import form_data, post_new
+from .test_seller import card_type, form_data, img, post_new  # noqa: F401  (card_type is a fixture)
 
 PAGES = {"/legal/privacy": "Privacy Policy", "/legal/terms": "Terms of Service", "/legal/refunds": "Refund Policy", "/legal/cookies": "Cookie Policy"}
 
@@ -243,25 +243,27 @@ def test_crypto_prepare_refuses_without_the_acknowledgement_before_doing_anythin
 
 
 # ---- selling and bidding -----------------------------------------------------------------------------------
-def test_listing_a_product_needs_the_seller_declaration(app, users, cats):  # noqa: F811
+def test_listing_a_card_needs_the_seller_declaration(app, users, card_type):  # noqa: F811
     c = client_for(app, "seller@t.test")
-    data = form_data(cats["Books"])
-    del data["accept"]
-    r = c.post("/seller/products/new", data=data, content_type="multipart/form-data")
+    form = c.get("/seller/cards/new").data.decode()
+    assert "I own this card, have the right to sell it" in form and "/legal/terms#selling" in form
+    data = form_data(card_type)
+    del data["confirm_accuracy"]
+    r = c.post("/seller/cards/new", data=data, content_type="multipart/form-data")
     assert r.status_code == 200 and b"You must agree to continue." in r.data and Product.query.count() == 0
-    assert post_new(c, cats["Books"]).status_code == 302 and Product.query.count() == 1
+    assert post_new(c, card_type).status_code == 302 and Product.query.count() == 1
 
 
-def test_editing_a_listing_needs_the_declaration_again(app, users, cats):  # noqa: F811
+def test_editing_a_card_needs_the_declaration_again(app, users, card_type):  # noqa: F811
     c = client_for(app, "seller@t.test")
-    post_new(c, cats["Books"])
-    p = Product.query.one()
-    data = form_data(cats["Books"], title="Renamed book")
-    del data["accept"]
-    r = c.post(f"/seller/products/{p.id}/edit", data=data, content_type="multipart/form-data")
+    post_new(c, card_type)
+    card = CollectibleCard.query.one()
+    data = form_data(card_type, card_name="Renamed card", card_images=[img()])
+    del data["confirm_accuracy"]
+    r = c.post(f"/seller/cards/{card.id}/edit", data=data, content_type="multipart/form-data")
     assert r.status_code == 200 and b"You must agree to continue." in r.data
     db.session.expire_all()
-    assert db.session.get(Product, p.id).title == "Old Book"
+    assert db.session.get(CollectibleCard, card.id).card_name == "Charizard"
 
 
 def test_the_bid_form_tells_buyers_that_a_bid_is_binding(app, users, cats):  # noqa: F811

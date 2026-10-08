@@ -213,13 +213,14 @@ def test_a_card_cannot_be_edited_or_deleted_through_the_generic_product_routes(a
     assert db.session.get(Product, p.id) is not None and db.session.get(Product, p.id).approval_status == "approved"
 
 
-def test_the_generic_routes_still_work_for_ordinary_products(as_seller, users, cat):
+def test_a_product_without_a_card_can_be_deleted_but_not_edited(as_seller, users, cat):
     plain = Product(seller_id=users["seller"].id, category_id=cat.id, title="Book", description="d" * 12,
                     starting_price=Decimal("5"), auction_start=utcnow() + timedelta(hours=1),
                     auction_end=utcnow() + timedelta(days=1), approval_status="pending")
     db.session.add(plain)
     db.session.commit()
-    assert as_seller.get(f"/seller/products/{plain.id}/edit").status_code == 200
+    r = as_seller.get(f"/seller/products/{plain.id}/edit")
+    assert r.status_code == 302 and r.location.endswith(f"/seller/products/{plain.id}")
     assert as_seller.post(f"/seller/products/{plain.id}/delete").status_code == 302
     assert db.session.get(Product, plain.id) is None
 

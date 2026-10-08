@@ -6,8 +6,9 @@ from decimal import Decimal
 import pytest
 from PIL import Image
 
+from app.blueprints.seller.routes_cards import CARD_CATEGORY_NAME
 from app.extensions import db
-from app.models import Auction, Bid, Category, Product, ProductImage, User, utcnow
+from app.models import Auction, Bid, CardType, Category, Product, ProductImage, utcnow
 
 from .conftest import login, make_user
 
@@ -27,10 +28,20 @@ def img(name="a.png", fmt="PNG"):
 
 @pytest.fixture
 def cat(app):
-    c = Category(name="Books")
+    c = Category(name=CARD_CATEGORY_NAME)  # the category the card form files every card under
     db.session.add(c)
     db.session.commit()
     return c
+
+
+@pytest.fixture
+def card_type(app, tmp_path):
+    """A card type to list under. The card form also writes a QR code file, so static files go to a temp folder."""
+    app.static_folder = str(tmp_path / "static")
+    t = CardType(name="Pokemon", slug="pokemon")
+    db.session.add(t)
+    db.session.commit()
+    return t
 
 
 @pytest.fixture
@@ -39,20 +50,17 @@ def seller(client, users, cat):
     return users["seller"]
 
 
-def form_data(cat, **over):
-    start = utcnow() + timedelta(hours=1)
-    data = {
-        "title": "Old Book", "category_id": cat.id, "description": "A very old and rare book.",
-        "starting_price": "500", "auction_start": start.strftime(FMT),
-        "auction_end": (start + timedelta(days=2)).strftime(FMT),
-        "images": [img()], "accept": "y",
-    }
+def form_data(card_type, **over):
+    """A valid card form submission (the only way a seller lists anything)."""
+    data = {"card_type_id": card_type.id, "card_name": "Charizard", "set_name": "Base Set", "release_year": "1999",
+            "card_number": "4/102", "condition": "Near Mint", "language": "English", "confirm_accuracy": "y",
+            "card_images": [img()]}
     data.update(over)
     return data
 
 
-def post_new(client, cat, **over):
-    return client.post("/seller/products/new", data=form_data(cat, **over), content_type="multipart/form-data")
+def post_new(client, card_type, **over):
+    return client.post("/seller/cards/new", data=form_data(card_type, **over), content_type="multipart/form-data")
 
 
 def make_product(owner, cat, auction=None, **kw):
@@ -73,90 +81,85 @@ def make_product(owner, cat, auction=None, **kw):
     return p
 
 
-# ---- create -------------------------------------------------------------
-def test_create_product_success(client, seller, cat, app):
-    r = post_new(client, cat, images=[img("one.png"), img("two.jpg", "JPEG")])
+# ---- create (through the card form) ---------------------------------------
+def test_the_old_product_form_sends_sellers_to_the_card_form(client, seller):
+    r = client.get("/seller/products/new")
+    assert r.status_code == 302 and r.location.endswith("/seller/cards/new")
+    assert client.post("/seller/products/new").status_code == 405
+
+
+def test_create_product_success(client, seller, cat, card_type, app):
+    r = post_new(client, card_type, card_images=[img("one.png"), img("two.jpg", "JPEG")])
     assert r.status_code == 302
     p = Product.query.one()
-    assert p.seller_id == seller.id and p.approval_status == "pending"
-    assert p.starting_price == Decimal("500") and len(p.images) == 2
+    assert p.seller_id == seller.id and p.approval_status == "pending" and p.category_id == cat.id
+    assert p.collectible_card is not None and len(p.images) == 2
+    page = client.get(r.headers["Location"]).data.decode()
+    assert f"Platform ID: {p.collectible_card.platform_card_id}." in page and "&lt;strong&gt;" not in page
     for i in p.images:
         assert os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], i.path))
         assert "one" not in i.path  # user-supplied name is never reused
 
 
-def test_create_requires_image(client, seller, cat):
-    r = post_new(client, cat, images=[])
-    assert r.status_code == 200 and b"at least one product image" in r.data
+def test_create_requires_image(client, seller, card_type):
+    r = post_new(client, card_type, card_images=[])
+    assert r.status_code == 200 and b"at least one image" in r.data
     assert Product.query.count() == 0
 
 
-def test_create_rejects_too_many_images(client, seller, cat):
-    r = post_new(client, cat, images=[img(f"{i}.png") for i in range(6)])
-    assert b"at most 5" in r.data and Product.query.count() == 0
+def test_create_rejects_too_many_images(client, seller, card_type):
+    r = post_new(client, card_type, card_images=[img(f"{i}.png") for i in range(11)])
+    assert b"at most 10" in r.data and Product.query.count() == 0
 
 
-def test_upload_rejects_non_image_with_image_extension(client, seller, cat, app):
+def test_upload_rejects_non_image_with_image_extension(client, seller, card_type, app):
     fake = (io.BytesIO(b"<?php echo 1; ?>"), "shell.png")
-    r = post_new(client, cat, images=[fake])
+    r = post_new(client, card_type, card_images=[fake])
     assert b"not a valid image" in r.data and Product.query.count() == 0
     assert not os.path.exists(os.path.join(app.config["UPLOAD_FOLDER"], "products")) or \
         not os.listdir(os.path.join(app.config["UPLOAD_FOLDER"], "products"))
 
 
-def test_upload_rejects_bad_extension_and_real_image_renamed(client, seller, cat):
-    assert b"only JPG" in post_new(client, cat, images=[(img_bytes(), "x.exe")]).data
-    assert b"only JPG" in post_new(client, cat, images=[(img_bytes(), "x.svg")]).data
-    assert b"only JPG" in post_new(client, cat, images=[(img_bytes(), "noext")]).data
+def test_upload_rejects_bad_extension_and_real_image_renamed(client, seller, card_type):
+    for name in ("x.exe", "x.svg", "noext"):
+        assert b"Images only" in post_new(client, card_type, card_images=[(img_bytes(), name)]).data, name
     assert Product.query.count() == 0
 
 
-def test_upload_rejects_unsupported_format_even_if_named_png(client, seller, cat):
-    r = post_new(client, cat, images=[(img_bytes("BMP"), "x.png")])
+def test_upload_rejects_unsupported_format_even_if_named_png(client, seller, card_type):
+    r = post_new(client, card_type, card_images=[(img_bytes("BMP"), "x.png")])
     assert b"unsupported image type" in r.data and Product.query.count() == 0
 
 
-def test_upload_rejects_oversized_image(client, seller, cat, app):
+def test_upload_rejects_oversized_image(client, seller, card_type, app):
     app.config["MAX_IMAGE_BYTES"] = 10
-    r = post_new(client, cat, images=[img()])
+    r = post_new(client, card_type, card_images=[img()])
     assert b"larger than" in r.data and Product.query.count() == 0
 
 
-def test_one_bad_file_stores_nothing(client, seller, cat, app):
-    post_new(client, cat, images=[img("ok.png"), (io.BytesIO(b"junk"), "bad.png")])
+def test_one_bad_file_stores_nothing(client, seller, card_type, app):
+    post_new(client, card_type, card_images=[img("ok.png"), (io.BytesIO(b"junk"), "bad.png")])
     folder = os.path.join(app.config["UPLOAD_FOLDER"], "products")
     assert Product.query.count() == 0
     assert not os.path.exists(folder) or not os.listdir(folder)
 
 
 @pytest.mark.parametrize("over,msg", [
-    ({"starting_price": "0"}, b"price"),
-    ({"starting_price": "abc"}, b"price"),
-    ({"title": "ab"}, b"Field must be between"),
-    ({"description": "short"}, b"Field must be between"),
-    ({"category_id": 9999}, b"valid choice"),
+    ({"card_name": "a"}, b"between 2 and 255"),
+    ({"card_name": ""}, b"This field is required"),
+    ({"card_type_id": 9999}, b"Not a valid choice"),
+    ({"condition": "Shiny"}, b"Not a valid choice"),
+    ({"confirm_accuracy": ""}, b"You must agree to continue."),
 ])
-def test_create_validation(client, seller, cat, over, msg):
-    r = post_new(client, cat, **over)
+def test_create_validation(client, seller, card_type, over, msg):
+    r = post_new(client, card_type, **over)
     assert r.status_code == 200 and msg in r.data and Product.query.count() == 0
 
 
-def test_auction_time_rules(client, seller, cat):
-    now = utcnow()
-    past = (now - timedelta(days=1)).strftime(FMT)
-    assert b"cannot be in the past" in post_new(client, cat, auction_start=past).data
-    start = now + timedelta(hours=1)
-    short = (start + timedelta(minutes=1)).strftime(FMT)
-    assert b"at least 5 minutes" in post_new(client, cat, auction_start=start.strftime(FMT), auction_end=short).data
-    long_ = (start + timedelta(days=31)).strftime(FMT)
-    assert b"longer than 30 days" in post_new(client, cat, auction_start=start.strftime(FMT), auction_end=long_).data
-    assert Product.query.count() == 0
-
-
-def test_xss_in_title_is_escaped(client, seller, cat):
-    created = post_new(client, cat, title="<script>alert(1)</script>")
+def test_xss_in_title_is_escaped(client, seller, card_type):
+    created = post_new(client, card_type, card_name="<script>alert(1)</script>")
     assert created.status_code == 302
-    r = client.get(created.headers["Location"])  # the new product's page shows its title
+    r = client.get(created.headers["Location"])  # the new card's page shows its name (and the flash repeats it)
     assert b"<script>alert(1)</script>" not in r.data and b"&lt;script&gt;" in r.data
 
 
@@ -177,61 +180,22 @@ def test_cannot_touch_another_sellers_product(client, seller, cat):
     p = make_product(other, cat)
     assert client.get(f"/seller/products/{p.id}").status_code == 404
     assert client.get(f"/seller/products/{p.id}/edit").status_code == 404
-    assert client.post(f"/seller/products/{p.id}/edit", data=form_data(cat)).status_code == 404
+    assert client.post(f"/seller/products/{p.id}/edit", data={"title": "Hacked"}).status_code == 404
     assert client.post(f"/seller/products/{p.id}/delete").status_code == 404
     assert db.session.get(Product, p.id) is not None
 
 
 # ---- edit ---------------------------------------------------------------
-def test_edit_updates_and_resubmits_approved_listing(client, seller, cat):
-    start = utcnow() + timedelta(hours=2)
-    p = make_product(seller, cat, approval_status="approved", auction={"start": start, "status": "scheduled"})
-    r = client.post(f"/seller/products/{p.id}/edit",
-                    data=form_data(cat, title="New Title", images=[]), content_type="multipart/form-data")
-    assert r.status_code == 302
+def test_a_listing_without_a_card_can_no_longer_be_edited(client, seller, cat):
+    """Listings from before the cards-only site have no card record; they can be deleted, not edited."""
+    p = make_product(seller, cat, approval_status="approved")
+    page = f"/seller/products/{p.id}"
+    for r in (client.get(f"{page}/edit"), client.post(f"{page}/edit", data={"title": "New Title"})):
+        assert r.status_code == 302 and r.location.endswith(page)
+    html = client.get(page).data.decode()
+    assert "can no longer be edited" in html and f"{page}/edit" not in html and f"{page}/delete" in html
     db.session.expire_all()
-    p = db.session.get(Product, p.id)
-    assert p.title == "New Title" and p.approval_status == "pending"
-    assert p.auction is None and Auction.query.count() == 0  # must be re-approved
-
-
-def test_edit_get_prefills_form(client, seller, cat):
-    p = make_product(seller, cat)
-    r = client.get(f"/seller/products/{p.id}/edit")
-    assert r.status_code == 200 and p.auction_start.strftime(FMT).encode() in r.data
-
-
-def test_edit_image_add_and_remove(client, seller, cat, app):
-    r = post_new(client, cat)
-    p = Product.query.one()
-    old = p.images[0]
-    old_path = os.path.join(app.config["UPLOAD_FOLDER"], old.path)
-    assert os.path.exists(old_path)
-    # removing the only image without adding one is refused
-    r = client.post(f"/seller/products/{p.id}/edit",
-                    data={**form_data(cat, images=[]), "remove_image": str(old.id)},
-                    content_type="multipart/form-data")
-    assert b"at least one image" in r.data and os.path.exists(old_path)
-    # replace it
-    r = client.post(f"/seller/products/{p.id}/edit",
-                    data={**form_data(cat, images=[img("new.png")]), "remove_image": str(old.id)},
-                    content_type="multipart/form-data")
-    assert r.status_code == 302
-    db.session.expire_all()
-    p = db.session.get(Product, p.id)
-    assert len(p.images) == 1 and p.images[0].id != old.id
-    assert not os.path.exists(old_path)
-
-
-def test_edit_cannot_remove_other_products_images(client, seller, cat):
-    other = make_user("other@t.test", "seller")
-    foreign = make_product(other, cat)
-    mine = make_product(seller, cat)
-    client.post(f"/seller/products/{mine.id}/edit",
-                data={**form_data(cat, images=[img()]), "remove_image": str(foreign.images[0].id)},
-                content_type="multipart/form-data")
-    db.session.expire_all()
-    assert db.session.get(Product, foreign.id).images  # untouched
+    assert db.session.get(Product, p.id).title == "P" and db.session.get(Product, p.id).approval_status == "approved"
 
 
 def test_cannot_edit_or_delete_after_auction_starts(client, seller, cat):
@@ -239,8 +203,7 @@ def test_cannot_edit_or_delete_after_auction_starts(client, seller, cat):
                           ("scheduled", utcnow() - timedelta(minutes=1))]:
         p = make_product(seller, cat, approval_status="approved", auction={"start": start, "status": status})
         assert client.get(f"/seller/products/{p.id}/edit").status_code == 302
-        r = client.post(f"/seller/products/{p.id}/edit", data=form_data(cat, title="Hacked"),
-                        content_type="multipart/form-data")
+        r = client.post(f"/seller/products/{p.id}/edit", data={"title": "Hacked"})
         assert r.status_code == 302
         assert client.post(f"/seller/products/{p.id}/delete").status_code == 302
         db.session.expire_all()
@@ -258,12 +221,13 @@ def test_cannot_edit_scheduled_auction_with_bids(client, seller, cat, users):
 
 # ---- delete -------------------------------------------------------------
 def test_delete_removes_product_auction_and_files(client, seller, cat, app):
-    post_new(client, cat)
-    p = Product.query.one()
+    p = make_product(seller, cat, auction={"start": utcnow() + timedelta(hours=1), "status": "scheduled"})
     path = os.path.join(app.config["UPLOAD_FOLDER"], p.images[0].path)
-    assert os.path.exists(path)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as f:
+        f.write(img_bytes().getvalue())
     assert client.post(f"/seller/products/{p.id}/delete").status_code == 302
-    assert Product.query.count() == 0 and ProductImage.query.count() == 0
+    assert Product.query.count() == 0 and ProductImage.query.count() == 0 and Auction.query.count() == 0
     assert not os.path.exists(path)
 
 
