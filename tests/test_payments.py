@@ -109,6 +109,15 @@ def test_payment_starts_awaiting(app, setup):
     assert p.awaiting_payment and not p.processing and p.amount == Decimal("500")
     page = c.get(f"/payments/{a.id}").data.decode()
     assert "₹500.00" in page and "Red Lamp" in page and "simulated" in page and "Cryptocurrency (not configured)" in page
+    assert "test ETH" not in page  # crypto is not configured here, so it is not described
+
+
+def test_a_simulated_payment_is_called_simulated_and_never_a_blockchain_one(app, setup):
+    a, c = setup
+    pay(c, a, "card", card())
+    page = c.get(f"/payments/{a.id}").data.decode()
+    assert "This is a <strong>simulated</strong> payment" in page
+    assert "test ETH" not in page and "verified on the blockchain" not in page
 
 
 @pytest.mark.parametrize("kind,data,ref", [

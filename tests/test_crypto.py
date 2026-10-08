@@ -19,6 +19,7 @@ from app.models import Category, CryptoPayment, Notification, Payment, User, utc
 from app.services import blockchain_service as bc
 from app.services import payment_service as ps
 
+from . import smart_account
 from .conftest import login, make_user
 from .test_buyer import cats, make_auction  # noqa: F401  (cats is a fixture)
 from .test_payments import client_for, titles, won
@@ -517,6 +518,75 @@ def test_a_paid_auction_cannot_start_crypto_again(app, setup):
     c.post(f"/payments/{a.id}/pay/upi", data={"upi_id": "bella@okbank", "accept": "y"})
     assert fresh(a).payment_status == "successful"
     assert prepare(c, a, chain).status_code == 409 and CryptoPayment.query.count() == 0
+
+
+# ---- smart accounts (MetaMask EIP-7702): tx.to is the wrapper, our contract still sees the wallet -----------------
+def wrapped_pay(c, a, chain, account, target=None, payer=None):
+    """Connect the smart account as the wallet, then pay through `payer` (default: that same account)."""
+    tx = prepare(c, a, chain, wallet=account.address).json["tx"]
+    h = smart_account.send_through(payer or account, chain.buyer, target or tx["to"], tx["data"], int(tx["value"], 16))
+    submit_raw(c, a, chain, h)
+    return h
+
+
+def test_a_payment_sent_through_a_smart_account_is_accepted(app, setup):
+    a, c, chain = setup
+    account = smart_account.deploy(chain.w3, chain.buyer)
+    h = wrapped_pay(c, a, chain, account)
+    assert chain.w3.eth.get_transaction(h)["from"] == chain.buyer != account.address  # submitted by another address
+    assert status(c, a)["status"] == "successful"
+    p = fresh(a)
+    assert p.crypto.status == "confirmed" and p.crypto.wallet_address == account.address and p.crypto.amount == Decimal("0.25")
+
+
+def test_a_wrapped_payment_to_another_payment_contract_fails(app, setup):
+    a, c, chain = setup
+    account = smart_account.deploy(chain.w3, chain.buyer)
+    impostor = chain.w3.eth.wait_for_transaction_receipt(chain.w3.eth.contract(abi=ART["abi"], bytecode=ART["bytecode"])
+                                                         .constructor().transact({"from": chain.deployer})).contractAddress
+    wrapped_pay(c, a, chain, account, target=impostor)  # a real PaymentMade, from the wrong contract
+    failed(c, a, chain, "not sent to the payment contract")
+
+
+def test_a_payment_event_forged_by_the_wrapper_fails(app, setup):
+    a, c, chain = setup
+    account = smart_account.deploy(chain.w3, chain.buyer)
+    prepare(c, a, chain, wallet=account.address)
+    h = chain.w3.to_hex(account.functions.forgePayment(a.id, chain.seller).transact({"from": chain.buyer, "value": ETH // 4}))
+    submit_raw(c, a, chain, h)
+    failed(c, a, chain, "not sent to the payment contract")
+    assert chain.contract.functions.paid(a.id).call() is False
+
+
+def test_a_wrapped_payment_from_a_different_smart_account_fails(app, setup):
+    a, c, chain = setup
+    connected, other = smart_account.deploy(chain.w3, chain.buyer), smart_account.deploy(chain.w3, chain.buyer)
+    wrapped_pay(c, a, chain, connected, payer=other)  # the contract records `other` as the buyer
+    failed(c, a, chain, "different wallet")
+
+
+def test_a_reverted_transaction_explains_how_to_turn_off_a_smart_account(app, setup, monkeypatch):
+    a, c, chain = setup
+    pay_ok(c, a, chain)
+    mine(chain)
+    real = chain.w3.eth.get_transaction_receipt
+    monkeypatch.setattr(chain.w3.eth, "get_transaction_receipt", lambda x: AttributeDict({**real(x), "status": 0}))
+    p = failed(c, a, chain, "failed on the blockchain")
+    assert "Account details > Smart account > Test chain off" in p.failure_reason and len(p.failure_reason) <= 200
+
+
+# ---- what the pay page says about the payment kind --------------------------------------------------------------
+def test_the_pay_page_names_both_kinds_while_choosing_and_only_the_one_used_after(app, setup):
+    a, c, chain = setup
+    choosing = c.get(f"/payments/{a.id}").get_data(as_text=True)
+    assert "Card, UPI and wallet payments are <strong>simulated</strong>" in choosing
+    assert "Cryptocurrency payments use <strong>test ETH</strong> on Test chain" in choosing
+    pay_ok(c, a, chain)
+    mine(chain)
+    assert status(c, a)["status"] == "successful"
+    paid = c.get(f"/payments/{a.id}").get_data(as_text=True)
+    assert "cryptocurrency payment in <strong>test ETH</strong> on Test chain" in paid and "verified on the blockchain" in paid
+    assert "simulated" not in paid.lower()
 
 
 # ---- outages ---------------------------------------------------------------------------------

@@ -469,6 +469,19 @@ def test_the_seller_pages_follow_the_sale(client, users, chain, s):
     assert "sold and paid for" in client.get(sale_url(s)).get_data(as_text=True)
 
 
+def test_a_mint_waiting_for_confirmation_is_named_as_such_not_as_a_missing_token(client, users, cat, card_type, chain, seller):
+    from app.services import blockchain_minting_service as bm
+    s = sold_card(users, cat, card_type, chain, minted=False)
+    bm.submit_mint(s.asset, "0x" + "ab" * 32)  # submitted, not confirmed yet
+    login(client, "seller@t.test")
+    html = client.get(sale_url(s)).get_data(as_text=True)
+    assert "waiting for blockchain confirmation" in html and "no minted blockchain token" not in html
+    assert "Authorize transfer</button>" not in html
+    as_buyer(client)
+    page = client.get(pay_url(s)).get_data(as_text=True)
+    assert "waiting for blockchain confirmation" in page and 'id="crypto-pay"' not in page
+
+
 def test_the_sale_page_says_what_blocks_the_seller(client, users, cat, card_type, chain, seller):
     nowallet = sold_card(users, cat, card_type, chain, winner_wallet=False)
     login(client, "seller@t.test")

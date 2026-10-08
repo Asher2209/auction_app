@@ -7,7 +7,7 @@ from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 
 from .extensions import socketio
-from .services import auction_service, blockchain_service
+from .services import auction_service, blockchain_minting_service, blockchain_service
 from .services.catalog import visible_auctions
 from .services.notifications import user_room
 
@@ -65,7 +65,8 @@ def on_leave(data):
 
 
 def scheduler_loop(app):
-    """Background tick: start due auctions and close finished ones, announcing each close."""
+    """Background tick: start due auctions and close finished ones (announcing each close), then confirm submitted
+    crypto payments and card token mints against the blockchain."""
     interval = app.config["SCHEDULER_INTERVAL_SECONDS"]
     while True:
         try:
@@ -73,6 +74,7 @@ def scheduler_loop(app):
                 for info in auction_service.run_maintenance():
                     emit_closed(info)
                 blockchain_service.verify_pending()
+                blockchain_minting_service.confirm_pending()
         except Exception:  # keep ticking; a bad cycle must not kill the loop
             app.logger.exception("Auction scheduler tick failed")
         socketio.sleep(interval)

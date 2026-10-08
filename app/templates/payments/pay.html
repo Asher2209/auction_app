@@ -30,7 +30,14 @@
       <div class="small text-muted">Paid on {{ payment.payment_date|local }}</div>
       {% endif %}
     </div></div>
-    <p class="small text-muted mt-3 mb-0">This is a <strong>simulated</strong> payment: no real money moves, and card numbers and CVVs are never stored.</p>
+    {% set chosen = payment.payment_method if payment.payment_status != 'failed' else None %}
+    {% if chosen == 'crypto' %}
+    <p class="small text-muted mt-3 mb-0" id="payment-kind">This is a cryptocurrency payment in <strong>test ETH</strong> on {{ payment.crypto.blockchain_network if payment.crypto else crypto.chain_name }} (a test network), verified on the blockchain.</p>
+    {% elif chosen %}
+    <p class="small text-muted mt-3 mb-0" id="payment-kind">This is a <strong>simulated</strong> payment: no real money moves, and card numbers and CVVs are never stored.</p>
+    {% else %}
+    <p class="small text-muted mt-3 mb-0" id="payment-kind">Card, UPI and wallet payments are <strong>simulated</strong>: no real money moves, and card numbers and CVVs are never stored.{% if crypto.enabled %} Cryptocurrency payments use <strong>test ETH</strong> on {{ crypto.chain_name }} (a test network) and are verified on the blockchain.{% endif %}</p>
+    {% endif %}
   </div>
 
   <div class="col-lg-7">

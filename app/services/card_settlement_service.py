@@ -39,6 +39,9 @@ def applies(payment):
 def _tokenised(payment):
     card = card_of(payment)
     asset = card.blockchain_asset
+    if asset is not None and asset.status == "minting":
+        raise CryptoError("The token mint is waiting for blockchain confirmation. This usually takes a minute or two; "
+                          "reload the page then.", 409)
     if asset is None or asset.status != "minted" or asset.token_id is None:
         raise CryptoError("This card has no minted blockchain token, so it cannot be paid for in cryptocurrency.", 409)
     w3 = get_web3()
@@ -195,7 +198,11 @@ def prepare_payment(payment, buyer_wallet_raw):
 
 # ---- step 5: verify the settlement event ------------------------------------------------------------
 def check_sale_event(w3, row, payment, receipt):
-    """Returns (failure Check or None, paid wei). The transaction itself was already checked by the caller."""
+    """Returns (failure Check or None, paid wei). The transaction itself was already checked by the caller.
+
+    Only events our token contract emitted count, so the same checks hold when the buyer's smart account wrapped
+    the settle() call. CardSold.buyer is the settle() caller (the contract requires it), so it proves who paid.
+    """
     asset = card_of(payment).blockchain_asset
     address = row.contract_address.lower()
     contract = bm._contract(w3, row.contract_address)
@@ -214,6 +221,12 @@ def check_sale_event(w3, row, payment, receipt):
     if paid != int(row.expected_wei):
         return Check("failed", f"Wrong amount: expected {int(row.expected_wei) / 10**18:f} ETH, "
                                f"received {paid / 10**18:f} ETH.", amount_wei=paid), None
+    moved = [e for e in contract.events.Transfer().process_receipt(receipt, errors=DISCARD)
+             if e["address"].lower() == address and e["args"]["tokenId"] == asset.token_id
+             and e["args"]["from"].lower() == row.seller_address.lower()
+             and e["args"]["to"].lower() == row.wallet_address.lower()]
+    if len(moved) != 1:
+        return Check("failed", "The settlement did not transfer the card token from the seller to the buyer."), None
     return None, paid
 
 
