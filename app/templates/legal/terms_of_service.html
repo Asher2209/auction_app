@@ -1,65 +1,66 @@
-{% extends "base.html" %}
-{% block title %}Terms of Service - ChainBid{% endblock %}
-{% block content %}
-<div class="container py-5">
-  <div class="row">
-    <div class="col-lg-8">
-      <h1 class="mb-4">Terms of Service</h1>
-      <p class="text-muted">Last updated: October 5, 2026</p>
+{% extends "legal/_page.html" %}
+{% block page_emoji %}📜{% endblock %}
+{% block page_title %}Terms of Service{% endblock %}
+{% block body %}
+<h2 class="h5 mt-4">1. Agreement</h2>
+<p>By creating an account, listing a card, bidding or paying on ChainBid you agree to these Terms, the <a href="{{ url_for('legal.privacy') }}">Privacy Policy</a>, the <a href="{{ url_for('legal.refunds') }}">Refund Policy</a> and the <a href="{{ url_for('legal.cookies') }}">Cookie Policy</a>. If you do not agree, do not use the site.</p>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">1. Acceptance of Terms</h2>
-        <p>By accessing and using ChainBid, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.</p>
-      </section>
+<h2 class="h5 mt-4">2. What ChainBid is</h2>
+<p>ChainBid is an online auction platform for collectible trading cards, built as an academic project. Sellers submit cards, an administrator reviews them, buyers bid, the system closes auctions and names winners, and winners pay. <strong>Payments are simulated or made with valueless test cryptocurrency; no real money changes hands and no real goods are exchanged</strong> unless the operator states otherwise in writing and has put in place a legal and payment setup that this software does not include.</p>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">2. User Accounts</h2>
-        <p>You are responsible for maintaining the confidentiality of your account information and password. You agree to accept responsibility for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account.</p>
-      </section>
+<h2 class="h5 mt-4">3. What "Platform Verified" means</h2>
+<p>A card marked <strong>Platform Verified</strong> has been reviewed by a ChainBid administrator, who checked the submitted details and images against a checklist. It is not a guarantee that the physical card is genuine, and it is not professional grading. Grading details and certification numbers are supplied by the seller. A card's blockchain token records its platform identity and who owns it; it does not prove the physical card is authentic.</p>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">3. Prohibited Activities</h2>
-        <p>You agree not to:</p>
-        <ul>
-          <li>Violate any applicable laws or regulations</li>
-          <li>Infringe upon any intellectual property rights</li>
-          <li>Harass, abuse, or threaten other users</li>
-          <li>Post false or misleading information</li>
-          <li>Attempt to gain unauthorized access to our systems</li>
-          <li>Use automated tools to access the platform without permission</li>
-        </ul>
-      </section>
+<h2 class="h5 mt-4">4. Accounts and wallets</h2>
+<ul>
+  <li>You must be 18 or older and give accurate details. One person, one account.</li>
+  <li>Keep your password secret and tell us if you think someone else is using your account. You are responsible for what happens under it.</li>
+  <li>You link a wallet by signing a one-time message with it, which proves you control it. A wallet can belong to only one account. Never share your private key or seed phrase with anyone, including us: we will never ask for them.</li>
+  <li>The operator may suspend or close accounts that break these Terms.</li>
+</ul>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">4. Auction Rules</h2>
-        <p>All auctions are binding contracts. By placing a bid, you agree to purchase the item at your bid price if you win the auction. Sellers must ship items within 5 business days of auction completion.</p>
-      </section>
+<h2 class="h5 mt-4" id="selling">5. Selling</h2>
+<ul>
+  <li>You may list only cards you own and have the right to sell, described honestly, with photos you have the right to use.</li>
+  <li>No illegal, stolen, counterfeit or fake listings. An administrator reviews every card and may reject it, ask for more information, or remove or cancel a listing.</li>
+  <li>A card can be edited only while it is under review (or after a rejection that allows resubmission). Once it is verified, or its auction has started, its details are fixed.</li>
+  <li>To have a card registered on the blockchain, listed and paid for in cryptocurrency, you must link a wallet you control.</li>
+  <li>When you list a card you confirm that you own the physical card and will send it to the winner once the payment is confirmed.</li>
+  <li>Sellers must not bid on their own items; the system blocks this.</li>
+</ul>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">5. Fees and Payments</h2>
-        <p>ChainBid may charge fees for using our services. You agree to pay all fees and charges that you incur. We accept cryptocurrency payments on the Sepolia test network for testing purposes.</p>
-      </section>
+<h2 class="h5 mt-4" id="bidding">6. Bidding</h2>
+<ul>
+  <li><strong>A bid is a binding offer.</strong> You cannot withdraw it. The highest valid bid when the auction closes wins.</li>
+  <li>A bid must be higher than the current bid (the first bid at least the starting price).</li>
+  <li><strong>Anti-sniping:</strong> a valid bid in the last 60 seconds extends the auction by 2 minutes.</li>
+  <li>The server's clock decides when an auction starts and ends. Times are shown in {{ tz_name }}.</li>
+  <li>Bid manipulation, fake bidding, automated abuse and attempts to get around limits are not allowed.</li>
+</ul>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">6. Limitation of Liability</h2>
-        <p>ChainBid is provided "as is" without warranties. We are not liable for any damages resulting from your use of or inability to use the platform, including direct, indirect, incidental, or consequential damages.</p>
-      </section>
+<h2 class="h5 mt-4">7. Paying</h2>
+<ul>
+  <li>The winner should pay the winning bid. The platform does not currently set a payment deadline, but the operator may cancel an unpaid sale.</li>
+  <li><strong>Simulated payments</strong> (card, UPI, wallet) only pretend to move money and may succeed, fail or stay pending for test purposes.</li>
+  <li><strong>Cryptocurrency payments</strong> are made in test ETH from your own wallet, directly to the seller's wallet through a small contract. For a registered card, the card's token moves to your wallet in the same transaction. The amount is quoted at a fixed exchange rate and locked when you start. The server accepts the payment only after it has checked the transaction on the blockchain. Blockchain transactions cannot be reversed.</li>
+  <li>An invoice is created after a successful payment.</li>
+</ul>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">7. Termination</h2>
-        <p>We reserve the right to terminate or suspend your account at any time for violations of these terms or any unlawful activity.</p>
-      </section>
+<h2 class="h5 mt-4">8. Reviews, messages and feedback</h2>
+<p>Only buyers who paid for an item can review it. Reviews and messages must be honest and lawful, and must not include other people's personal data or abuse. Administrators may hide or delete reviews that break these rules. By posting a review you allow ChainBid to display it publicly with your name shortened.</p>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">8. Modifications</h2>
-        <p>We may modify these terms at any time. Continued use of the platform following any changes constitutes your acceptance of the new terms.</p>
-      </section>
+<h2 class="h5 mt-4">9. Acceptable use</h2>
+<p>Do not attack, overload or probe the site, try to reach other people's data, upload malware, scrape it at scale, or use it for anything unlawful.</p>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">9. Contact Us</h2>
-        <p>For questions about these Terms of Service, contact us at <strong>legal@chainbid.test</strong></p>
-      </section>
-    </div>
-  </div>
-</div>
+<h2 class="h5 mt-4">10. Intellectual property</h2>
+<p>You keep the rights to what you post, and give ChainBid a limited licence to show it on the site for as long as it is listed. Card names and artwork belong to their publishers. The software and design belong to their authors.</p>
+
+<h2 class="h5 mt-4">11. No warranty and limits of liability</h2>
+<p>The site is provided "as is", as a demonstration. We do not promise it will be available, error-free or secure, or that any card, seller or buyer is genuine. To the extent the law allows, the operator is not liable for losses from using the site, including lost test funds, failed transactions or wallet mistakes. Nothing here limits liability that cannot be limited by law.</p>
+
+<h2 class="h5 mt-4">12. Changes and ending</h2>
+<p>We may change these Terms; the version and date at the top show when. Continuing to use the site after a change means you accept it. You can stop using ChainBid at any time and ask us to close your account.</p>
+
+<h2 class="h5 mt-4">13. Governing law</h2>
+<p>An operator running this for real should state here which country's law applies and where disputes are heard. This academic version does not choose one.</p>
 {% endblock %}

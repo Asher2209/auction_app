@@ -53,10 +53,12 @@
     say("");
     const provider = window.ethereum;
     if (!provider || !account) { say("Connect your wallet first."); return; }
+    const accept = document.getElementById("accept-crypto");
+    if (!accept || !accept.checked) { say("Please tick the box to confirm you have read the Refund Policy."); return; }
     payBtn.disabled = true;
     try {
       // 1. the server locks the quote and builds the exact transaction
-      const prep = await post("prepare", { wallet_address: account });
+      const prep = await post("prepare", { wallet_address: account, accept_terms: true });
       if (!prep.ok) throw new Error(prep.error || "Could not start the payment.");
 
       // 2. the wallet must be on the right network

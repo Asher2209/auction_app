@@ -3,10 +3,11 @@ import time
 from flask import current_app, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
+from ... import legal
 from ...extensions import db
 from ...services import wallet_service
 from ...services.mailer import send_email
-from ...models import User
+from ...models import User, utcnow
 from ...ratelimit import client_ip, limited, limiter, too_many
 from ...utils import safe_redirect_target
 from . import bp
@@ -32,6 +33,8 @@ def register():
             phone=form.phone.data.strip(),
             address=form.address.data.strip(),
             role=form.role.data,  # SelectField restricts this to buyer/seller
+            consent_version=legal.POLICY_VERSION,  # which policies they agreed to, and when
+            consented_at=utcnow(),
         )
         user.set_password(form.password.data)
         db.session.add(user)

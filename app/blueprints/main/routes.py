@@ -3,10 +3,11 @@ from datetime import timedelta
 from flask import flash, redirect, render_template, url_for, request, abort, jsonify
 from flask_login import current_user, login_required
 from flask_wtf import FlaskForm
-from wtforms import TextAreaField
+from wtforms import BooleanField, TextAreaField
 from wtforms.validators import DataRequired, Length
 
 from ...extensions import db
+from ...legal import MUST_AGREE
 from ...models import Auction, Category, Feedback, utcnow, CollectibleCard, CardType, Product
 from ... import sockets
 from ...services import auction_service
@@ -45,6 +46,8 @@ def health():
 
 class FeedbackForm(FlaskForm):
     message = TextAreaField("Your feedback", validators=[DataRequired(), Length(min=10, max=1000)])
+    consent = BooleanField("I agree that this message is stored with my account and read by the administrators",
+                           validators=[DataRequired(message=MUST_AGREE)])
 
 
 FEEDBACK_PER_DAY = 10
@@ -65,26 +68,6 @@ def feedback():
             flash("Thank you! Your feedback was sent to the administrators.", "success")
             return redirect(url_for("main.feedback"))
     return render_template("feedback.html", form=form)
-
-
-@bp.route("/privacy-policy")
-def privacy_policy():
-    return render_template("legal/privacy_policy.html")
-
-
-@bp.route("/terms-of-service")
-def terms_of_service():
-    return render_template("legal/terms_of_service.html")
-
-
-@bp.route("/refund-policy")
-def refund_policy():
-    return render_template("legal/refund_policy.html")
-
-
-@bp.route("/cookie-policy")
-def cookie_policy():
-    return render_template("legal/cookie_policy.html")
 
 
 @bp.route("/cards/search", methods=["GET"])

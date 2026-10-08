@@ -45,7 +45,7 @@ def form_data(cat, **over):
         "title": "Old Book", "category_id": cat.id, "description": "A very old and rare book.",
         "starting_price": "500", "auction_start": start.strftime(FMT),
         "auction_end": (start + timedelta(days=2)).strftime(FMT),
-        "images": [img()],
+        "images": [img()], "accept": "y",
     }
     data.update(over)
     return data

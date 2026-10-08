@@ -53,7 +53,7 @@ def mine(chain, n=1):
 
 
 def prepare(c, a, chain, wallet=None):
-    return c.post(f"/payments/{a.id}/crypto/prepare", json={"wallet_address": wallet or chain.buyer})
+    return c.post(f"/payments/{a.id}/crypto/prepare", json={"accept_terms": True, "wallet_address": wallet or chain.buyer})
 
 
 def send(chain, tx):
@@ -190,7 +190,7 @@ def test_prepare_builds_the_exact_transaction_and_locks_the_quote(app, setup):
 def test_prepare_ignores_anything_the_client_claims(app, setup):
     a, c, chain = setup
     j = c.post(f"/payments/{a.id}/crypto/prepare",
-               json={"wallet_address": chain.buyer, "amount": "1", "wei": "1", "seller": chain.other}).json
+               json={"accept_terms": True, "wallet_address": chain.buyer, "amount": "1", "wei": "1", "seller": chain.other}).json
     assert j["quote"]["wei"] == str(ETH // 4) and j["seller_address"] == chain.seller
 
 
@@ -210,7 +210,7 @@ def test_repeated_prepare_reuses_one_row_and_requotes(app, setup):
 ])
 def test_prepare_rejects_bad_buyer_wallets(app, setup, wallet, msg):
     a, c, chain = setup
-    r = c.post(f"/payments/{a.id}/crypto/prepare", json={"wallet_address": wallet})
+    r = c.post(f"/payments/{a.id}/crypto/prepare", json={"accept_terms": True, "wallet_address": wallet})
     assert r.status_code == 400 and msg in r.json["error"] and CryptoPayment.query.count() == 0
 
 
@@ -507,14 +507,14 @@ def test_failure_then_a_clean_second_attempt_succeeds(app, setup, users):
 def test_crypto_and_simulated_payments_exclude_each_other(app, setup):
     a, c, chain = setup
     pay_ok(c, a, chain)  # crypto is now processing
-    r = c.post(f"/payments/{a.id}/pay/upi", data={"upi_id": "bella@okbank"})
+    r = c.post(f"/payments/{a.id}/pay/upi", data={"upi_id": "bella@okbank", "accept": "y"})
     assert fresh(a).method_detail == "eth" and fresh(a).attempts == 1 and r.status_code == 302
     assert prepare(c, a, chain).status_code == 409
 
 
 def test_a_paid_auction_cannot_start_crypto_again(app, setup):
     a, c, chain = setup
-    c.post(f"/payments/{a.id}/pay/upi", data={"upi_id": "bella@okbank"})
+    c.post(f"/payments/{a.id}/pay/upi", data={"upi_id": "bella@okbank", "accept": "y"})
     assert fresh(a).payment_status == "successful"
     assert prepare(c, a, chain).status_code == 409 and CryptoPayment.query.count() == 0
 
@@ -625,7 +625,7 @@ def test_local_chain_end_to_end_through_the_demo_wallet(local_app):
     assert r.status_code == 200, (r.status_code, r.location)
     acct = r.json
     assert acct["address"] == accounts[1]
-    prep = c.post(f"/payments/{a.id}/crypto/prepare", json={"wallet_address": acct["address"]}).json
+    prep = c.post(f"/payments/{a.id}/crypto/prepare", json={"accept_terms": True, "wallet_address": acct["address"]}).json
     assert prep["quote"]["eth"] == "0.1"
     h = c.post("/dev-wallet/send", json={"tx": prep["tx"]}).json["hash"]
     assert h.startswith("0x") and len(h) == 66
@@ -714,7 +714,7 @@ def test_local_chain_advances_by_itself_while_a_payment_waits(local_app):
     svc.place_bid(a.id, buyer, "32000")
     svc.close_auction(a.id, now=a.end_time + timedelta(seconds=1))
     c = client_for(app, "buyer@t.test")
-    prep = c.post(f"/payments/{a.id}/crypto/prepare", json={"wallet_address": accounts[1]}).json
+    prep = c.post(f"/payments/{a.id}/crypto/prepare", json={"accept_terms": True, "wallet_address": accounts[1]}).json
     c.post(f"/payments/{a.id}/crypto/submit", json={"tx_hash": c.post("/dev-wallet/send", json={"tx": prep["tx"]}).json["hash"]})
     assert c.get(f"/payments/{a.id}/status").json["status"] == "pending"
     assert bc.verify_pending() == 1  # one background tick mines a block and confirms it

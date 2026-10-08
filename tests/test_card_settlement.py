@@ -307,7 +307,7 @@ def as_buyer(client):
 
 
 def prepare_payment(client, s, wallet=None):
-    return jpost(client, pay_url(s, "/crypto/prepare"), {"wallet_address": wallet or s.buyer_wallet})
+    return jpost(client, pay_url(s, "/crypto/prepare"), {"accept_terms": True, "wallet_address": wallet or s.buyer_wallet})
 
 
 def test_the_winner_cannot_pay_before_the_seller_authorizes(client, chain, s):

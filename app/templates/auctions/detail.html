@@ -84,7 +84,8 @@
           <input class="form-control" id="amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="{{ state.min_next_bid }}" required>
           <button class="btn btn-primary" type="submit" id="bid-btn">Place bid</button>
         </div>
-        <div class="form-text">Minimum bid: <span id="min-bid">{{ currency }}{{ '{:,.2f}'.format(state.min_next_bid|float) }}</span>. A bid in the last minute extends the auction by 2 minutes.</div>
+        <div class="form-text">Minimum bid: <span id="min-bid">{{ currency }}{{ '{:,.2f}'.format(state.min_next_bid|float) }}</span>. A bid in the last minute extends the auction by 2 minutes.
+          Please note that a bid is binding: it cannot be withdrawn (<a href="{{ url_for('legal.terms') }}#bidding">Terms of Service</a>).</div>
         <div class="text-danger small mt-1" id="bid-error" role="alert"></div>
       </form>
       <form method="post" action="{{ url_for('buyer.toggle_watch', auction_id=auction.id) }}" class="mt-3">

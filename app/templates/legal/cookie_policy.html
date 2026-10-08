@@ -1,95 +1,42 @@
-{% extends "base.html" %}
-{% block title %}Cookie Policy - ChainBid{% endblock %}
-{% block content %}
-<div class="container py-5">
-  <div class="row">
-    <div class="col-lg-8">
-      <h1 class="mb-4">Cookie Policy</h1>
-      <p class="text-muted">Last updated: October 5, 2026</p>
+{% extends "legal/_page.html" %}
+{% block page_emoji %}🍪{% endblock %}
+{% block page_title %}Cookie Policy{% endblock %}
+{% block body %}
+<h2 class="h5 mt-4">1. What cookies are</h2>
+<p>Cookies are small text files a website saves in your browser. ChainBid uses only the cookies it needs to work, plus one that remembers your cookie choice. <strong>It sets no advertising, analytics or tracking cookies.</strong></p>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">1. What Are Cookies?</h2>
-        <p>Cookies are small text files stored on your device that help us recognize you and remember your preferences. They allow us to provide personalized experiences and improve our services.</p>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">2. Types of Cookies We Use</h2>
-
-        <h5 class="mt-4">Essential Cookies</h5>
-        <p>These cookies are necessary for the platform to function. They include:</p>
-        <ul>
-          <li><strong>session</strong> - Manages user sessions and authentication</li>
-          <li><strong>csrf_token</strong> - Protects against cross-site request forgery attacks</li>
-        </ul>
-
-        <h5 class="mt-4">Preference Cookies</h5>
-        <p>These cookies remember your preferences:</p>
-        <ul>
-          <li><strong>theme_preference</strong> - Stores your preferred light/dark mode</li>
-          <li><strong>currency</strong> - Remembers your preferred currency display</li>
-        </ul>
-
-        <h5 class="mt-4">Analytics Cookies</h5>
-        <p>These cookies help us understand how you use our platform:</p>
-        <ul>
-          <li><strong>_ga</strong> - Google Analytics tracking (if enabled)</li>
-          <li><strong>page_views</strong> - Tracks page navigation</li>
-        </ul>
-
-        <h5 class="mt-4">Marketing Cookies</h5>
-        <p>These cookies support our marketing efforts:</p>
-        <ul>
-          <li><strong>utm_source, utm_medium, utm_campaign</strong> - Track marketing campaigns</li>
-        </ul>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">3. Cookie Consent</h2>
-        <p>When you first visit ChainBid, a cookie consent banner will appear. You can:</p>
-        <ul>
-          <li><strong>Accept All</strong> - Accept all cookies</li>
-          <li><strong>Manage Preferences</strong> - Choose which types of cookies to accept</li>
-          <li><strong>Reject All</strong> - Reject non-essential cookies</li>
-        </ul>
-        <p>Essential cookies are always used to provide basic functionality. You can change your cookie preferences at any time in your account settings.</p>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">4. How to Disable Cookies</h2>
-        <p>You can disable cookies through your browser settings:</p>
-        <ul>
-          <li><strong>Chrome:</strong> Settings → Privacy → Cookies and other site data</li>
-          <li><strong>Firefox:</strong> Preferences → Privacy & Security → Cookies and Site Data</li>
-          <li><strong>Safari:</strong> Preferences → Privacy → Cookies and website data</li>
-          <li><strong>Edge:</strong> Settings → Privacy → Cookies and other site data</li>
-        </ul>
-        <p>Note: Disabling cookies may affect your ability to use certain features of ChainBid.</p>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">5. Third-Party Cookies</h2>
-        <p>We may use third-party services that set their own cookies:</p>
-        <ul>
-          <li>Google Analytics - <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a></li>
-          <li>Cloudflare - <a href="https://www.cloudflare.com/privacy/" target="_blank">Privacy Policy</a></li>
-        </ul>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">6. Cookie Retention</h2>
-        <p>Session cookies are deleted when you close your browser. Persistent cookies are retained based on their purpose:</p>
-        <ul>
-          <li>Authentication cookies: Until logout or session expiration (30 days)</li>
-          <li>Preference cookies: 1 year</li>
-          <li>Analytics cookies: 2 years</li>
-        </ul>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">7. Contact Us</h2>
-        <p>If you have questions about our use of cookies, please contact <strong>privacy@chainbid.test</strong></p>
-      </section>
-    </div>
-  </div>
+<h2 class="h5 mt-4">2. The cookies we set</h2>
+<div class="table-responsive">
+<table class="table table-sm align-middle">
+  <caption class="visually-hidden">Cookies set by this site</caption>
+  <thead><tr><th scope="col">Name</th><th scope="col">Purpose</th><th scope="col">Type</th><th scope="col">Lasts</th></tr></thead>
+  <tbody>
+    <tr><th scope="row"><code>session</code></th><td>Keeps you signed in, protects forms against forgery (CSRF), holds the one-time message you sign when linking a wallet, and carries one-time notices such as "Account created". Set only after you sign in or open a form.</td><td>Essential</td><td>Until you close the browser (the server also ends a login after 8 hours)</td></tr>
+    <tr><th scope="row"><code>chainbid_consent</code></th><td>Remembers your choice on this page so we do not ask again on every visit.</td><td>Essential (records your preference)</td><td>180 days, or until the policy version changes</td></tr>
+  </tbody>
+</table>
 </div>
+<p>Both are first-party, <code>HttpOnly</code> and <code>SameSite=Lax</code>, and <code>Secure</code> when the site runs over HTTPS.</p>
+
+<h2 class="h5 mt-4">3. Other things stored in your browser</h2>
+<p>If you use the light/dark switch, your choice is saved in this browser's local storage under the name <code>chainbid-theme</code>. It is not a cookie, is never sent to the server, and you can clear it in your browser settings.</p>
+<p>Nothing else is stored for tracking. Files from third-party content delivery networks (jsdelivr, cdnjs) are fetched when a page loads; those services may log your IP address, and your browser may cache the files. See the <a href="{{ url_for('legal.privacy') }}">Privacy Policy</a>.</p>
+
+<h2 class="h5 mt-4">4. Your choice</h2>
+<p>Because every cookie above is essential, the site works the same whichever option you pick. The choice is recorded so that, if optional cookies are ever added, none is set without your agreement. <strong>Essential only</strong> means just the cookies in the table. <strong>Accept all</strong> would also allow optional cookies in future; none exist today.</p>
+<p id="settings">
+  {% if cookie_choice == 'all' %}Your current choice: <strong>Accept all</strong>.
+  {% elif cookie_choice == 'essential' %}Your current choice: <strong>Essential only</strong>.
+  {% else %}You have not chosen yet.{% endif %}
+</p>
+<form method="post" action="{{ url_for('legal.cookie_consent') }}" class="d-flex gap-2 flex-wrap">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="next" value="{{ here }}">
+  <button class="btn btn-outline-secondary" type="submit" name="choice" value="essential">Essential only</button>
+  <button class="btn btn-primary" type="submit" name="choice" value="all">Accept all</button>
+</form>
+<p class="small text-muted mt-3">You can also delete cookies in your browser settings; you will then be signed out and asked again.</p>
+
+<h2 class="h5 mt-4">5. Changes</h2>
+<p>If we add cookies or change their purpose we update this page and its version, and the banner asks again.</p>
 {% endblock %}

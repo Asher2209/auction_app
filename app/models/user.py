@@ -22,6 +22,8 @@ class User(UserMixin, db.Model):
     # Set only by proving control of the wallet (a signed one-time message, see wallet_service). One account per wallet.
     wallet_address = db.Column(db.String(42), unique=True)
     wallet_verified_at = db.Column(db.DateTime)  # when control of wallet_address was proven
+    consent_version = db.Column(db.String(20))  # policy version accepted at registration (NULL: account predates the consent record)
+    consented_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     def set_password(self, password):

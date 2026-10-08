@@ -56,6 +56,7 @@ class Config:
     MIN_AUCTION_MINUTES = 5
     MAX_AUCTION_DAYS = 30
     CURRENCY_SYMBOL = "₹"
+    LEGAL_CONTACT_EMAIL = os.environ.get("LEGAL_CONTACT_EMAIL", "privacy@chainbid.local")  # shown on the policy pages
     # Display zone: timestamps are stored as naive UTC, people type and see them in this fixed-offset zone (see timeutil.py).
     TZ_NAME = os.environ.get("APP_TZ_NAME", "IST")
     TZ_OFFSET_MINUTES = int(os.environ.get("APP_TZ_OFFSET_MINUTES", "330"))

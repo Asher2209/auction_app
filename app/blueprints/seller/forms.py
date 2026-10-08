@@ -6,6 +6,7 @@ from wtforms import BooleanField, DecimalField, IntegerField, MultipleFileField,
 from wtforms.validators import DataRequired, Length, NumberRange, ValidationError, Optional
 
 from ... import timeutil
+from ...legal import MUST_AGREE
 from ...models import utcnow
 from ...services.category_questionnaires import get_category_questions
 
@@ -23,6 +24,8 @@ class ProductForm(FlaskForm):
     auction_start = timeutil.LocalDateTimeField("Auction start", format=DT_FORMAT, validators=[DataRequired()])  # typed in site time, .data is UTC
     auction_end = timeutil.LocalDateTimeField("Auction end", format=DT_FORMAT, validators=[DataRequired()])
     images = MultipleFileField("Product images")
+    accept = BooleanField("I own this item, have the right to sell it, and have described it honestly",
+                          validators=[DataRequired(message=MUST_AGREE)])  # asked again on every edit
 
     # Common detail fields
     condition = SelectField("Condition", choices=[], validators=[Optional()])

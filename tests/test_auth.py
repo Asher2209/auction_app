@@ -10,7 +10,7 @@ from .conftest import PASSWORD, login, make_user
 
 REG = {
     "name": "New User", "email": "new@t.test", "phone": "9876543210",
-    "address": "1 Main St", "role": "buyer", "password": "Passw0rdX", "confirm": "Passw0rdX",
+    "address": "1 Main St", "role": "buyer", "password": "Passw0rdX", "confirm": "Passw0rdX", "accept_terms": "y",
 }
 
 

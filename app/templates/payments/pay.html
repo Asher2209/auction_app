@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_form.html" import field %}
+{% from "_form.html" import checkbox, field %}
 {% block title %}Pay for {{ product.title }} - ChainBid{% endblock %}
 {% block content %}
 <a class="small" href="{{ url_for('buyer.won') }}">&larr; Won auctions</a>
@@ -99,6 +99,7 @@
             {% else %}
               {{ field(f.provider) }}{{ field(f.mobile) }}
             {% endif %}
+            {% call checkbox(f.accept) %}I have read the <a href="{{ url_for('legal.refunds') }}">Refund Policy</a>.{% endcall %}
             <button class="btn btn-primary w-100" type="submit">Pay {{ payment.amount|money }}</button>
           </form>
         </div>
@@ -121,6 +122,10 @@
                 {% endif %}
               </div>
               <div class="mb-2 small">Your wallet: <code id="crypto-account" class="text-break">not connected</code></div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="accept-crypto">
+                <label class="form-check-label" for="accept-crypto">I have read the <a href="{{ url_for('legal.refunds') }}">Refund Policy</a> and understand that a blockchain payment cannot be reversed.</label>
+              </div>
               <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-outline-primary" type="button" id="crypto-connect">Connect wallet</button>
                 <button class="btn btn-primary" type="button" id="crypto-pay" disabled>Pay {{ crypto.eth }} ETH</button>

@@ -102,8 +102,12 @@ def _json_body():
 @limited("crypto", 20, 60, by="user")
 def crypto_prepare(auction_id):
     payment = _own_payment_or_404(auction_id)
+    body = _json_body()
+    if body.get("accept_terms") is not True:  # exactly JSON true: the box on the page, not a truthy string or number
+        return jsonify(ok=False, error="Please tick the box to confirm you have read the Refund Policy: "
+                                       "a blockchain payment cannot be reversed."), 400
     try:
-        return jsonify(ok=True, **bc.prepare(payment, _json_body().get("wallet_address")))
+        return jsonify(ok=True, **bc.prepare(payment, body.get("wallet_address")))
     except bc.CryptoError as e:
         return jsonify(ok=False, error=e.message), e.status
 
@@ -141,7 +145,7 @@ def pay(auction_id, kind):
                 getattr(form, name).data = ""
         return _render(payment, active=kind, forms=forms), 400
 
-    data = {k: (v.strip() if isinstance(v, str) else v) for k, v in form.data.items() if k != "csrf_token"}
+    data = {k: (v.strip() if isinstance(v, str) else v) for k, v in form.data.items() if k not in ("csrf_token", "accept")}
     if kind == "card":
         data["card_number"] = ps.clean_card_number(data["card_number"])
     try:

@@ -1,11 +1,12 @@
 import re
 
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, SelectField, StringField, TextAreaField
+from wtforms import BooleanField, PasswordField, SelectField, StringField, TextAreaField
 from wtforms.validators import (
     DataRequired, Email, EqualTo, Length, Regexp, ValidationError,
 )
 
+from ...legal import MUST_AGREE
 from ...models import User
 
 PHONE_RE = r"^\+?[0-9 \-]{7,20}$"
@@ -28,6 +29,7 @@ class RegisterForm(FlaskForm):
     role = SelectField("I want to", choices=[("buyer", "Buy (bid on items)"), ("seller", "Sell (list items)")])
     password = PasswordField("Password", validators=PASSWORD)
     confirm = PasswordField("Confirm password", validators=[DataRequired(), EqualTo("password", "Passwords must match.")])
+    accept_terms = BooleanField("I agree to the Terms of Service and the Privacy Policy", validators=[DataRequired(message=MUST_AGREE)])
 
     def validate_email(self, field):
         if User.query.filter_by(email=field.data.strip().lower()).first():

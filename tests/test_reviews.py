@@ -406,7 +406,7 @@ def test_simultaneous_submissions_make_exactly_one_review(tmp_path):
 
 # ---- site feedback ---------------------------------------------------------------------------------------
 def send_feedback(c, msg="The browse page is great but search could be faster."):
-    return c.post("/feedback", data={"message": msg})
+    return c.post("/feedback", data={"message": msg, "consent": "y"})
 
 
 def test_feedback_is_stored_and_acknowledged(app, users):

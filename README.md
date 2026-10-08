@@ -27,6 +27,10 @@ The demo accounts (admin, sellers, buyers) are listed at the top of `scripts/see
 
 To try the whole card flow without MetaMask, set `LOCAL_CHAIN=1`: the app starts an in-process test chain with a built-in demo wallet at `/dev-wallet`.
 
+## Policies and consent
+
+The Terms of Service, Privacy, Refund and Cookie policies are at `/legal/`. They describe what this software actually does and are not legal advice. Registration records which policy version a user accepted and when; payments, listings and feedback each need their own box ticked; the cookie notice works without JavaScript and declining is as easy as accepting. Only essential cookies are set.
+
 ## Wallets
 
 A user links a wallet by signing a one-time message with it (proof of control); typing an address is not enough. Only a proven wallet can receive a card token or a payout. The app never asks for, receives or stores private keys, seed phrases or MetaMask passwords.
@@ -59,6 +63,7 @@ Settings come from environment variables, read from `.env` (see `.env.example`).
 | `BLOCK_EXPLORER_TX_URL` | `https://sepolia.etherscan.io/tx/` | Prefix for transaction links |
 | `CONFIRMATIONS_REQUIRED` | `2` | Blocks to wait before a payment counts |
 | `INR_PER_ETH` | `320000` | Fixed exchange rate used to price auctions in ETH |
+| `LEGAL_CONTACT_EMAIL` | `privacy@chainbid.local` | Contact address shown on the policy pages |
 | `APP_TZ_NAME` | `IST` | Name of the display time zone. Times are stored as UTC and typed and shown in this zone |
 | `APP_TZ_OFFSET_MINUTES` | `330` | Its fixed offset from UTC in minutes (IST is +5:30, no daylight saving) |
 | `LOCAL_CHAIN` | `0` | `1`: development-only in-process test chain with a demo wallet |
