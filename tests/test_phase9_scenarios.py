@@ -687,7 +687,7 @@ def test_editing_a_card_under_review_resubmits_it_and_keeps_its_identity(client,
 
 # =================================== wording: Platform Verified, never authentic ============================================
 OVERCLAIM = re.compile(r"100\s*%\s*(authentic|genuine|real)|authenticity verified|professional authentication|guaranteed (authentic|genuine)"
-                       r"|certified authentic|verified seller|\bcertified\b", re.I)  # the platform reviews cards, it does not certify them
+                       r"|certified authentic|verified seller|\bcertified\b|authentic items|trusted sellers?", re.I)  # the platform reviews cards, it does not certify them or vet sellers
 
 
 def test_verification_wording_no_card_page_claims_a_card_is_authentic(client, users, seller, cat, card_type):
@@ -698,7 +698,8 @@ def test_verification_wording_no_card_page_claims_a_card_is_authentic(client, us
     auction = Auction.query.one()
     anonymous = ["/", "/shop", "/auth/login", "/auth/register", "/cards/browse", f"/cards/{card.id}", f"/auctions/{auction.id}",
                  f"/collectibles/card-verification/{card.platform_card_id}", "/cards/search?q=Charizard"]
-    signed_in = {"seller@t.test": ["/seller/collectibles", f"/seller/cards/{card.id}"],
+    signed_in = {"buyer@t.test": ["/buyer/", "/buyer/cards"],
+                 "seller@t.test": ["/seller/collectibles", f"/seller/cards/{card.id}"],
                  "admin@t.test": ["/admin/cards/verify?status=verified", f"/admin/cards/verify/{vid}", f"/admin/tokens/{asset.id}"]}
     pages = {}
     client.post("/auth/logout")

@@ -102,7 +102,7 @@ def pages(site):
                "/auth/login", "/auth/register", "/auth/forgot-password"],
         "buyer@t.test": ["/buyer/", "/buyer/bids", "/buyer/watchlist", "/buyer/won", f"/payments/{unpaid.id}", f"/payments/{paid.id}", f"/auctions/{paid.id}",
                          f"/auctions/{live.id}", "/notifications/", "/feedback", "/auth/profile", "/auth/change-password"],
-        "seller@t.test": ["/seller/", "/seller/?tab=pending", "/seller/products/new", f"/seller/products/{paid.product_id}", f"/seller/products/{site['pending'].id}/edit",
+        "seller@t.test": ["/seller/collectibles", "/seller/products/new", f"/seller/products/{paid.product_id}", f"/seller/products/{site['pending'].id}/edit",
                           "/seller/reviews", "/auth/profile"],
         "admin@t.test": ["/admin/", "/admin/analytics", "/admin/reports", "/admin/reports/payments?from=2000-01-01&to=2030-01-01",
                          "/admin/reports/daily-auctions", "/admin/reports/crypto-transactions", "/admin/products?status=all", f"/admin/products/{paid.product_id}",

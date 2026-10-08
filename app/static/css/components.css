@@ -726,3 +726,6 @@ button.product-detail-gallery-thumb[aria-current="true"] { border-color: var(--d
 .badge.badge-plain { text-transform: none; }
 .cc-cell { display: flex; min-width: 0; }
 .cc-cell > .cc { width: 100%; }
+
+/* Inline SVG icons (class="icon"): as tall as the text around them unless the markup sets a size */
+.icon { width: 1em; height: 1em; vertical-align: -.14em; flex: none; }

@@ -3,7 +3,7 @@
 {% block content %}
 
 <!-- ========== PAGE HEADER ========== -->
-<div style="padding-bottom: 2rem; margin-bottom: 3rem; border-bottom: 1px solid var(--cb-border);">
+<div style="padding-bottom: 2rem; margin-bottom: 3rem; border-bottom: 1px solid var(--dt-border);">
   <h1 class="h1 mb-1">Welcome back, {{ current_user.name }}</h1>
   <p class="lead text-muted">Track your bids and manage your auctions</p>
 </div>
@@ -16,17 +16,17 @@
 <!-- ========== STATS GRID ========== -->
 <div class="row g-4 mb-5">
   {% set stats_items = [
-    ('Bidding On', stats.bidding_on, 'buyer.bids', '#3b82f6', 'rgba(59, 130, 246, 0.15)'),
-    ('Currently Leading', stats.leading, 'buyer.bids', '#10b981', 'rgba(16, 185, 129, 0.15)'),
-    ('Watching', stats.watching, 'buyer.watchlist', '#f59e0b', 'rgba(245, 158, 11, 0.15)'),
-    ('Auctions Won', stats.won, 'buyer.won', '#C79A52', 'rgba(199, 154, 82, 0.15)')
+    ('Bidding On', stats.bidding_on, 'buyer.bids'),
+    ('Currently Leading', stats.leading, 'buyer.bids'),
+    ('Watching', stats.watching, 'buyer.watchlist'),
+    ('Auctions Won', stats.won, 'buyer.won')
   ] %}
 
-  {% for label, value, endpoint, color, bg_color in stats_items %}
+  {% for label, value, endpoint in stats_items %}
   <div class="col-12 col-sm-6 col-lg-3">
     <a href="{{ url_for(endpoint) }}" class="text-decoration-none" style="transition: transform 0.2s;">
-      <div class="glass p-5 hover-lift" style="border-radius: 1.5rem; text-align: center; cursor: pointer;">
-        <div style="width: 60px; height: 60px; background: {{ bg_color }}; border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: {{ color }};">
+      <div class="p-5 hover-lift" style="border-radius: 1.5rem; text-align: center; cursor: pointer; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
+        <div style="width: 60px; height: 60px; background: var(--dt-bg-2); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: var(--dt-accent);">
           {% if 'Bidding' in label %}
           <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
             <path d="M12 2v20m0 0l-7-7m7 7l7-7"></path>
@@ -47,7 +47,7 @@
           {% endif %}
         </div>
         <div class="text-muted small mb-2" style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">{{ label }}</div>
-        <div class="h2" style="color: {{ color }}; margin-bottom: 0;">{{ value }}</div>
+        <div class="h2" style="color: var(--dt-text-primary); margin-bottom: 0;">{{ value }}</div>
       </div>
     </a>
   </div>
@@ -55,9 +55,9 @@
 </div>
 
 <!-- ========== EMPTY STATE / CTA ========== -->
-<div class="glass p-5" style="border-radius: 1.5rem; text-align: center; border-left: 4px solid var(--cb-link);">
-  <h3 class="h5 mb-2" style="color: var(--cb-text);">Ready to bid?</h3>
-  <p class="text-muted mb-4">Explore verified collectibles and place your bids on authentic items</p>
+<div class="p-5" style="border-radius: 1.5rem; text-align: center; background: var(--dt-bg-1); border: 1px solid var(--dt-border); border-left: 4px solid var(--dt-accent);">
+  <h3 class="h5 mb-2" style="color: var(--dt-text-primary);">Ready to bid?</h3>
+  <p class="text-muted mb-4">Browse platform-verified trading cards and place your bids</p>
   <a class="btn btn-primary" href="{{ url_for('auctions.browse') }}">
     <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="8"></circle>

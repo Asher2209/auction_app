@@ -16,13 +16,13 @@
     <form method="get">
       <div class="row g-3 mb-4">
         <div class="col-12 col-lg-4">
-          <label class="form-label">Search</label>
-          <input class="form-control" name="q" placeholder="Name, description..." value="{{ f.q }}" maxlength="100">
+          <label class="form-label" for="browse-q">Search</label>
+          <input id="browse-q" class="form-control" name="q" placeholder="Name, description..." value="{{ f.q }}" maxlength="100">
         </div>
         
         <div class="col-6 col-lg-2">
-          <label class="form-label">Category</label>
-          <select class="form-select" name="category">
+          <label class="form-label" for="browse-category">Category</label>
+          <select id="browse-category" class="form-select" name="category">
             <option value="">All</option>
             {% for c in categories %}
             <option value="{{ c.id }}" {{ 'selected' if f.category == c.id }}>{{ c.name }}</option>
@@ -31,8 +31,8 @@
         </div>
         
         <div class="col-6 col-lg-2">
-          <label class="form-label">Status</label>
-          <select class="form-select" name="status">
+          <label class="form-label" for="browse-status">Status</label>
+          <select id="browse-status" class="form-select" name="status">
             <option value="">All</option>
             {% for s in statuses %}
             <option value="{{ s }}" {{ 'selected' if f.status == s }}>{{ s|capitalize }}</option>
@@ -41,8 +41,8 @@
         </div>
         
         <div class="col-12 col-lg-2">
-          <label class="form-label">Sort By</label>
-          <select class="form-select" name="sort">
+          <label class="form-label" for="browse-sort">Sort By</label>
+          <select id="browse-sort" class="form-select" name="sort">
             {% for s in sorts %}
             <option value="{{ s }}" {{ 'selected' if f.sort == s }}>
               {{ {'ending': 'Ending soon', 'newest': 'Newest', 'price_low': 'Low price', 'price_high': 'High price', 'most_bids': 'Most bids'}[s] }}
@@ -54,13 +54,13 @@
       
       <div class="row g-3 mb-4">
         <div class="col-6 col-lg-2">
-          <label class="form-label">Min Price</label>
-          <input class="form-control" type="number" min="0" step="0.01" name="min_price" value="{{ f.min_price if f.min_price is not none }}">
+          <label class="form-label" for="browse-min-price">Min Price</label>
+          <input id="browse-min-price" class="form-control" type="number" min="0" step="0.01" name="min_price" value="{{ f.min_price if f.min_price is not none }}">
         </div>
         
         <div class="col-6 col-lg-2">
-          <label class="form-label">Max Price</label>
-          <input class="form-control" type="number" min="0" step="0.01" name="max_price" value="{{ f.max_price if f.max_price is not none }}">
+          <label class="form-label" for="browse-max-price">Max Price</label>
+          <input id="browse-max-price" class="form-control" type="number" min="0" step="0.01" name="max_price" value="{{ f.max_price if f.max_price is not none }}">
         </div>
         
         <div class="col-12 col-lg-8" style="display: flex; align-items: flex-end; gap: var(--dt-space-md);">

@@ -70,8 +70,8 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Email Address</label>
-            <input type="email" class="form-control" value="{{ current_user.email }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
+            <label class="form-label" for="profile-email">Email Address</label>
+            <input id="profile-email" type="email" class="form-control" value="{{ current_user.email }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
             <small class="text-muted d-block mt-1">Your email cannot be changed</small>
           </div>
 
@@ -82,8 +82,8 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Account Role</label>
-            <input type="text" class="form-control" value="{{ current_user.role|capitalize }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
+            <label class="form-label" for="profile-role">Account Role</label>
+            <input id="profile-role" type="text" class="form-control" value="{{ current_user.role|capitalize }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
             <small class="text-muted d-block mt-1">Your account type cannot be changed</small>
           </div>
         </div>
