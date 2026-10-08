@@ -58,11 +58,14 @@
     <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Images</h6>
       <div id="gallery" class="carousel slide" style="background: var(--dt-bg-2); border-radius: 1rem; overflow: hidden;">
-        <div class="carousel-inner" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+        <div class="carousel-inner">
           {% for image in card_images %}
           <div class="carousel-item {{ 'active' if loop.first }}">
-            <img src="{{ url_for('static', filename='uploads/' ~ image.path) }}" class="d-block mx-auto" alt="{{ image.image_type }}" style="max-height:400px;max-width:100%;object-fit:contain;">
-            <div class="small text-muted text-center mt-2">{{ image.image_type|title }}</div>
+            {# centre inside the slide: a flex .carousel-inner breaks Bootstrap's slide positioning and pushes images right #}
+            <div class="d-flex flex-column align-items-center justify-content-center p-3" style="min-height: 400px;">
+              <img src="{{ url_for('static', filename='uploads/' ~ image.path) }}" class="d-block" alt="{{ image.image_type }}" style="max-height:400px;max-width:100%;object-fit:contain;">
+              <div class="small text-muted text-center mt-2">{{ image.image_type|title }}</div>
+            </div>
           </div>
           {% endfor %}
         </div>
