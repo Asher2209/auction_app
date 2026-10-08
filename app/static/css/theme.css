@@ -40,6 +40,11 @@
   --bs-border-color: var(--dt-border);
 }
 
+[data-bs-theme="light"] {
+  --bs-link-color-rgb: 131, 97, 43;          /* light --dt-accent #83612B */
+  --bs-link-hover-color-rgb: 118, 87, 38;    /* light --dt-accent-hover #765726 */
+}
+
 body { background-color: var(--dt-bg-0); font-optical-sizing: auto; scroll-behavior: smooth; }
 main { padding-top: var(--dt-space-xl); padding-bottom: var(--dt-space-3xl); }
 

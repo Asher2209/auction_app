@@ -5,9 +5,12 @@ Flow
 1. initiate_mint(): checks the card is verified and the connected wallet owns the token contract, then
    builds the exact mint transaction for the browser wallet to sign. The server holds no private key.
 2. submit_mint(): the browser reports the transaction hash; the asset becomes "minting".
-3. confirm_mint(): the server reads the chain itself. Only a transaction that succeeded, targets our token
-   contract on the right network, emitted our CardMinted event for THIS card and owner with the recorded
-   verification hash, and has enough confirmations completes the mint. The token ID is read from that event.
+3. confirm_mint(): the server reads the chain itself. Only a transaction on the right network that succeeded,
+   in which our token contract itself emitted its CardMinted event for THIS card and owner with the recorded
+   verification hash, and that has enough confirmations completes the mint. The token ID is read from that event.
+   The admin wallet may call the contract directly or through a MetaMask smart account (tx.to is then the
+   DelegationManager); the contract's onlyOwner check applies to its msg.sender either way.
+   confirm_pending() runs this for every submitted mint on each scheduler tick, and the admin page can run it too.
 """
 import json
 import logging
@@ -21,8 +24,9 @@ from web3.exceptions import TransactionNotFound
 from web3.logs import DISCARD
 
 from ..extensions import db
-from ..models import utcnow
-from .blockchain_service import TX_HASH_RE, get_web3, normalize_wallet
+from ..models import BlockchainAsset, User, utcnow
+from .blockchain_service import TX_HASH_RE, get_web3, logs_from, normalize_wallet, reverted_reason
+from .notifications import notify
 
 logger = logging.getLogger(__name__)
 ARTIFACT = Path(__file__).resolve().parent.parent.parent / "contracts" / "build" / "CollectibleCardToken.json"
@@ -147,14 +151,14 @@ def verify_mint(asset):
             return {"status": "error", "reason": "The configured RPC node is on a different network than CHAIN_ID."}
         try:
             receipt = w3.eth.get_transaction_receipt(asset.mint_transaction_hash)
-            tx = w3.eth.get_transaction(asset.mint_transaction_hash)
         except TransactionNotFound:
             return {"status": "pending", "reason": "The transaction has not been mined yet."}
 
         if receipt["status"] != 1:
-            return _failed("The transaction reverted on the blockchain.")
+            return _failed(reverted_reason("The transaction reverted on the blockchain."))
         address = asset.contract_address.lower()
-        if (tx["to"] or "").lower() != address:
+        # What the token contract itself logged, not tx.to: a smart-account mint is sent via a DelegationManager.
+        if not logs_from(receipt, address):
             return _failed("The transaction was not sent to the card token contract.")
 
         contract = _contract(w3, asset.contract_address)
@@ -209,3 +213,30 @@ def confirm_mint(asset):
         asset.mint_transaction_hash = None
         db.session.commit()
     return result
+
+
+def confirm_pending():
+    """Scheduler step: run confirm_mint() for every submitted mint, so a mint completes without anyone re-checking
+    the admin page. A failure is told to the admins, since nobody may be watching. Returns how many were checked.
+    Never raises."""
+    if not chain_ready():
+        return 0
+    minting = BlockchainAsset.query.filter(BlockchainAsset.status == "minting",
+                                           BlockchainAsset.mint_transaction_hash.isnot(None)).all()
+    if minting and current_app.extensions.get("local_chain_accounts"):
+        get_web3().provider.ethereum_tester.mine_blocks(1)  # development chain only: no blocks without this
+    checked = 0
+    for asset in minting:
+        try:
+            result = confirm_mint(asset)
+            checked += 1
+            if result["status"] == "failed":
+                card_id = asset.collectible_card.platform_card_id
+                for (admin_id,) in db.session.query(User.id).filter_by(role="admin", is_active_user=True):
+                    notify(admin_id, "Card token mint failed", f"The mint of {card_id} failed: {result['reason']}",
+                           url=f"/admin/tokens/{asset.id}")
+                db.session.commit()
+        except Exception:  # an RPC outage must not stop the other mints or the scheduler
+            db.session.rollback()
+            logger.warning("Background mint confirmation failed for asset %s", asset.id, exc_info=True)
+    return checked

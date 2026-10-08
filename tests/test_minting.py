@@ -385,3 +385,85 @@ def test_deploy_script_deploys_a_token_contract_owned_by_the_admin_wallet(app, s
     assert chain_id == chain.w3.eth.chain_id
     assert deployed.functions.owner().call() == chain.admin != deployer.address  # the deployer does not keep control
     assert deployed.functions.nextTokenId().call() == 1
+
+
+# ---- background confirmation: the scheduler finishes mints without anyone re-checking the admin page -----------------
+from app.models import Notification  # noqa: E402
+
+
+def submitted(asset, chain):
+    bm.submit_mint(asset, chain.send(bm.initiate_mint(asset, chain.admin)["tx"]))
+    return asset
+
+
+def test_the_scheduler_step_completes_a_submitted_mint(app, seller, cat, card_type, chain):
+    app.config["CONFIRMATIONS_REQUIRED"] = 2
+    asset = submitted(verified_asset(seller, cat, card_type, chain), chain)
+    draft = verified_asset(seller, cat, card_type, chain)  # nothing submitted: left alone
+    assert bm.confirm_pending() == 1 and asset.status == "minting"  # 1 of 2 confirmations
+    chain.w3.provider.ethereum_tester.mine_blocks(1)
+    assert bm.confirm_pending() == 1 and asset.status == "minted" and asset.token_id == 1
+    assert bm.confirm_pending() == 0 and draft.status == "draft"
+
+
+def test_a_mint_failing_in_the_background_returns_to_draft_and_the_admins_are_told(users, seller, cat, card_type, chain):
+    asset = verified_asset(seller, cat, card_type, chain)
+    waiting = verified_asset(seller, cat, card_type, chain)
+    bm.submit_mint(asset, Web3.to_hex(chain.w3.eth.send_transaction({"from": chain.stranger, "to": chain.admin, "value": 1})))
+    bm.submit_mint(waiting, "0x" + "ab" * 32)  # not mined yet: stays as it is, nobody is told
+    assert bm.confirm_pending() == 2
+    assert asset.status == "draft" and asset.mint_transaction_hash is None and waiting.status == "minting"
+    told = Notification.query.filter_by(title="Card token mint failed").all()
+    assert [n.user_id for n in told] == [users["admin"].id]
+    assert asset.collectible_card.platform_card_id in told[0].message and told[0].url == f"/admin/tokens/{asset.id}"
+
+
+def test_one_unreadable_mint_does_not_stop_the_others(seller, cat, card_type, chain, monkeypatch):
+    broken, fine = (submitted(verified_asset(seller, cat, card_type, chain), chain) for _ in range(2))
+    real = bm.confirm_mint
+
+    def flaky(asset):
+        if asset.id == broken.id:
+            raise ConnectionError("node unreachable")
+        return real(asset)
+
+    monkeypatch.setattr(bm, "confirm_mint", flaky)
+    assert bm.confirm_pending() == 1
+    assert broken.status == "minting" and fine.status == "minted"
+
+
+def test_the_scheduler_step_does_nothing_without_a_blockchain(app, seller, cat, card_type, chain):
+    asset = submitted(verified_asset(seller, cat, card_type, chain), chain)
+    del app.extensions["web3"]
+    app.config["RPC_URL"] = None
+    assert bm.confirm_pending() == 0 and asset.status == "minting"
+
+
+def test_every_scheduler_tick_runs_the_mint_step(app, monkeypatch):
+    from app import sockets
+
+    class Stop(Exception):
+        pass
+
+    def stop(_seconds):
+        raise Stop
+
+    calls = []
+    monkeypatch.setattr(sockets.auction_service, "run_maintenance", lambda: [])
+    monkeypatch.setattr(sockets.blockchain_service, "verify_pending", lambda: calls.append("payments"))
+    monkeypatch.setattr(sockets.blockchain_minting_service, "confirm_pending", lambda: calls.append("mints"))
+    monkeypatch.setattr(sockets.socketio, "sleep", stop)
+    with pytest.raises(Stop):
+        sockets.scheduler_loop(app)
+    assert calls == ["payments", "mints"]
+
+
+def test_a_reverted_mint_explains_how_to_turn_off_a_smart_account(seller, cat, card_type, chain, monkeypatch):
+    from web3.datastructures import AttributeDict
+    asset = submitted(verified_asset(seller, cat, card_type, chain), chain)
+    real = chain.w3.eth.get_transaction_receipt
+    monkeypatch.setattr(chain.w3.eth, "get_transaction_receipt", lambda x: AttributeDict({**real(x), "status": 0}))
+    result = bm.confirm_mint(asset)
+    assert result["status"] == "failed" and "reverted on the blockchain" in result["reason"]
+    assert "smart account" in result["reason"] and "Account details > Smart account > Local off" in result["reason"]
+    assert asset.status == "draft"

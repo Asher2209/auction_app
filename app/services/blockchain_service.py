@@ -8,9 +8,11 @@ Flow
 2. The browser asks MetaMask to sign and send that transaction. The server never sees a key.
 3. submit(): the browser reports the transaction hash. It is stored (unique) and the payment becomes "processing".
 4. verify_payment(): the server reads the chain itself and checks, in order: the transaction exists and is
-   mined, it did not revert, it targets our contract on the right network, it came from the connected
-   wallet, and its PaymentMade event names this auction, this seller and this buyer with at least the
-   quoted amount. Then it waits for the required confirmations. Only then is the payment marked successful.
+   mined on the right network, it did not revert, our contract itself emitted its PaymentMade event naming
+   this auction, this seller and this buyer (the contract records msg.sender, so this proves which wallet
+   paid) with at least the quoted amount. Then it waits for the required confirmations. Only then is the
+   payment marked successful. The transaction may call our contract directly or through a smart account
+   (see logs_from()).
 
 Nothing the browser says is trusted: the chain is the source of truth. Private keys and seed phrases are
 never requested, stored or logged.
@@ -27,6 +29,7 @@ from sqlalchemy import and_, or_, update
 from sqlalchemy.exc import IntegrityError
 from web3 import Web3
 from web3.exceptions import TransactionNotFound
+from web3.logs import DISCARD
 
 from ..extensions import db
 from ..models import CryptoPayment, Payment, utcnow
@@ -85,6 +88,23 @@ def _contract(w3):
 def explorer_url(tx_hash):
     base = current_app.config.get("BLOCK_EXPLORER_TX_URL")
     return f"{base}{tx_hash}" if base and tx_hash else None
+
+
+def logs_from(receipt, address):
+    """The receipt's logs written by the contract at `address`: what that contract actually did in the transaction.
+
+    Only the contract itself can write a log under its own address. Its logs are there whether the wallet called it
+    directly or through a smart account: a MetaMask EIP-7702 smart account sends the call via its DelegationManager,
+    so tx.to is the DelegationManager, not our contract, while our contract still sees the wallet as msg.sender.
+    """
+    address = address.lower()
+    return [log for log in receipt["logs"] if log["address"].lower() == address]
+
+
+def reverted_reason(text):
+    """A reverted transaction, with the one cause we have seen in practice and how to undo it."""
+    return (f"{text} If your MetaMask account is a smart account, switch it back first (Account details > "
+            f"Smart account > {current_app.config['CHAIN_NAME']} off), then try again.")
 
 
 # ---- wallet addresses ---------------------------------------------------------------------
@@ -238,11 +258,13 @@ def check_transaction(w3, row, payment, now):
         return Check("pending", "Waiting for the transaction to be included in a block.")
 
     if receipt["status"] != 1:
-        return Check("failed", "The transaction failed on the blockchain.")
+        return Check("failed", reverted_reason("The transaction failed on the blockchain."))
     contract_addr = row.contract_address.lower()
-    if (tx.get("to") or "").lower() != contract_addr or (receipt.get("to") or "").lower() != contract_addr:
+    if not logs_from(receipt, contract_addr):  # our contract did nothing in it, directly or via a smart account
         return Check("failed", "The transaction was not sent to the payment contract.")
-    if tx["from"].lower() != row.wallet_address.lower():
+    direct = (tx.get("to") or "").lower() == contract_addr
+    if direct and tx["from"].lower() != row.wallet_address.lower():
+        # A wrapped call may be submitted by another address; the event's buyer (msg.sender) is checked below.
         return Check("failed", "The transaction came from a different wallet than the one connected.")
 
     from . import card_settlement_service as css
@@ -250,7 +272,7 @@ def check_transaction(w3, row, payment, now):
         failure, paid = css.check_sale_event(w3, row, payment, receipt)
         return failure or _finish(w3, receipt, paid, required)
 
-    events = [e for e in _contract(w3).events.PaymentMade().process_receipt(receipt)
+    events = [e for e in _contract(w3).events.PaymentMade().process_receipt(receipt, errors=DISCARD)
               if e["address"].lower() == contract_addr and e["args"]["auctionId"] == payment.auction_id]
     if len(events) != 1:
         return Check("failed", "The transaction does not contain a payment for this auction.")

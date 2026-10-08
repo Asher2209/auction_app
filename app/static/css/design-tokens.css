@@ -13,7 +13,7 @@
   /* Text hierarchy */
   --dt-text-primary: #F2EFE8;   /* Main text, high contrast */
   --dt-text-secondary: #A7A39A; /* Supporting text */
-  --dt-text-muted: #706C65;     /* Captions, metadata */
+  --dt-text-muted: #8C877F;     /* Captions, metadata (4.6:1 on --dt-bg-3: WCAG AA) */
 
   /* Borders - minimal, sophisticated */
   --dt-border: #302D29;         /* Subtle separator lines */
@@ -110,7 +110,7 @@
 
   --dt-text-primary: #F2EFE8;
   --dt-text-secondary: #A7A39A;
-  --dt-text-muted: #706C65;
+  --dt-text-muted: #8C877F;
 
   --dt-border: #302D29;
   --dt-border-light: #262319;
@@ -128,12 +128,15 @@
 
   --dt-text-primary: #2A2824;   /* Dark charcoal text */
   --dt-text-secondary: #6B6560; /* Medium gray text */
-  --dt-text-muted: #9A9289;     /* Light gray text */
+  --dt-text-muted: #6D655D;     /* Gray text (4.7:1 on --dt-bg-3: WCAG AA) */
 
   --dt-border: #D4CDBF;         /* Warm beige borders */
   --dt-border-light: #E5DFCE;   /* Lighter borders */
 
-  --dt-accent: #C79A52;         /* Same warm accent */
+  /* The same amber, darkened: #C79A52 is only 2.5:1 on off-white, too faint for links and button text */
+  --dt-accent: #83612B;         /* 4.6:1 on --dt-bg-3 */
+  --dt-accent-hover: #765726;
+  --dt-accent-dark: #664C21;
 
   /* Shadows are stronger on light background */
   --dt-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.08);
