@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """End-to-end blockchain integration test"""
 
 import sys, os

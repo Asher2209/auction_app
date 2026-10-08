@@ -12,7 +12,7 @@ def test_health(client):
 def test_home_empty(client):
     r = client.get("/")
     assert r.status_code == 200
-    assert b"No active auctions" in r.data
+    assert b"No Active Auctions" in r.data
 
 
 def test_home_lists_active_auction(client):

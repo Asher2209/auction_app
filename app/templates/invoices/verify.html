@@ -8,14 +8,14 @@
       <span class="text-muted small">issued by ChainBid</span>
     </div>
     <h1 class="h4 mt-2">{{ invoice.number }}</h1>
-    <p class="text-muted small mb-3">Issued {{ invoice.created_at|utc }}. Names are partly hidden for privacy.</p>
+    <p class="text-muted small mb-3">Issued {{ invoice.created_at|local }}. Names are partly hidden for privacy.</p>
 
     <dl class="row mb-0">
       <dt class="col-sm-4">Product</dt><dd class="col-sm-8">{{ product.title }}</dd>
       <dt class="col-sm-4">Amount</dt><dd class="col-sm-8">{{ payment.amount|money }}</dd>
       <dt class="col-sm-4">Auction ID</dt><dd class="col-sm-8">{{ auction.id }}</dd>
       <dt class="col-sm-4">Payment ID</dt><dd class="col-sm-8">{{ payment.id }}</dd>
-      <dt class="col-sm-4">Status</dt><dd class="col-sm-8"><span class="badge text-bg-success">Paid</span> on {{ payment.payment_date|utc }}</dd>
+      <dt class="col-sm-4">Status</dt><dd class="col-sm-8"><span class="badge text-bg-success">Paid</span> on {{ payment.payment_date|local }}</dd>
       <dt class="col-sm-4">Method</dt><dd class="col-sm-8">{{ method }}</dd>
       <dt class="col-sm-4">Buyer</dt><dd class="col-sm-8">{{ payment.buyer.name|mask }}</dd>
       <dt class="col-sm-4">Seller</dt><dd class="col-sm-8">{{ product.seller.name|mask }}</dd>

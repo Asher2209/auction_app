@@ -1,4 +1,4 @@
-﻿"""Monitoring and metrics collection for blockchain auction system."""
+"""Monitoring and metrics collection for blockchain auction system."""
 
 import logging
 from datetime import datetime, timedelta

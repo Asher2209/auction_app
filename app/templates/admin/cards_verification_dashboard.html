@@ -13,25 +13,25 @@
 <!-- Stats -->
 <div class="row g-4 mb-5">
   <div class="col-12 col-sm-6 col-lg-3">
-    <div class="glass p-4" style="border-radius: 1.5rem; text-align: center;">
+    <div class="p-4" style="border-radius: 1.5rem; text-align: center; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <div class="h3 mb-1" style="color: #f59e0b;">{{ pending_count }}</div>
       <div class="small text-muted">Pending Review</div>
     </div>
   </div>
   <div class="col-12 col-sm-6 col-lg-3">
-    <div class="glass p-4" style="border-radius: 1.5rem; text-align: center;">
-      <div class="h3 mb-1" style="color: #8b5cf6;">{{ info_needed_count }}</div>
+    <div class="p-4" style="border-radius: 1.5rem; text-align: center; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
+      <div class="h3 mb-1" style="color: #f59e0b;">{{ info_needed_count }}</div>
       <div class="small text-muted">Waiting for Seller</div>
     </div>
   </div>
   <div class="col-12 col-sm-6 col-lg-3">
-    <div class="glass p-4" style="border-radius: 1.5rem; text-align: center;">
+    <div class="p-4" style="border-radius: 1.5rem; text-align: center; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <div class="h3 mb-1" style="color: #10b981;">{{ verified_count }}</div>
       <div class="small text-muted">Approved</div>
     </div>
   </div>
   <div class="col-12 col-sm-6 col-lg-3">
-    <div class="glass p-4" style="border-radius: 1.5rem; text-align: center;">
+    <div class="p-4" style="border-radius: 1.5rem; text-align: center; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <div class="h3 mb-1" style="color: #ef4444;">{{ rejected_count }}</div>
       <div class="small text-muted">Rejected</div>
     </div>
@@ -39,7 +39,7 @@
 </div>
 
 <!-- Filters -->
-<div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
+<div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
   <div class="row g-3">
     <div class="col-12 col-sm-6 col-md-3">
       <label class="small fw-600 mb-2">Status</label>
@@ -57,10 +57,10 @@
 </div>
 
 <!-- Verification Queue -->
-<div class="glass p-5" style="border-radius: 1.5rem; overflow-x: auto;">
+<div class="p-5" style="border-radius: 1.5rem; overflow-x: auto; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
   {% if verifications.items %}
   <table style="width: 100%; font-size: 0.95rem;">
-    <thead style="border-bottom: 1px solid var(--cb-border); text-transform: uppercase; font-size: 0.8rem; color: var(--cb-text); font-weight: 600;">
+    <thead style="border-bottom: 1px solid var(--dt-border); text-transform: uppercase; font-size: 0.8rem; color: var(--dt-text-primary); font-weight: 600;">
       <tr>
         <th style="padding: 1rem; text-align: left;">Card Name</th>
         <th style="padding: 1rem; text-align: left;">Type</th>
@@ -74,9 +74,9 @@
     {% for v in verifications.items %}
       {% set card = v.collectible_card %}
       {% set product = v.product %}
-      <tr style="border-bottom: 1px solid var(--cb-border-light);">
+      <tr style="border-bottom: 1px solid var(--dt-border-light);">
         <td style="padding: 1rem;">
-          <a href="{{ url_for('admin.card_verification_detail', verification_id=v.id) }}" style="color: var(--cb-link); text-decoration: none; font-weight: 500;">
+          <a href="{{ url_for('admin.card_verification_detail', verification_id=v.id) }}" style="color: var(--dt-accent); text-decoration: none; font-weight: 500;">
             {{ card.card_name }}
           </a>
           <div class="small text-muted">{{ card.set_name or 'N/A' }}</div>
@@ -94,7 +94,7 @@
           {% set status_color = {
             'pending': '#f59e0b',
             'submitted': '#3b82f6',
-            'under_review': '#8b5cf6',
+            'under_review': '#3b82f6',
             'more_info_needed': '#f97316',
             'verified': '#10b981',
             'rejected': '#ef4444'
@@ -108,7 +108,7 @@
             {% endif %}
           </span>
         </td>
-        <td style="padding: 1rem; text-align: right; color: var(--cb-muted); font-size: 0.85rem;">
+        <td style="padding: 1rem; text-align: right; color: var(--dt-text-muted); font-size: 0.85rem;">
           {{ v.created_at.strftime('%d %b %Y') }}
         </td>
         <td style="padding: 1rem; text-align: center;">
@@ -161,7 +161,7 @@
 {% endif %}
 
 <!-- Info Box -->
-<div class="glass p-4" style="border-radius: 1.5rem; border-left: 4px solid var(--cb-link); margin-top: 3rem;">
+<div class="p-4" style="border-radius: 1.5rem; margin-top: 3rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border); border-left: 4px solid var(--dt-accent);">
   <h6 class="fw-600 mb-2">📋 Verification Process</h6>
   <p class="small text-muted mb-0">
     Click "Review" to open the full verification interface. Use the checklist to document your review, then approve, reject, or request more information from the seller.

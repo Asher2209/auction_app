@@ -4,12 +4,12 @@
 {% block content %}
 <!-- Header with Back Link -->
 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
-  <a href="{{ url_for('admin.cards_verify_dashboard') }}" style="color: var(--cb-link); text-decoration: none;">← Back to Dashboard</a>
+  <a href="{{ url_for('admin.cards_verify_dashboard') }}" style="color: var(--dt-accent); text-decoration: none;">← Back to Dashboard</a>
   <h1 class="h2 mb-0">Card Verification</h1>
 </div>
 
 <!-- Status Bar -->
-<div class="glass p-4 mb-5" style="border-radius: 1.5rem; border-left: 4px solid var(--cb-accent);">
+<div class="p-4 mb-5" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border); border-left: 4px solid var(--dt-accent);">
   <div class="row">
     <div class="col-auto">
       <div class="small text-muted mb-1">Card</div>
@@ -32,7 +32,7 @@
       {% set status_color = {
         'pending': '#f59e0b',
         'submitted': '#3b82f6',
-        'under_review': '#8b5cf6',
+        'under_review': '#3b82f6',
         'more_info_needed': '#f97316',
         'verified': '#10b981',
         'rejected': '#ef4444'
@@ -55,14 +55,17 @@
 
     <!-- Card Images -->
     {% if card_images %}
-    <div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
+    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Images</h6>
-      <div id="gallery" class="carousel slide" style="background: var(--cb-surface-secondary); border-radius: 1rem; overflow: hidden;">
-        <div class="carousel-inner" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+      <div id="gallery" class="carousel slide" style="background: var(--dt-bg-2); border-radius: 1rem; overflow: hidden;">
+        <div class="carousel-inner">
           {% for image in card_images %}
           <div class="carousel-item {{ 'active' if loop.first }}">
-            <img src="{{ url_for('static', filename='uploads/' ~ image.path) }}" class="d-block mx-auto" alt="{{ image.image_type }}" style="max-height:400px;max-width:100%;object-fit:contain;">
-            <div class="small text-muted text-center mt-2">{{ image.image_type|title }}</div>
+            {# centre inside the slide: a flex .carousel-inner breaks Bootstrap's slide positioning and pushes images right #}
+            <div class="d-flex flex-column align-items-center justify-content-center p-3" style="min-height: 400px;">
+              <img src="{{ url_for('static', filename='uploads/' ~ image.path) }}" class="d-block" alt="{{ image.image_type }}" style="max-height:400px;max-width:100%;object-fit:contain;">
+              <div class="small text-muted text-center mt-2">{{ image.image_type|title }}</div>
+            </div>
           </div>
           {% endfor %}
         </div>
@@ -79,7 +82,7 @@
     {% endif %}
 
     <!-- Card Details -->
-    <div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
+    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Information</h6>
 
       <div class="row mb-3">
@@ -116,7 +119,7 @@
       </div>
 
       {% if card.is_graded %}
-      <div style="padding: 1.5rem; background: var(--cb-surface-secondary); border-radius: 0.75rem; margin-top: 1.5rem;">
+      <div style="padding: 1.5rem; background: var(--dt-bg-2); border-radius: 0.75rem; margin-top: 1.5rem;">
         <h6 class="small text-muted text-uppercase fw-600 mb-2">Professional Grading</h6>
         <div class="row">
           <div class="col-6">
@@ -134,94 +137,49 @@
         </div>
         {% if card.certification_url %}
         <div class="mt-2">
-          <a href="{{ card.certification_url }}" target="_blank" class="small" style="color: var(--cb-link);">Verify Certificate →</a>
+          <a href="{{ card.certification_url }}" target="_blank" class="small" style="color: var(--dt-accent);">Verify Certificate →</a>
         </div>
         {% endif %}
       </div>
       {% endif %}
 
       {% if card.condition_notes %}
-      <div style="padding: 1.5rem; background: var(--cb-surface-secondary); border-radius: 0.75rem; margin-top: 1.5rem;">
+      <div style="padding: 1.5rem; background: var(--dt-bg-2); border-radius: 0.75rem; margin-top: 1.5rem;">
         <h6 class="small text-muted text-uppercase fw-600 mb-2">Condition Notes</h6>
         <p class="small mb-0">{{ card.condition_notes }}</p>
       </div>
       {% endif %}
     </div>
 
-    <!-- Type-Specific Details -->
-    {% if type_details %}
-    <div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
-      <h6 class="text-muted small text-uppercase fw-600 mb-3">{{ card.card_type.name }} Specifics</h6>
+    <!-- Listing facts, type-specific details and duplicate signals -->
+    <div class="cd-panel mb-4" id="admin-card-facts">
+      <h2 class="cd-heading">Listing and type details</h2>
+      <dl class="cd-grid">
+        <div class="cd-row"><dt>Estimated value (given by the seller)</dt><dd>{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</dd></div>
+        <div class="cd-row"><dt>Starting price</dt><dd>{{ product.starting_price|money }}</dd></div>
+        {% for key, val in type_details.items() if val %}
+        <div class="cd-row"><dt>{{ key|replace('_', ' ')|capitalize }}</dt><dd>{{ 'Yes' if val is sameas true else val }}</dd></div>
+        {% endfor %}
+      </dl>
+    </div>
 
-      {% if card.card_type.slug == 'pokemon' %}
-        {% if type_details.pokemon_name %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Pokémon Name:</strong></div>
-          <div class="col-6">{{ type_details.pokemon_name }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.pokemon_hp %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>HP:</strong></div>
-          <div class="col-6">{{ type_details.pokemon_hp }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.pokemon_holo_type %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Holo Type:</strong></div>
-          <div class="col-6">{{ type_details.pokemon_holo_type }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.pokemon_first_edition %}
-        <div class="mb-2"><span class="badge bg-success">First Edition</span></div>
-        {% endif %}
-        {% if type_details.pokemon_shadowless %}
-        <div class="mb-2"><span class="badge bg-info">Shadowless</span></div>
-        {% endif %}
-        {% if type_details.pokemon_promo %}
-        <div class="mb-2"><span class="badge bg-warning">Promo</span></div>
-        {% endif %}
-      {% elif card.card_type.slug == 'football' %}
-        {% if type_details.football_player_name %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Player:</strong></div>
-          <div class="col-6">{{ type_details.football_player_name }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.football_team %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Club:</strong></div>
-          <div class="col-6">{{ type_details.football_team }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.football_league %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>League:</strong></div>
-          <div class="col-6">{{ type_details.football_league }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.football_season %}
-        <div class="row mb-2">
-          <div class="col-6"><strong>Season:</strong></div>
-          <div class="col-6">{{ type_details.football_season }}</div>
-        </div>
-        {% endif %}
-        {% if type_details.football_is_rookie %}
-        <div class="mb-2"><span class="badge bg-success">Rookie Card</span></div>
-        {% endif %}
-      {% endif %}
+    {% if duplicate_issues %}
+    <div class="cd-panel mb-4" id="admin-duplicates" style="border-color: var(--dt-warning);">
+      <h2 class="cd-heading" style="color: var(--dt-warning);">Potential duplicates</h2>
+      <ul class="mb-0 small">{% for issue in duplicate_issues %}<li>{{ issue.message }}</li>{% endfor %}</ul>
+      <p class="cd-note">A shared certification number is a signal, not proof. Images alone cannot show that two entries are the same physical card.</p>
     </div>
     {% endif %}
 
     <!-- Verification Checklist Form -->
-    <div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
+    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-4">Verification Checklist</h6>
 
       <form method="POST" action="{{ url_for('admin.save_verification_checklist', verification_id=verification.id) }}">
         {{ form.hidden_tag() }}
 
         <!-- Card Identity -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--cb-border-light);">
+        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
           <div class="row g-3">
             <div class="col-12">
               <label class="small fw-600 mb-2">{{ form.card_identity_result.label.text }}</label>
@@ -234,7 +192,7 @@
         </div>
 
         <!-- Set Checked -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--cb-border-light);">
+        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
           <div class="row g-3">
             <div class="col-12">
               <label class="small fw-600 mb-2">{{ form.set_checked_result.label.text }}</label>
@@ -247,7 +205,7 @@
         </div>
 
         <!-- Card Number -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--cb-border-light);">
+        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
           <div class="row g-3">
             <div class="col-12">
               <label class="small fw-600 mb-2">{{ form.card_number_result.label.text }}</label>
@@ -260,7 +218,7 @@
         </div>
 
         <!-- Manufacturer -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--cb-border-light);">
+        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
           <div class="row g-3">
             <div class="col-12">
               <label class="small fw-600 mb-2">{{ form.manufacturer_result.label.text }}</label>
@@ -273,7 +231,7 @@
         </div>
 
         <!-- Images Reviewed -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--cb-border-light);">
+        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
           <div class="row g-3">
             <div class="col-12">
               <label class="small fw-600 mb-2">{{ form.images_reviewed_result.label.text }}</label>
@@ -286,7 +244,7 @@
         </div>
 
         <!-- Condition Reviewed -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--cb-border-light);">
+        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
           <div class="row g-3">
             <div class="col-12">
               <label class="small fw-600 mb-2">{{ form.condition_reviewed_result.label.text }}</label>
@@ -299,7 +257,7 @@
         </div>
 
         <!-- Grading Checked -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--cb-border-light);">
+        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
           <div class="row g-3">
             <div class="col-12">
               <label class="small fw-600 mb-2">{{ form.grading_checked_result.label.text }}</label>
@@ -312,7 +270,7 @@
         </div>
 
         <!-- Seller Info -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--cb-border-light);">
+        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
           <div class="row g-3">
             <div class="col-12">
               <label class="small fw-600 mb-2">{{ form.seller_info_reviewed_result.label.text }}</label>
@@ -325,7 +283,7 @@
         </div>
 
         <!-- Counterfeit Check -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--cb-border-light);">
+        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
           <div class="row g-3">
             <div class="col-12">
               <label class="small fw-600 mb-2">{{ form.counterfeit_check_result.label.text }}</label>
@@ -349,7 +307,7 @@
 
     <!-- Verification History -->
     {% if history %}
-    <div class="glass p-4" style="border-radius: 1.5rem;">
+    <div class="p-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-4">Verification History</h6>
 
       <div style="position: relative; padding: 1rem 0;">
@@ -357,9 +315,9 @@
         <div style="display: flex; gap: 1.5rem; padding-bottom: 2rem;">
           <!-- Timeline dot -->
           <div style="flex-shrink: 0; position: relative; width: 24px;">
-            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--cb-accent); border: 3px solid var(--cb-surface); position: relative; z-index: 2;"></div>
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--dt-accent); border: 3px solid var(--dt-bg-1); position: relative; z-index: 2;"></div>
             {% if not loop.last %}
-            <div style="position: absolute; left: 50%; transform: translateX(-50%); width: 2px; height: 2rem; background: var(--cb-border-light); top: 24px;"></div>
+            <div style="position: absolute; left: 50%; transform: translateX(-50%); width: 2px; height: 2rem; background: var(--dt-border-light); top: 24px;"></div>
             {% endif %}
           </div>
 
@@ -389,16 +347,22 @@
   <div class="col-lg-4">
 
     <!-- Quick Actions -->
-    <div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
+    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">Actions</h6>
 
       <!-- Approve Button -->
       <form method="POST" action="{{ url_for('admin.approve_card', verification_id=verification.id) }}" class="mb-3">
         {{ approval_form.hidden_tag() }}
+        {% if approval_blockers %}
+        <div class="small mb-3" id="approval-blockers">
+          <strong>Cannot be approved yet</strong>
+          <ul class="mb-0 ps-3">{% for reason in approval_blockers %}<li>{{ reason }}</li>{% endfor %}</ul>
+        </div>
+        {% endif %}
         <div class="mb-3">
           {{ approval_form.approval_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Optional approval notes') }}
         </div>
-        <button type="submit" class="btn btn-success btn-sm w-100" style="border-radius: 0.5rem; background: #10b981; border: none;">
+        <button type="submit" class="btn btn-success btn-sm w-100" style="border-radius: 0.5rem; background: #10b981; border: none;"{% if approval_blockers or verification.verification_status == 'verified' %} disabled{% endif %}>
           ✓ Approve Card
         </button>
       </form>
@@ -415,7 +379,7 @@
     </div>
 
     <!-- Seller Information -->
-    <div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
+    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">Seller Information</h6>
       <div class="mb-3">
         <div class="small text-muted mb-1">Name</div>
@@ -423,7 +387,12 @@
       </div>
       <div class="mb-3">
         <div class="small text-muted mb-1">Email</div>
-        <a href="mailto:{{ seller.email }}" style="color: var(--cb-link); text-decoration: none;">{{ seller.email }}</a>
+        <a href="mailto:{{ seller.email }}" style="color: var(--dt-accent); text-decoration: none;">{{ seller.email }}</a>
+      </div>
+      <div class="mb-3" id="seller-wallet">
+        <div class="small text-muted mb-1">Wallet</div>
+        {% if seller.has_verified_wallet %}<code class="text-break">{{ seller.wallet_address }}</code> <span class="small">(verified)</span>
+        {% else %}<span class="small">No verified wallet. Approval still works; the blockchain record is created when the seller verifies one.</span>{% endif %}
       </div>
       {% if seller.phone %}
       <div class="mb-3">
@@ -434,7 +403,7 @@
     </div>
 
     <!-- Submission Details -->
-    <div class="glass p-4" style="border-radius: 1.5rem;">
+    <div class="p-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">Submission Details</h6>
       <div class="mb-3">
         <div class="small text-muted mb-1">Submitted</div>
@@ -457,10 +426,10 @@
 <!-- Reject Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content" style="border-radius: 1.5rem; border: 1px solid var(--cb-border);">
-      <div class="modal-header" style="border-bottom: 1px solid var(--cb-border-light);">
+    <div class="modal-content" style="border-radius: 1.5rem; border: 1px solid var(--dt-border);">
+      <div class="modal-header" style="border-bottom: 1px solid var(--dt-border-light);">
         <h5 class="modal-title">✗ Reject Card</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form method="POST" action="{{ url_for('admin.reject_card', verification_id=verification.id) }}">
         {{ rejection_form.hidden_tag() }}
@@ -482,7 +451,7 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer" style="border-top: 1px solid var(--cb-border-light);">
+        <div class="modal-footer" style="border-top: 1px solid var(--dt-border-light);">
           <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal" style="border-radius: 0.5rem;">Cancel</button>
           <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 0.5rem; background: #ef4444; border: none;">✗ Reject Card</button>
         </div>
@@ -494,10 +463,10 @@
 <!-- More Info Modal -->
 <div class="modal fade" id="infoModal" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content" style="border-radius: 1.5rem; border: 1px solid var(--cb-border);">
-      <div class="modal-header" style="border-bottom: 1px solid var(--cb-border-light);">
+    <div class="modal-content" style="border-radius: 1.5rem; border: 1px solid var(--dt-border);">
+      <div class="modal-header" style="border-bottom: 1px solid var(--dt-border-light);">
         <h5 class="modal-title">❓ Request More Information</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form method="POST" action="{{ url_for('admin.request_card_info', verification_id=verification.id) }}">
         {{ info_form.hidden_tag() }}
@@ -515,7 +484,7 @@
             {{ info_form.message(class_='form-control form-control-sm', style='border-radius: 0.5rem;', rows='4') }}
           </div>
         </div>
-        <div class="modal-footer" style="border-top: 1px solid var(--cb-border-light);">
+        <div class="modal-footer" style="border-top: 1px solid var(--dt-border-light);">
           <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal" style="border-radius: 0.5rem;">Cancel</button>
           <button type="submit" class="btn btn-warning btn-sm" style="border-radius: 0.5rem; background: #f97316; border: none; color: white;">❓ Send Request</button>
         </div>
@@ -523,17 +492,4 @@
     </div>
   </div>
 </div>
-
-<script>
-// Pass the forms to the template context
-var approval_form = {
-  hidden_tag: function() { return ''; }
-};
-var rejection_form = {
-  hidden_tag: function() { return ''; }
-};
-var info_form = {
-  hidden_tag: function() { return ''; }
-};
-</script>
 {% endblock %}

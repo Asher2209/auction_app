@@ -6,3 +6,12 @@
   {% for e in f.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
 </div>
 {% endmacro %}
+
+{# A consent or declaration box: never pre-ticked, labelled, its error shown under it. Use {% call checkbox(form.x) %}label with links{% endcall %}. #}
+{% macro checkbox(f) %}
+<div class="form-check mb-3">
+  {{ f(class="form-check-input" ~ (" is-invalid" if f.errors else ""), **kwargs) }}
+  <label class="form-check-label" for="{{ kwargs.get('id', f.id) }}">{{ caller() if caller is defined else f.label.text }}</label>
+  {% for e in f.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+</div>
+{% endmacro %}

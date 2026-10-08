@@ -14,6 +14,12 @@ def generate_platform_card_id(card_id: int) -> str:
     return f"CARD-{card_id:06d}"
 
 
+def card_public_url(platform_card_id: str) -> str:
+    """Absolute URL of the public card page. Set APP_BASE_URL to an address phones can reach."""
+    path = current_app.url_map.bind("localhost").build("collectibles.verify_card", {"platform_card_id": platform_card_id})
+    return current_app.config["APP_BASE_URL"] + path
+
+
 def generate_qr_code_svg(platform_card_id: str, include_metadata: bool = False) -> str:
     """
     Generate QR code for a card in SVG format (can be displayed in HTML).
@@ -33,7 +39,7 @@ def generate_qr_code_svg(platform_card_id: str, include_metadata: bool = False) 
     )
     
     # QR code links to public card verification page
-    qr_url = f"/collectible/verify/{platform_card_id}"
+    qr_url = card_public_url(platform_card_id)
     qr.add_data(qr_url)
     qr.make(fit=True)
     
@@ -91,7 +97,7 @@ def save_qr_code_to_file(platform_card_id: str, card_id: int) -> str:
         border=2,
     )
     
-    qr_url = f"/collectible/verify/{platform_card_id}"
+    qr_url = card_public_url(platform_card_id)
     qr.add_data(qr_url)
     qr.make(fit=True)
     

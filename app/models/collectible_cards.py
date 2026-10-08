@@ -122,8 +122,13 @@ class CardImage(db.Model):
         return f'<CardImage {self.image_type} - {self.path or self.url}>'
     
     def get_image_src(self):
-        """Return the appropriate image source (URL or path)"""
-        return self.url or self.path
+        """The browser URL of this image: an external URL as it is, an uploaded file under /static/uploads."""
+        if self.url:
+            return self.url
+        if self.path:
+            from flask import url_for
+            return url_for("static", filename=f"uploads/{self.path}")
+        return None
 
 
 class CardVerificationChecklist(db.Model):

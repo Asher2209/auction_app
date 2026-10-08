@@ -1,4 +1,4 @@
-﻿/* ChainBid Core Components - Premium Dark Matte Design
+/* ChainBid Core Components - Premium Dark Matte Design
    Foundation-level components using design tokens
    Replaces old glassmorphic and gradient-based styles */
 
@@ -640,3 +640,92 @@ hr {
     transform: none !important;
   }
 }
+
+
+/* ========== Dark matte surfaces ========== */
+/* Templates mark some tables and lists bg-white. On this dark theme that gave bright white rows with grey text. */
+.table.bg-white, .list-group.bg-white, .card.bg-white {
+  background-color: var(--dt-bg-2) !important;
+  color: var(--dt-text-primary);
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--dt-text-primary);
+  --bs-table-border-color: var(--dt-border);
+}
+.table.bg-white > :not(caption) > * > * { color: var(--dt-text-primary); border-color: var(--dt-border); }
+
+
+/* ========== Collectible card tile (marketplace) ========== */
+.cc {
+  display: flex; flex-direction: column; height: 100%;
+  background-color: var(--dt-bg-2); border: 1px solid var(--dt-border); border-radius: var(--dt-radius-md);
+  overflow: hidden; color: var(--dt-text-primary); transition: border-color var(--dt-transition-base);
+}
+.cc:hover, .cc:focus-visible { border-color: var(--dt-accent); color: var(--dt-text-primary); }
+.cc-media {
+  position: relative; aspect-ratio: 5 / 6; background-color: var(--dt-bg-0);
+  display: flex; align-items: center; justify-content: center; padding: var(--dt-space-lg);
+}
+.cc-media img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.cc-badge {
+  position: absolute; top: var(--dt-space-md); right: var(--dt-space-md);
+  padding: 0.15rem 0.5rem; border: 1px solid var(--dt-success); border-radius: var(--dt-radius-sm);
+  background-color: rgba(13, 13, 12, 0.85); color: var(--dt-success);
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.cc-body { display: flex; flex-direction: column; gap: 0.2rem; flex-grow: 1; padding: var(--dt-space-lg); }
+.cc-name {
+  margin: 0; font-family: var(--dt-font-display); font-size: 1.05rem; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--dt-text-primary); overflow-wrap: anywhere;
+}
+.cc-meta { font-size: 0.85rem; color: var(--dt-text-secondary); }
+.cc-grade { font-size: 0.85rem; font-weight: 600; color: var(--dt-text-primary); }
+.cc-label {
+  margin-top: auto; padding-top: var(--dt-space-md); font-size: 0.7rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--dt-text-muted);
+}
+.cc-price { font-size: 1.4rem; font-weight: 700; color: var(--dt-accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cc-foot {
+  display: flex; justify-content: space-between; gap: var(--dt-space-md); padding: 0.6rem var(--dt-space-lg);
+  border-top: 1px solid var(--dt-border); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--dt-text-muted);
+}
+.cc-time { color: var(--dt-text-primary); font-variant-numeric: tabular-nums; }
+
+/* ========== Card detail panels ========== */
+.cd-stack { display: grid; gap: var(--dt-space-xl); margin-top: var(--dt-space-3xl); grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 900px) { .cd-stack { grid-template-columns: 1fr; } }
+.cd-panel { background-color: var(--dt-bg-1); border: 1px solid var(--dt-border); border-radius: var(--dt-radius-md); padding: var(--dt-space-xl); }
+.cd-panel-wide { grid-column: 1 / -1; }
+.cd-heading {
+  margin: 0 0 var(--dt-space-lg); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--dt-text-muted);
+}
+.cd-grid { display: grid; gap: 0; margin: 0; }
+.cd-row {
+  display: flex; justify-content: space-between; gap: var(--dt-space-lg); padding: 0.55rem 0;
+  border-bottom: 1px solid var(--dt-border-light); font-size: 0.9rem;
+}
+.cd-row:last-child { border-bottom: 0; }
+.cd-row dt { margin: 0; font-weight: 400; color: var(--dt-text-muted); flex-shrink: 0; }
+.cd-row dd { margin: 0; text-align: right; color: var(--dt-text-primary); overflow-wrap: anywhere; }
+.cd-mono { font-family: "Fira Code", ui-monospace, monospace; font-size: 0.8rem; }
+.cd-status { display: flex; align-items: center; gap: var(--dt-space-md); font-weight: 600; }
+.cd-status-ok { color: var(--dt-success); }
+.cd-status-wait { color: var(--dt-warning); }
+.cd-status-bad { color: var(--dt-danger); }
+.cd-note { margin: var(--dt-space-lg) 0 0; font-size: 0.8rem; line-height: 1.5; color: var(--dt-text-muted); }
+.cd-note-label {
+  display: inline-block; margin-right: 0.4rem; padding: 0 0.4rem; border: 1px solid var(--dt-border);
+  border-radius: var(--dt-radius-sm); font-size: 0.65rem; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.cd-history { list-style: none; margin: var(--dt-space-lg) 0 0; padding: var(--dt-space-lg) 0 0; border-top: 1px solid var(--dt-border); font-size: 0.82rem; }
+.cd-history li { margin-bottom: 0.4rem; color: var(--dt-text-secondary); }
+
+button.product-detail-gallery-thumb { padding: 0; }
+button.product-detail-gallery-thumb[aria-current="true"] { border-color: var(--dt-accent); }
+.badge.badge-plain { text-transform: none; }
+.cc-cell { display: flex; min-width: 0; }
+.cc-cell > .cc { width: 100%; }
+
+/* Inline SVG icons (class="icon"): as tall as the text around them unless the markup sets a size */
+.icon { width: 1em; height: 1em; vertical-align: -.14em; flex: none; }

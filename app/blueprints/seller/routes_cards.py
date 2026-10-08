@@ -3,64 +3,45 @@ Trading card creation and management routes
 Handles seller workflow for collectible cards
 """
 
-from flask import abort, current_app, flash, redirect, render_template, request, url_for
+from flask import abort, current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user
 from decimal import Decimal
 
 from ...extensions import db
 from ...models import (
-    Product, ProductImage, ProductDetails, CollectibleCard, CardType, CardImage,
-    CollectibleVerification, utcnow
+    Category, Notification, Product, ProductImage, ProductDetails, CollectibleCard, CardType, CardImage,
+    CollectibleVerification, CardVerificationHistory, utcnow
 )
-from ...services import uploads
+from ...ratelimit import limited
+from ...services import (auction_validation_service, blockchain_minting_service, blockchain_service,
+                         card_auction_service, card_settlement_service, card_status_service, seller_cards_service, uploads,
+                         verification_checklist_service)
+from ...services.notifications import notify
+from ...services.card_identity_service import assign_platform_card_id
+from ...services.qrcode_service import save_qr_code_to_file
 from ...utils import role_required
 from . import bp
+from .forms_card_auction import CardAuctionForm
 from .forms_cards import CollectibleCardForm
+
+CARD_CATEGORY_NAME = "Trading Cards"
+
+
+def _card_category():
+    category = Category.query.filter_by(name=CARD_CATEGORY_NAME).first()
+    if category is None:
+        category = Category(name=CARD_CATEGORY_NAME)
+        db.session.add(category)
+        db.session.flush()
+    return category
 
 
 @bp.route("/collectibles", methods=["GET"])
 @role_required("seller")
 def collectibles_dashboard():
-    """My Collectibles dashboard - seller's trading card inventory"""
-    page = request.args.get('page', 1, type=int)
-    status = request.args.get('status', 'all')
-    sort = request.args.get('sort', 'newest')
-
-    query = CollectibleCard.query.join(Product).filter(Product.seller_id == current_user.id)
-
-    if status != 'all':
-        if status == 'pending':
-            query = query.join(CollectibleVerification).filter(
-                CollectibleVerification.verification_status.in_(('pending', 'under_review'))
-            )
-        elif status == 'verified':
-            query = query.join(CollectibleVerification).filter(
-                CollectibleVerification.verification_status == 'verified'
-            )
-        elif status == 'rejected':
-            query = query.join(CollectibleVerification).filter(
-                CollectibleVerification.verification_status == 'rejected'
-            )
-        elif status == 'more_info':
-            query = query.join(CollectibleVerification).filter(
-                CollectibleVerification.verification_status == 'more_info_needed'
-            )
-
-    if sort == 'oldest':
-        query = query.order_by(CollectibleCard.created_at.asc())
-    elif sort == 'name':
-        query = query.order_by(CollectibleCard.card_name.asc())
-    else:
-        query = query.order_by(CollectibleCard.created_at.desc())
-
-    cards = query.paginate(page=page, per_page=12)
-
-    return render_template(
-        'seller/collectibles/dashboard.html',
-        cards=cards,
-        status=status,
-        sort=sort
-    )
+    """My cards: every card with its verification, blockchain and auction state, grouped by lifecycle."""
+    data = seller_cards_service.seller_cards(current_user, request.args.get("status", "all"), request.args.get("sort", "newest"))
+    return render_template("seller/collectibles/dashboard.html", sorts=seller_cards_service.SORTS, **data)
 
 
 @bp.route("/cards/new", methods=["GET", "POST"])
@@ -93,7 +74,7 @@ def create_card():
                 # Create Product entry
                 product = Product(
                     seller_id=current_user.id,
-                    category_id=None,  # Will be set to "Collectible Cards" category
+                    category_id=_card_category().id,
                     title=form.card_name.data.strip(),
                     description=form.condition_notes.data or "See card details for condition information.",
                     starting_price=form.estimated_value.data or Decimal("1.00"),
@@ -163,6 +144,9 @@ def create_card():
                 db.session.add(collectible_card)
                 db.session.commit()
 
+                # PHASE 1: Assign unique Platform Card ID (CARD-XXXXXX format)
+                platform_card_id = assign_platform_card_id(collectible_card)
+
                 # Save card images with type information
                 for i, saved_path in enumerate(saved):
                     # Infer image type from order: first=front, second=back, rest=detail/slab
@@ -173,6 +157,14 @@ def create_card():
                         path=saved_path
                     )
                     db.session.add(card_image)
+
+                # PHASE 1: Generate QR code pointing to public verification page
+                try:
+                    qr_code_path = save_qr_code_to_file(platform_card_id, collectible_card.id)
+                    current_app.logger.info(f"QR code generated for {platform_card_id} at {qr_code_path}")
+                except Exception as qr_error:
+                    current_app.logger.warning(f"QR code generation failed for {platform_card_id}: {str(qr_error)}")
+                    # Continue even if QR code fails, it's not critical
 
                 # Create verification entry (ungraded cards pending manual review)
                 verification = CollectibleVerification(
@@ -188,6 +180,7 @@ def create_card():
 
                 flash(
                     f"Card '{collectible_card.card_name}' created successfully! "
+                    f"Platform ID: <strong>{platform_card_id}</strong>. "
                     "It's awaiting verification. You'll be able to create an auction once approved.",
                     "success"
                 )
@@ -223,8 +216,97 @@ def view_card(card_id):
         product=card.product,
         verification=verification,
         card_images=card_images,
-        type_details=type_details
+        type_details=type_details,
+        auction=card.product.auction,
+        listing=auction_validation_service.check_listing(card.product),
+        lifecycle=card_status_service.lifecycle(card),
+        can_edit=card_status_service.edit_blocker(card) is None,
     )
+
+
+def _json_body():
+    data = request.get_json(silent=True)
+    return data if isinstance(data, dict) else {}
+
+
+def _sold_card_or_404(card_id):
+    card = db.session.get(CollectibleCard, card_id)
+    if card is None or card.product.seller_id != current_user.id:
+        abort(404)
+    auction = card.product.auction
+    if auction is None or auction.payment is None:
+        abort(404)  # nothing to settle until an auction has closed with a winner
+    return card, auction, auction.payment
+
+
+@bp.route("/cards/<int:card_id>/sale")
+@role_required("seller")
+def card_sale(card_id):
+    """The seller authorizes the on-chain transfer of the token to the auction winner."""
+    card, auction, payment = _sold_card_or_404(card_id)
+    waiting = payment.awaiting_payment
+    return render_template(
+        "seller/cards/card_sale.html", card=card, auction=auction, payment=payment,
+        blocker=card_settlement_service.authorization_blockers(payment) if waiting else None,
+        state=card_settlement_service.authorization_state(payment) if waiting else None,
+        chain=blockchain_minting_service.chain_info())
+
+
+@bp.route("/cards/<int:card_id>/sale/prepare", methods=["POST"])
+@role_required("seller")
+@limited("sale", 20, 60, by="user")
+def card_sale_prepare(card_id):
+    card, auction, payment = _sold_card_or_404(card_id)
+    try:
+        prep = card_settlement_service.prepare_authorization(payment, _json_body().get("wallet_address"))
+    except blockchain_service.CryptoError as e:
+        return jsonify(ok=False, error=e.message), e.status
+    return jsonify(ok=True, **prep)
+
+
+@bp.route("/cards/<int:card_id>/sale/check", methods=["POST"])
+@role_required("seller")
+@limited("sale", 40, 60, by="user")
+def card_sale_check(card_id):
+    """Read the authorization back from the chain; once it is there, tell the winner they can pay."""
+    card, auction, payment = _sold_card_or_404(card_id)
+    state = card_settlement_service.authorization_state(payment)
+    if state["state"] == "authorized":
+        title, url = "The seller authorized the transfer: you can pay now", f"/payments/{payment.auction_id}"
+        if not Notification.query.filter_by(user_id=payment.buyer_id, title=title, url=url).first():
+            notify(payment.buyer_id, title,
+                   f'The seller has authorized the transfer of "{card.product.title}". You can now pay in cryptocurrency.',
+                   url=url, email=True)
+            db.session.commit()
+    return jsonify(ok=True, **state)
+
+
+@bp.route("/cards/<int:card_id>/auction", methods=["GET", "POST"])
+@role_required("seller")
+def create_card_auction(card_id):
+    """Put a verified, token-backed card up for auction. Every rule is enforced by the service, not by this page."""
+    card = db.session.get(CollectibleCard, card_id)
+    if card is None or card.product.seller_id != current_user.id:
+        abort(404)  # 404 so sellers cannot probe for other sellers' cards
+    product = card.product
+    if product.auction is not None:
+        flash("This card already has an auction.", "info")
+        return redirect(url_for("seller.view_card", card_id=card.id))
+
+    form = CardAuctionForm()
+    status = 200
+    if form.validate_on_submit():
+        try:
+            auction = card_auction_service.create_card_auction(
+                product, current_user, form.starting_bid.data, form.start_time.data, form.duration_hours.data)
+        except card_auction_service.CardAuctionError as e:
+            flash(e.message, "danger")
+            status = e.status
+        else:
+            flash("Your auction has been created.", "success")
+            return redirect(url_for("auctions.detail", auction_id=auction.id))
+    return render_template("seller/cards/card_auction.html", form=form, card=card, product=product,
+                           listing=auction_validation_service.check_listing(product)), status
 
 
 @bp.route("/cards/<int:card_id>/edit", methods=["GET", "POST"])
@@ -239,14 +321,11 @@ def edit_card(card_id):
     if card.product.seller_id != current_user.id:
         abort(403)
 
-    # Prevent editing if verified or auction active
+    # Verified, on auction, or rejected for good: the details are no longer the seller's to change
     verification = card.product.collectible_verification
-    if verification and verification.verification_status == 'verified':
-        flash("You cannot edit a verified card listing.", "warning")
-        return redirect(url_for('seller.view_card', card_id=card_id))
-
-    if card.product.auction and card.product.auction.status in ('active', 'closed'):
-        flash("You cannot edit a card once the auction has started.", "warning")
+    blocker = card_status_service.edit_blocker(card)
+    if blocker:
+        flash(blocker, "warning")
         return redirect(url_for('seller.view_card', card_id=card_id))
 
     form = CollectibleCardForm()
@@ -278,10 +357,15 @@ def edit_card(card_id):
         card.product.starting_price = form.estimated_value.data or Decimal("1.00")
         card.product.approval_status = "pending"  # Reset to pending for re-verification
 
-        # Reset verification on edit
+        # Reset verification on edit: the recorded checks described the old details, so the admin starts again
         if verification:
+            previous_status = verification.verification_status
             verification.verification_status = "pending"
             verification.submission_count += 1
+            verification_checklist_service.clear(verification)
+            db.session.add(CardVerificationHistory(
+                verification_id=verification.id, previous_status=previous_status, new_status="pending",
+                changed_by=current_user.id, change_reason="Seller edited the card and resubmitted it"))
 
         db.session.commit()
         flash("Card listing updated and resubmitted for verification.", "success")

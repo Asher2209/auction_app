@@ -1,4 +1,4 @@
-﻿# Load Test Results Report - ChainBid Auction System
+# Load Test Results Report - ChainBid Auction System
 
 **Date**: 2026-10-07  
 **Target**: http://localhost:5000  

@@ -1,10 +1,10 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}Search Trading Cards - ChainBid{% endblock %}
 {% block content %}
 
 <div style="margin-bottom: var(--dt-space-3xl);">
   <h1 class="h1 mb-2">Search Trading Cards</h1>
-  <p class="lead">Find verified collectible cards from trusted sellers</p>
+  <p class="lead">Find platform-verified trading cards</p>
 </div>
 
 <!-- Filter Panel -->
@@ -13,13 +13,13 @@
     <form method="GET">
       <div class="row g-3 mb-4">
         <div class="col-12 col-lg-6">
-          <label class="form-label">Search</label>
-          <input class="form-control" name="q" placeholder="Card name, set, or player..." value="{{ q }}">
+          <label class="form-label" for="cards-q">Search</label>
+          <input id="cards-q" class="form-control" name="q" placeholder="Card name, set, or player..." value="{{ q }}">
         </div>
         
         <div class="col-12 col-lg-3">
-          <label class="form-label">Card Type</label>
-          <select class="form-select" name="type">
+          <label class="form-label" for="cards-type">Card Type</label>
+          <select id="cards-type" class="form-select" name="type">
             <option value="">All Types</option>
             {% for ctype in card_types %}
             <option value="{{ ctype.id }}" {{ 'selected' if card_type|string == ctype.id|string else '' }}>{{ ctype.name }}</option>
@@ -28,8 +28,8 @@
         </div>
         
         <div class="col-12 col-lg-3">
-          <label class="form-label">Sort</label>
-          <select class="form-select" name="sort" onchange="this.form.submit()">
+          <label class="form-label" for="cards-sort">Sort</label>
+          <select id="cards-sort" class="form-select" name="sort" data-autosubmit>
             <option value="newest" {{ 'selected' if sort == 'newest' else '' }}>Newest</option>
             <option value="oldest" {{ 'selected' if sort == 'oldest' else '' }}>Oldest</option>
             <option value="price_low" {{ 'selected' if sort == 'price_low' else '' }}>Price: Low to High</option>
@@ -41,8 +41,8 @@
       
       <div class="row g-3">
         <div class="col-6 col-lg-2">
-          <label class="form-label">Condition</label>
-          <select class="form-select form-select-sm" name="condition">
+          <label class="form-label" for="cards-condition">Condition</label>
+          <select id="cards-condition" class="form-select form-select-sm" name="condition">
             <option value="">All</option>
             {% for cond in conditions %}
             <option value="{{ cond }}" {{ 'selected' if condition == cond else '' }}>{{ cond }}</option>
@@ -51,8 +51,8 @@
         </div>
         
         <div class="col-6 col-lg-2">
-          <label class="form-label">Graded</label>
-          <select class="form-select form-select-sm" name="graded">
+          <label class="form-label" for="cards-graded">Graded</label>
+          <select id="cards-graded" class="form-select form-select-sm" name="graded">
             <option value="">Any</option>
             <option value="true" {{ 'selected' if graded == 'true' else '' }}>Verified</option>
             <option value="false" {{ 'selected' if graded == 'false' else '' }}>Unverified</option>
@@ -60,8 +60,8 @@
         </div>
         
         <div class="col-6 col-lg-2">
-          <label class="form-label">Grader</label>
-          <select class="form-select form-select-sm" name="grader">
+          <label class="form-label" for="cards-grader">Grader</label>
+          <select id="cards-grader" class="form-select form-select-sm" name="grader">
             <option value="">Any</option>
             {% for g in graders %}
             <option value="{{ g }}" {{ 'selected' if grader == g else '' }}>{{ g }}</option>
@@ -70,13 +70,13 @@
         </div>
         
         <div class="col-6 col-lg-2">
-          <label class="form-label">Min Price</label>
-          <input type="number" class="form-control form-control-sm" name="min_price" value="{{ min_price or '' }}" step="0.01">
+          <label class="form-label" for="cards-min-price">Min Price</label>
+          <input id="cards-min-price" type="number" class="form-control form-control-sm" name="min_price" value="{{ min_price or '' }}" step="0.01">
         </div>
         
         <div class="col-6 col-lg-2">
-          <label class="form-label">Max Price</label>
-          <input type="number" class="form-control form-control-sm" name="max_price" value="{{ max_price or '' }}" step="0.01">
+          <label class="form-label" for="cards-max-price">Max Price</label>
+          <input id="cards-max-price" type="number" class="form-control form-control-sm" name="max_price" value="{{ max_price or '' }}" step="0.01">
         </div>
         
         <div class="col-12 col-lg-2" style="display: flex; align-items: flex-end;">
@@ -118,8 +118,8 @@
         
         <div class="auction-card-info">
           <div class="auction-card-bid">
-            <div class="auction-card-bid-label">Est. Value</div>
-            <div class="auction-card-bid-amount">{{ card.estimated_value|money }}</div>
+            <div class="auction-card-bid-label">Seller's estimate</div>
+            <div class="auction-card-bid-amount">{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</div>
           </div>
         </div>
         

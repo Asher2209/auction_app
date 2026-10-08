@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 from decimal import Decimal
 
@@ -128,8 +129,8 @@ def test_pagination(client, users, cats):
         make_auction(users["seller"], cats["Books"], f"Item {i:02d}")
     page1 = client.get("/auctions/").data.decode()
     page2 = client.get("/auctions/?page=2").data.decode()
-    assert page1.count("card-title") == 12 and page2.count("card-title") == 2
-    assert "14 auctions found" in page1
+    assert page1.count('class="cc-name"') == 12 and page2.count('class="cc-name"') == 2
+    assert "Found <strong>14</strong> items" in page1
     assert client.get("/auctions/?page=99").status_code == 200
     assert client.get("/auctions/?page=-3").status_code == 200
 
@@ -287,8 +288,8 @@ def test_dashboard_stats(client, market, users):
     login(client, "buyer@t.test")
     d = client.get("/buyer/").data.decode()
     # bidding on: Blue Book + Lead Item (2); leading: Lead Item (1); watching 1; won 1
-    for label, value in (("Auctions you are bidding on", 2), ("Currently leading", 1), ("Watching", 1), ("Auctions won", 1)):
-        assert f"{label}</div><div class=\"fs-3 fw-semibold\">{value}<" in d.replace("\n", "").replace("      ", "")
+    for label, value in (("Bidding On", 2), ("Currently Leading", 1), ("Watching", 1), ("Auctions Won", 1)):
+        assert re.search(rf">{label}</div>\s*<div class=\"h2\"[^>]*>{value}</div>", d), label
 
 
 def test_won_page_lists_wins_with_payment_status(client, market, users):

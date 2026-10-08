@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Card tokens - Admin - ChainBid{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Admin</h1>
+{% include "admin/_nav.html" %}
+
+<p class="text-muted small">Each platform-verified card gets one blockchain token. The token is a digital identity and ownership record; it does not prove the physical card is genuine.</p>
+
+<div class="btn-group mb-3" role="group" aria-label="Filter by status">
+  {% for s in statuses %}
+  <a class="btn btn-sm {{ 'btn-primary' if s == status else 'btn-outline-primary' }}" href="{{ url_for('admin.tokens', status=s) }}">{{ s|capitalize }}</a>
+  {% endfor %}
+</div>
+
+<div class="table-responsive">
+  <table class="table table-sm align-middle bg-white">
+    <thead><tr><th>Card ID</th><th>Card</th><th>Owner wallet</th><th>Status</th><th>Token</th><th>Ownership</th><th></th></tr></thead>
+    <tbody>
+      {% for a in page.items %}
+      <tr>
+        <td><code>{{ a.collectible_card.platform_card_id }}</code></td>
+        <td>{{ a.collectible_card.card_name }}</td>
+        <td><code class="small">{{ a.owner_wallet[:8] }}&hellip;{{ a.owner_wallet[-6:] }}</code></td>
+        <td><span class="badge {{ {'draft': 'text-bg-secondary', 'minting': 'text-bg-warning', 'minted': 'text-bg-success'}.get(a.status, 'text-bg-light') }}">{{ a.status }}</span></td>
+        <td>{% if a.token_id %}#{{ a.token_id }}{% else %}&mdash;{% endif %}</td>
+        <td>{% set s = sync.get(a.id) %}{% if s is none %}&mdash;{% elif s.status == 'in_sync' %}<span class="badge text-bg-success">in sync</span>{% elif s.status == 'sync_error' %}<span class="badge text-bg-danger">SYNC ERROR</span>{% else %}<span class="badge text-bg-light">unverified</span>{% endif %}</td>
+        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.token_detail', asset_id=a.id) }}">{{ 'View' if a.status == 'minted' else 'Mint / check' }}</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted">No card tokens yet. Approving a card in verification creates its draft token record.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if page.pages > 1 %}
+<nav class="d-flex gap-2">
+  {% if page.has_prev %}<a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.tokens', status=status, page=page.prev_num) }}">&larr; Previous</a>{% endif %}
+  <span class="small text-muted align-self-center">Page {{ page.page }} of {{ page.pages }}</span>
+  {% if page.has_next %}<a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.tokens', status=status, page=page.next_num) }}">Next &rarr;</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

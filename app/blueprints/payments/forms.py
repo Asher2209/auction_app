@@ -1,8 +1,14 @@
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, SelectField, StringField
+from wtforms import BooleanField, PasswordField, SelectField, StringField
 from wtforms.validators import DataRequired, Length, Regexp, ValidationError
 
+from ...legal import MUST_AGREE
 from ...services import payment_service as ps
+
+
+def _accept(kind):
+    # one box per method, each with its own id, because all three forms share the payment page
+    return BooleanField("I have read the Refund Policy", id=f"accept-{kind}", validators=[DataRequired(message=MUST_AGREE)])
 
 
 class CardForm(FlaskForm):
@@ -14,6 +20,7 @@ class CardForm(FlaskForm):
                          render_kw={"autocomplete": "cc-exp", "placeholder": "MM/YY"})
     cvv = PasswordField("CVV", validators=[DataRequired(), Regexp(r"^[0-9]{3,4}$", message="Enter the 3 or 4 digit CVV.")],
                         render_kw={"autocomplete": "cc-csc", "inputmode": "numeric", "maxlength": 4})
+    accept = _accept("card")
 
     def validate_card_number(self, field):
         if ps.clean_card_number(field.data) is None:
@@ -27,6 +34,7 @@ class CardForm(FlaskForm):
 class UpiForm(FlaskForm):
     upi_id = StringField("UPI ID", validators=[DataRequired(), Length(max=100)],
                          render_kw={"placeholder": "name@bank"})
+    accept = _accept("upi")
 
     def validate_upi_id(self, field):
         if not ps.UPI_RE.match((field.data or "").strip()):
@@ -37,6 +45,7 @@ class WalletForm(FlaskForm):
     provider = SelectField("Wallet", choices=[(w, w) for w in ps.WALLETS])
     mobile = StringField("Registered mobile number", validators=[DataRequired(), Regexp(r"^[0-9]{10}$", message="Enter a 10 digit mobile number.")],
                          render_kw={"inputmode": "numeric", "autocomplete": "tel-national"})
+    accept = _accept("wallet")
 
 
 FORMS = {"card": CardForm, "upi": UpiForm, "wallet": WalletForm}

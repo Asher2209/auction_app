@@ -1,4 +1,4 @@
-﻿"""Logging configuration for production deployment."""
+"""Logging configuration for production deployment."""
 
 import logging
 import logging.handlers

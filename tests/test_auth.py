@@ -10,7 +10,7 @@ from .conftest import PASSWORD, login, make_user
 
 REG = {
     "name": "New User", "email": "new@t.test", "phone": "9876543210",
-    "address": "1 Main St", "role": "buyer", "password": "Passw0rdX", "confirm": "Passw0rdX",
+    "address": "1 Main St", "role": "buyer", "password": "Passw0rdX", "confirm": "Passw0rdX", "accept_terms": "y",
 }
 
 
@@ -89,7 +89,7 @@ def test_anonymous_redirected_from_portals(client):
 
 
 def test_roles_are_isolated(client, users):
-    allowed = {"buyer": "/buyer/", "seller": "/seller/", "admin": "/admin/"}
+    allowed = {"buyer": "/buyer/", "seller": "/seller/collectibles", "admin": "/admin/"}  # /seller/ itself redirects there
     for role, own in allowed.items():
         client.post("/auth/logout")
         login(client, f"{role}@t.test")

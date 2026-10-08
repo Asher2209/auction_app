@@ -1,113 +1,105 @@
-"""Admin routes for blockchain card token minting"""
+"""Admin pages for registering platform-verified cards on the blockchain (minting).
 
-from flask import abort, flash, jsonify, redirect, render_template, request, url_for, current_app
-from flask_login import current_user
+The admin's wallet (MetaMask) signs the mint. The server prepares the transaction and later verifies it on
+the chain; it never holds a private key.
+"""
+from flask import abort, flash, jsonify, redirect, render_template, request, url_for
 
 from ...extensions import db
-from ...models import BlockchainAsset, CollectibleCard, CollectibleVerification
-from ...services import blockchain_minting_service as bm_service, blockchain_service as bc
+from ...models import BlockchainAsset
+from ...services import blockchain_minting_service as bm
+from ...services import blockchain_ownership_service as ownership
+from ...services import blockchain_service as bc
+from ...services import ownership_transfer_service as ots
 from ...utils import role_required
 from . import bp
 
+TOKEN_STATUSES = ("all", "draft", "minting", "minted")
 
-@bp.route("/tokens/mint/<int:blockchain_asset_id>", methods=["GET", "POST"])
+
+def _asset_or_404(asset_id):
+    asset = db.session.get(BlockchainAsset, asset_id)
+    if asset is None:
+        abort(404)
+    return asset
+
+
+def _sync_status(asset):
+    """Does MySQL agree with the chain about the owner? None when the token is not minted or the chain is not set up."""
+    if asset.token_id is None or asset.status not in ("minted", "transferred") or not bm.chain_ready():
+        return None
+    return ownership.check_ownership_sync(asset)
+
+
+def _json_body():
+    data = request.get_json(silent=True)
+    return data if isinstance(data, dict) else {}
+
+
+@bp.route("/tokens")
 @role_required("admin")
-def mint_token(blockchain_asset_id):
-    """Initiate token minting for a card"""
-    blockchain_asset = BlockchainAsset.query.get_or_404(blockchain_asset_id)
-    collectible_card = blockchain_asset.collectible_card
-    seller = collectible_card.product.seller
-    
-    if request.method == "POST":
-        try:
-            # Get minter wallet
-            minter_wallet = request.form.get("minter_wallet", "").strip()
-            if not minter_wallet:
-                flash("Minter wallet address required", "danger")
-            else:
-                # Normalize wallet
-                minter_wallet = bc.normalize_wallet(minter_wallet)
-                
-                # Prepare mint transaction
-                tx_data = bm_service.initiate_mint(blockchain_asset, minter_wallet)
-                
-                # Return transaction data for signing
-                return render_template(
-                    'admin/mint_transaction.html',
-                    blockchain_asset=blockchain_asset,
-                    collectible_card=collectible_card,
-                    tx_data=tx_data,
-                    seller=seller
-                )
-        except bm_service.MintError as e:
-            flash(f"Error: {e.message}", "danger")
-        except Exception as e:
-            flash(f"Error preparing mint: {str(e)}", "danger")
-    
-    return render_template(
-        'admin/mint_prepare.html',
-        blockchain_asset=blockchain_asset,
-        collectible_card=collectible_card,
-        seller=seller,
-        crypto_enabled=bc.crypto_enabled()
-    )
+def tokens():
+    status = request.args.get("status", "all")
+    if status not in TOKEN_STATUSES:
+        status = "all"
+    query = BlockchainAsset.query
+    if status != "all":
+        query = query.filter(BlockchainAsset.status == status)
+    page = query.order_by(BlockchainAsset.created_at.desc()).paginate(
+        page=request.args.get("page", 1, type=int), per_page=15, error_out=False)
+    return render_template("admin/tokens.html", page=page, status=status, statuses=TOKEN_STATUSES,
+                           sync={a.id: _sync_status(a) for a in page.items})
 
 
-@bp.route("/tokens/mint/<int:blockchain_asset_id>/submit", methods=["POST"])
+@bp.route("/tokens/<int:asset_id>")
 @role_required("admin")
-def submit_mint(blockchain_asset_id):
-    """Submit minting transaction hash"""
-    blockchain_asset = BlockchainAsset.query.get_or_404(blockchain_asset_id)
-    
-    tx_hash = request.form.get("tx_hash", "").strip()
-    
+def token_detail(asset_id):
+    asset = _asset_or_404(asset_id)
+    return render_template("admin/token_detail.html", asset=asset, card=asset.collectible_card,
+                           chain=bm.chain_info(), chain_ready=bm.chain_ready(),
+                           tx_url=bc.explorer_url(asset.mint_transaction_hash), sync=_sync_status(asset),
+                           transfers=ots.history(asset), explorer=bc.explorer_url)
+
+
+@bp.route("/tokens/<int:asset_id>/mint/prepare", methods=["POST"])
+@role_required("admin")
+def token_mint_prepare(asset_id):
+    asset = _asset_or_404(asset_id)
     try:
-        bm_service.submit_mint(blockchain_asset, tx_hash)
-        flash(f"Mint transaction submitted. Token minting in progress.", "success")
-    except bm_service.MintError as e:
-        flash(f"Error: {e.message}", "danger")
-    except Exception as e:
-        flash(f"Error submitting mint: {str(e)}", "danger")
-    
-    return redirect(url_for('admin.token_status', blockchain_asset_id=blockchain_asset_id))
+        prep = bm.initiate_mint(asset, _json_body().get("wallet_address"))
+    except bm.MintError as e:
+        return jsonify(ok=False, error=e.message), e.status
+    return jsonify(ok=True, **prep)
 
 
-@bp.route("/tokens/status/<int:blockchain_asset_id>", methods=["GET"])
+@bp.route("/tokens/<int:asset_id>/mint/submit", methods=["POST"])
 @role_required("admin")
-def token_status(blockchain_asset_id):
-    """Check token minting/transfer status"""
-    blockchain_asset = BlockchainAsset.query.get_or_404(blockchain_asset_id)
-    collectible_card = blockchain_asset.collectible_card
-    
-    # Verify current status
-    result = bm_service.verify_mint(blockchain_asset)
-    
-    # Update if confirmed
-    if result.get("status") == "confirmed":
-        # Extract token ID from contract (would need to be done separately in real implementation)
-        # For now, use predictable ID based on asset
-        token_id = blockchain_asset.id + 1000
-        bm_service.complete_mint(
-            blockchain_asset,
-            token_id,
-            result.get("block_number")
-        )
-        flash(f"Token minting confirmed! Token ID: {token_id}", "success")
-    
-    return render_template(
-        'admin/token_status.html',
-        blockchain_asset=blockchain_asset,
-        collectible_card=collectible_card,
-        verification_result=result
-    )
+def token_mint_submit(asset_id):
+    asset = _asset_or_404(asset_id)
+    try:
+        bm.submit_mint(asset, _json_body().get("tx_hash"))
+    except bm.MintError as e:
+        return jsonify(ok=False, error=e.message), e.status
+    return jsonify(ok=True)
 
 
-@bp.route("/api/tokens/verify/<int:blockchain_asset_id>", methods=["GET"])
+@bp.route("/tokens/<int:asset_id>/verify", methods=["POST"])
 @role_required("admin")
-def api_verify_mint(blockchain_asset_id):
-    """API endpoint to check mint status"""
-    blockchain_asset = BlockchainAsset.query.get_or_404(blockchain_asset_id)
-    
-    result = bm_service.verify_mint(blockchain_asset)
-    
-    return jsonify(result)
+def token_verify(asset_id):
+    """Read the chain and, if the mint is genuine and confirmed, record the real token ID."""
+    return jsonify(ok=True, **bm.confirm_mint(_asset_or_404(asset_id)))
+
+
+@bp.route("/tokens/<int:asset_id>/reconcile", methods=["POST"])
+@role_required("admin")
+def token_reconcile(asset_id):
+    """Explicitly adopt the on-chain owner when MySQL disagrees. Never happens automatically."""
+    asset = _asset_or_404(asset_id)
+    try:
+        result = ots.reconcile_ownership(asset)
+    except ots.ReconcileError as e:
+        flash(e.message, "danger")
+    else:
+        flash("The recorded owner now matches the blockchain." if result["changed"] else "Ownership was already in sync.",
+              "success" if result["changed"] else "info")
+    return redirect(url_for("admin.token_detail", asset_id=asset.id))

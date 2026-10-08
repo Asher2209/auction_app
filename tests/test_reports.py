@@ -451,7 +451,7 @@ def test_excel_structure_types_and_formats(full):
     ws = wb["Report"]
     assert wb.sheetnames == ["Report", "Summary"] and ws["A1"].value == "Payment Report" and "Period: 2026-09-01" in ws["A2"].value
     headers = [c.value for c in ws[5]]
-    assert headers == [c.label for c in report.columns]
+    assert headers == [c.display_label for c in report.columns]  # datetime columns name the display zone
     assert ws.freeze_panes == "A6" and ws.auto_filter.ref.startswith("A5:")
     first = {h: ws.cell(6, i + 1) for i, h in enumerate(headers)}
     assert isinstance(first["Amount"].value, (int, float)) and first["Amount"].number_format == "#,##0.00"   # numbers stay numbers

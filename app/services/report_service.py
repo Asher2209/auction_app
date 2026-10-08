@@ -4,7 +4,8 @@ The same definition drives the on-screen table, the PDF and the Excel export (se
 adding a report means writing one function and one entry in REPORTS.
 
 Conventions
-* Times are UTC. A date range is inclusive of both days.
+* Times are stored as UTC and shown in the site zone (timeutil). A date range is in site days, inclusive of both days;
+  Params.start/end hold the UTC instants where those days begin and end.
 * Money is INR. Rows are tuples aligned with the report's columns.
 * Every query is an aggregate or a join (no per-row queries), and results are capped at MAX_ROWS.
 """
@@ -15,6 +16,7 @@ from decimal import Decimal
 from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import aliased
 
+from .. import timeutil
 from ..extensions import db
 from ..models import (
     Auction, Bid, Category, CryptoPayment, Invoice, Payment, Product, Review, User, Winner, utcnow,
@@ -39,17 +41,25 @@ class Column:
     kind: str = "text"  # text int money eth datetime date rating pct mono
     weight: float = 1.0  # relative width in the PDF
 
+    @property
+    def display_label(self):
+        return f"{self.label} ({timeutil.tz_name()})" if self.kind == "datetime" else self.label
+
 
 @dataclass(frozen=True)
 class Params:
-    start: datetime | None = None  # inclusive
-    end: datetime | None = None  # exclusive
+    start: datetime | None = None  # inclusive, UTC instant
+    end: datetime | None = None  # exclusive, UTC instant
     day: date | None = None
     status: str = "all"
 
     @property
+    def first_day(self):
+        return timeutil.to_local(self.start).date() if self.start else None
+
+    @property
     def last_day(self):
-        return (self.end - timedelta(days=1)).date() if self.end else None
+        return (timeutil.to_local(self.end) - timedelta(days=1)).date() if self.end else None
 
 
 @dataclass
@@ -81,7 +91,7 @@ def parse_date(text):
 def parse_params(report, args, now=None):
     """Return (Params, errors). Bad input never raises: it produces a message and a safe default."""
     now = now or utcnow()
-    today = now.date()
+    today = timeutil.to_local(now).date()  # "today" is the site's day, not UTC's
     errors, status = [], "all"
     if report.statuses:
         status = args.get("status", "all")
@@ -101,7 +111,7 @@ def parse_params(report, args, now=None):
 
     if report.filter == "day":
         day = read("day") or today
-        return Params(datetime.combine(day, datetime.min.time()), datetime.combine(day + timedelta(days=1), datetime.min.time()), day, status), errors
+        return Params(_day_start(day), _day_start(day + timedelta(days=1)), day, status), errors
     if report.filter == "none":
         return Params(status=status), errors
 
@@ -114,10 +124,12 @@ def parse_params(report, args, now=None):
     if start and end and (end - start).days > MAX_RANGE_DAYS:
         errors.append(f"A range can span at most {MAX_RANGE_DAYS // 365} years; showing the most recent part.")
         start = end - timedelta(days=MAX_RANGE_DAYS)
-    return Params(
-        datetime.combine(start, datetime.min.time()) if start else None,
-        datetime.combine(end + timedelta(days=1), datetime.min.time()) if end else None,
-        None, status), errors
+    return Params(_day_start(start) if start else None, _day_start(end + timedelta(days=1)) if end else None, None, status), errors
+
+
+def _day_start(day):
+    """The UTC instant at which a site-zone calendar day begins."""
+    return timeutil.from_local(datetime.combine(day, datetime.min.time()))
 
 
 def _between(column, p):
@@ -253,7 +265,7 @@ def revenue(p):
     raw, truncated = _cap(q)
     days = {}
     for when, amount, method, eth in raw:
-        d = days.setdefault(when.date(), [0, Decimal(0), Decimal(0), Decimal(0)])
+        d = days.setdefault(timeutil.to_local(when).date(), [0, Decimal(0), Decimal(0), Decimal(0)])  # a site-zone day
         d[0] += 1
         d[2 if method == "crypto" else 1] += amount
         if method == "crypto":
@@ -381,21 +393,21 @@ C = Column
 REPORTS = {r.key: r for r in (
     Report("daily-auctions", "Daily Auction Report", "Every auction that started, ended or received bids on the chosen day.",
            (C("id", "Auction", "int", .5), C("product", "Product", weight=1.6), C("seller", "Seller"), C("category", "Category"), C("status", "Status", weight=.8),
-            C("start", "Starts (UTC)", "datetime", 1.1), C("end", "Ends (UTC)", "datetime", 1.1), C("bids", "Bids that day", "int", .7),
+            C("start", "Starts", "datetime", 1.1), C("end", "Ends", "datetime", 1.1), C("bids", "Bids that day", "int", .7),
             C("current", "Current bid", "money", .9), C("started", "Started", weight=.6), C("ended", "Ended", weight=.6)),
            daily_auctions, filter="day"),
     Report("active-auctions", "Active Auction Report", "All live and upcoming auctions right now.",
            (C("id", "Auction", "int", .5), C("product", "Product", weight=1.6), C("seller", "Seller"), C("category", "Category"), C("status", "Status", weight=.8),
-            C("start", "Starts (UTC)", "datetime", 1.1), C("end", "Ends (UTC)", "datetime", 1.1), C("left", "Time left", weight=.8),
+            C("start", "Starts", "datetime", 1.1), C("end", "Ends", "datetime", 1.1), C("left", "Time left", weight=.8),
             C("bids", "Bids", "int", .5), C("current", "Current bid", "money", .9), C("top", "Top bidder")),
            active_auctions, filter="none"),
     Report("completed-auctions", "Completed Auction Report", "Auctions that ended in the period, with winner and payment status.",
            (C("id", "Auction", "int", .5), C("product", "Product", weight=1.6), C("seller", "Seller"), C("winner", "Winner"), C("amount", "Winning bid", "money", .9),
-            C("bids", "Bids", "int", .5), C("start", "Started (UTC)", "datetime", 1.1), C("end", "Ended (UTC)", "datetime", 1.1), C("payment", "Payment", weight=.8)),
+            C("bids", "Bids", "int", .5), C("start", "Started", "datetime", 1.1), C("end", "Ended", "datetime", 1.1), C("payment", "Payment", weight=.8)),
            completed_auctions, filter_label="Auction end date"),
     Report("top-products", "Highest Selling Products", f"The {TOP_PRODUCTS} highest-value paid sales in the period.",
            (C("rank", "#", "int", .3), C("product", "Product", weight=1.6), C("seller", "Seller"), C("category", "Category"), C("buyer", "Buyer"),
-            C("amount", "Sale value", "money", .9), C("paid", "Paid on (UTC)", "datetime", 1.1), C("method", "Method", weight=.9)),
+            C("amount", "Sale value", "money", .9), C("paid", "Paid on", "datetime", 1.1), C("method", "Method", weight=.9)),
            top_products, filter_label="Payment date"),
     Report("highest-bids", "Highest Bid Report", "Auctions ranked by their highest bid, with the increase over the starting price.",
            (C("rank", "#", "int", .3), C("product", "Product", weight=1.6), C("seller", "Seller"), C("category", "Category"), C("status", "Status", weight=.8),
@@ -407,7 +419,7 @@ REPORTS = {r.key: r for r in (
             C("total", "Total revenue", "money", 1.1), C("eth", "ETH received", "eth", 1)),
            revenue, filter_label="Payment date"),
     Report("user-activity", "User Activity Report", "What each user did in the period (users with no activity are left out).",
-           (C("name", "User", weight=1.2), C("email", "Email", weight=1.6), C("role", "Role", weight=.7), C("joined", "Joined (UTC)", "datetime", 1.1),
+           (C("name", "User", weight=1.2), C("email", "Email", weight=1.6), C("role", "Role", weight=.7), C("joined", "Joined", "datetime", 1.1),
             C("bids", "Bids", "int", .5), C("won", "Auctions won", "int", .7), C("listed", "Products listed", "int", .8), C("buys", "Paid purchases", "int", .8),
             C("reviews", "Reviews", "int", .6), C("total", "Total actions", "int", .7)),
            user_activity, filter_label="Activity date"),
@@ -419,17 +431,17 @@ REPORTS = {r.key: r for r in (
     Report("product-ratings", "Product Rating Report", "Average rating and star breakdown per product (hidden reviews are excluded).",
            (C("product", "Product", weight=1.6), C("seller", "Seller"), C("category", "Category"), C("avg", "Average", "rating", .7), C("n", "Reviews", "int", .6),
             C("s5", "5 stars", "int", .5), C("s4", "4 stars", "int", .5), C("s3", "3 stars", "int", .5), C("s2", "2 stars", "int", .5), C("s1", "1 star", "int", .5),
-            C("hidden", "Hidden", "int", .5), C("last", "Latest review (UTC)", "datetime", 1.1)),
+            C("hidden", "Hidden", "int", .5), C("last", "Latest review", "datetime", 1.1)),
            product_ratings, filter_label="Review date", default_days=None),
     Report("payments", "Payment Report", "Every payment, whatever its status, with the invoice number once paid.",
            (C("id", "Payment", "int", .5), C("auction", "Auction", "int", .5), C("product", "Product", weight=1.5), C("buyer", "Buyer"), C("seller", "Seller"),
             C("amount", "Amount", "money", .9), C("method", "Method", weight=.9), C("status", "Status", weight=.8), C("attempts", "Tries", "int", .4),
-            C("created", "Created (UTC)", "datetime", 1.1), C("paid", "Paid (UTC)", "datetime", 1.1), C("invoice", "Invoice", "mono", 1.1)),
+            C("created", "Created", "datetime", 1.1), C("paid", "Paid", "datetime", 1.1), C("invoice", "Invoice", "mono", 1.1)),
            payments, filter_label="Payment created date", statuses=True),
     Report("crypto-transactions", "Cryptocurrency Transaction Report", "Submitted blockchain payments with their on-chain details (test network).",
            (C("id", "Payment", "int", .5), C("auction", "Auction", "int", .5), C("product", "Product", weight=1.2), C("buyer", "Buyer"), C("eth", "ETH", "eth", .8),
             C("inr", "INR value", "money", .9), C("rate", "INR per ETH", "money", .9), C("net", "Network", weight=.9), C("status", "Status", weight=.8),
-            C("conf", "Conf.", "int", .4), C("block", "Block", "int", .6), C("when", "Submitted (UTC)", "datetime", 1.1), C("hash", "Transaction hash", "mono", 2.4),
+            C("conf", "Conf.", "int", .4), C("block", "Block", "int", .6), C("when", "Submitted", "datetime", 1.1), C("hash", "Transaction hash", "mono", 2.4),
             C("wallet", "Buyer wallet", "mono", 1.6), C("seller_wallet", "Seller wallet", "mono", 1.6), C("reason", "Failure reason", weight=1.3)),
            crypto_transactions, filter_label="Transaction date", pdf_skip=("wallet", "seller_wallet", "rate")),
 )}

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Phase E: End-to-End Blockchain Integration Testing"""
 
 import os, sys, json

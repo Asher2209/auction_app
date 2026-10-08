@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_form.html" import field %}
+{% from "_form.html" import checkbox, field %}
 {% block title %}Pay for {{ product.title }} - ChainBid{% endblock %}
 {% block content %}
 <a class="small" href="{{ url_for('buyer.won') }}">&larr; Won auctions</a>
@@ -27,7 +27,7 @@
       <div class="small text-muted mt-1">{{ payment.reference }}{% if payment.gateway_ref %} &middot; {{ payment.gateway_ref }}{% endif %}</div>
       {% endif %}
       {% if payment.payment_status == 'successful' %}
-      <div class="small text-muted">Paid on {{ payment.payment_date|utc }}</div>
+      <div class="small text-muted">Paid on {{ payment.payment_date|local }}</div>
       {% endif %}
     </div></div>
     <p class="small text-muted mt-3 mb-0">This is a <strong>simulated</strong> payment: no real money moves, and card numbers and CVVs are never stored.</p>
@@ -37,6 +37,21 @@
     {% if payment.payment_status == 'successful' %}
       <div class="alert alert-success">Payment complete. Your seller has been notified.</div>
       <a class="btn btn-primary" href="{{ url_for('invoices.download', auction_id=auction.id) }}">Download invoice (PDF)</a>
+      {% if ownership %}
+      <div class="card mt-4" id="ownership-record"><div class="card-body">
+        <h2 class="h6 text-uppercase text-muted">Blockchain transaction</h2>
+        <dl class="row small mb-0">
+          <dt class="col-4">Token ID</dt><dd class="col-8">#{{ ownership.asset.token_id }}</dd>
+          <dt class="col-4">Previous owner</dt><dd class="col-8"><code class="text-break">{{ ownership.transfer.from_wallet }}</code></dd>
+          <dt class="col-4">New owner</dt><dd class="col-8"><code class="text-break">{{ ownership.transfer.to_wallet }}</code> (your wallet)</dd>
+          <dt class="col-4">Network</dt><dd class="col-8">{{ ownership.transfer.network }}</dd>
+          <dt class="col-4">Status</dt><dd class="col-8">Confirmed &middot; ownership transferred</dd>
+          <dt class="col-4">Transaction</dt>
+          <dd class="col-8">{% if ownership.explorer %}<a href="{{ ownership.explorer }}" target="_blank" rel="noopener"><code class="text-break">{{ ownership.transfer.transaction_hash }}</code></a>{% else %}<code class="text-break">{{ ownership.transfer.transaction_hash }}</code>{% endif %}</dd>
+        </dl>
+        <p class="small text-muted mt-3 mb-0">The token is a digital ownership record. The physical card is handed over by the seller.</p>
+      </div></div>
+      {% endif %}
     {% elif payment.processing and payment.payment_method == 'crypto' %}
       <div class="alert alert-info">
         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
@@ -68,6 +83,7 @@
         <li class="nav-item"><button class="nav-link disabled" type="button" tabindex="-1" aria-disabled="true">Cryptocurrency (not configured)</button></li>
         {% endif %}
       </ul>
+      {% if crypto.reason %}<div class="small text-muted mb-3">{{ crypto.reason }}</div>{% endif %}
 
       <div class="tab-content">
         {% for k in ['card', 'upi', 'wallet'] %}
@@ -83,6 +99,7 @@
             {% else %}
               {{ field(f.provider) }}{{ field(f.mobile) }}
             {% endif %}
+            {% call checkbox(f.accept) %}I have read the <a href="{{ url_for('legal.refunds') }}">Refund Policy</a>.{% endcall %}
             <button class="btn btn-primary w-100" type="submit">Pay {{ payment.amount|money }}</button>
           </form>
         </div>
@@ -90,16 +107,25 @@
         {% if crypto.enabled %}
         <div class="tab-pane fade" id="tab-crypto">
           <div id="crypto-root" data-auction-id="{{ auction.id }}" data-dev-wallet="{{ 'true' if crypto.dev_wallet else 'false' }}">
-            {% if not crypto.seller_wallet %}
-              <div class="alert alert-warning mb-0">The seller has not added a payout wallet yet, so this auction cannot be paid with cryptocurrency. Please use another method.</div>
+            {% if crypto.waiting %}
+              <div class="alert alert-info mb-0" role="status">{{ crypto.waiting }}</div>
+            {% elif not crypto.seller_wallet %}
+              <div class="alert alert-warning mb-0">The seller has not verified a wallet yet, so this auction cannot be paid with cryptocurrency. Please use another method.</div>
             {% else %}
               <div class="card card-body mb-3">
                 <div class="small text-muted">You will send</div>
                 <div class="fs-4 fw-semibold">{{ crypto.eth }} ETH</div>
                 <div class="small text-muted">= {{ payment.amount|money }} at {{ currency }}{{ crypto.rate }} per ETH &middot; network: {{ crypto.chain_name }} (test network)</div>
                 <div class="small mt-2">Paid to the seller's wallet: <code class="text-break">{{ crypto.seller_wallet }}</code></div>
+                {% if crypto.card %}
+                <div class="small mt-2">You receive card token <strong>#{{ crypto.token_id }}</strong> in the same transaction. If either part fails, nothing is sent. Pay from the wallet <code class="text-break">{{ crypto.buyer_wallet }}</code>.</div>
+                {% endif %}
               </div>
               <div class="mb-2 small">Your wallet: <code id="crypto-account" class="text-break">not connected</code></div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="accept-crypto">
+                <label class="form-check-label" for="accept-crypto">I have read the <a href="{{ url_for('legal.refunds') }}">Refund Policy</a> and understand that a blockchain payment cannot be reversed.</label>
+              </div>
               <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-outline-primary" type="button" id="crypto-connect">Connect wallet</button>
                 <button class="btn btn-primary" type="button" id="crypto-pay" disabled>Pay {{ crypto.eth }} ETH</button>

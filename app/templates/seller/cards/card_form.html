@@ -4,7 +4,7 @@
 {% block content %}
 <div class="row">
   <div class="col-lg-8">
-    <div class="glass p-5" style="border-radius: 1.5rem; margin-bottom: 3rem;">
+    <div class="p-5" style="border-radius: 1.5rem; margin-bottom: 3rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h1 class="h3 mb-4">Create Trading Card Listing</h1>
 
       <form method="POST" enctype="multipart/form-data" id="card-form" novalidate>
@@ -143,8 +143,8 @@
         <!-- Estimated Value -->
         <div class="mb-3">
           <label class="form-label fw-600" for="estimated_value">Your Estimated Value (₹)</label>
-          {{ form.estimated_value(class="form-control", placeholder="For admin reference - not public") }}
-          <small class="text-muted d-block mt-1">Helps admins verify the card's legitimacy</small>
+          {{ form.estimated_value(class="form-control", placeholder="Optional") }}
+          <small class="text-muted d-block mt-1">Shown publicly as your own estimate, not a platform valuation. It also helps admins check the listing.</small>
         </div>
 
         <!-- Type-Specific Fields -->
@@ -271,21 +271,21 @@
 
   <!-- Sidebar Info -->
   <div class="col-lg-4">
-    <div class="glass p-4" style="border-radius: 1.5rem; border-left: 4px solid var(--cb-link); margin-bottom: 2rem;">
+    <div class="p-4" style="border-radius: 1.5rem; margin-bottom: 2rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border); border-left: 4px solid var(--dt-accent);">
       <h6 class="fw-600 mb-2">ℹ️ Getting Approved</h6>
       <p class="small text-muted mb-0">
         After you submit, our team will verify your card details and images. Verified cards can be auctioned immediately. This usually takes 1-2 days.
       </p>
     </div>
 
-    <div class="glass p-4" style="border-radius: 1.5rem; margin-bottom: 2rem;">
+    <div class="p-4" style="border-radius: 1.5rem; margin-bottom: 2rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="fw-600 mb-2">📸 Good Photos Matter</h6>
       <p class="small text-muted mb-0">
         Clear, well-lit images help us verify your card faster. Include front, back, and any grading slabs. Avoid watermarks.
       </p>
     </div>
 
-    <div class="glass p-4" style="border-radius: 1.5rem;">
+    <div class="p-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="fw-600 mb-2">✓ Graded Cards</h6>
       <p class="small text-muted mb-0">
         If your card is graded by PSA, Beckett, or CGC, include the certificate number so we can verify it.
@@ -295,42 +295,5 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/card-forms.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Show/hide grading fields based on checkbox
-  const isGradedCheckbox = document.getElementById('is_graded');
-  function toggleGradingFields() {
-    const gradingFields = document.getElementById('grading-fields');
-    const certFields = document.getElementById('cert-fields');
-    if (isGradedCheckbox.checked) {
-      gradingFields.style.display = 'grid';
-      certFields.style.display = 'grid';
-    } else {
-      gradingFields.style.display = 'none';
-      certFields.style.display = 'none';
-    }
-  }
-  isGradedCheckbox.addEventListener('change', toggleGradingFields);
-  toggleGradingFields();
-
-  // Show/hide type-specific fields
-  const cardTypeSelect = document.getElementById('card_type_id');
-  function toggleTypeFields() {
-    const typeId = cardTypeSelect.value;
-    const selectedOption = cardTypeSelect.querySelector(`option[value="${typeId}"]`);
-    const typeName = selectedOption ? selectedOption.textContent.toLowerCase() : '';
-
-    document.getElementById('pokemon-fields').style.display = 'none';
-    document.getElementById('football-fields').style.display = 'none';
-
-    if (typeName.includes('pokémon') || typeName.includes('pokemon')) {
-      document.getElementById('pokemon-fields').style.display = 'block';
-    } else if (typeName.includes('football') || typeName.includes('soccer')) {
-      document.getElementById('football-fields').style.display = 'block';
-    }
-  }
-  cardTypeSelect.addEventListener('change', toggleTypeFields);
-  toggleTypeFields();
-});
-</script>
+<script src="{{ url_for('static', filename='js/card-form-toggles.js') }}"></script>
 {% endblock %}

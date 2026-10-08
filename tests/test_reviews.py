@@ -406,7 +406,7 @@ def test_simultaneous_submissions_make_exactly_one_review(tmp_path):
 
 # ---- site feedback ---------------------------------------------------------------------------------------
 def send_feedback(c, msg="The browse page is great but search could be faster."):
-    return c.post("/feedback", data={"message": msg})
+    return c.post("/feedback", data={"message": msg, "consent": "y"})
 
 
 def test_feedback_is_stored_and_acknowledged(app, users):
@@ -455,9 +455,9 @@ def test_feedback_needs_login_and_works_for_every_role(app, users):
     for role in ("buyer", "seller", "admin"):
         assert send_feedback(client_for(app, f"{role}@t.test")).status_code == 302
     assert Feedback.query.count() == 3
-    assert "Send feedback" in client_for(app, "buyer@t.test").get("/").data.decode()
+    assert "Send Feedback" in client_for(app, "buyer@t.test").get("/").data.decode()
     g.pop("_login_user", None)
-    assert "Send feedback" not in app.test_client().get("/").data.decode()
+    assert "Send Feedback" not in app.test_client().get("/").data.decode()
 
 
 def test_admin_manages_feedback(app, users):

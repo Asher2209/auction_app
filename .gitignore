@@ -5,8 +5,13 @@ __pycache__/
 instance/
 app/static/uploads/*
 !app/static/uploads/.gitkeep
+app/static/qrcodes/
 flask*.log
 *.output
 IMAGES_IMPLEMENTATION_REPORT.md
 IMAGE_AUDIT.md
 PROJECT_PLAN.md
+node_modules/
+
+# created by the claude-mem plugin, not part of the project
+claude-mem/

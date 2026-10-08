@@ -1,57 +1,32 @@
-{% extends "base.html" %}
-{% block title %}Refund Policy - ChainBid{% endblock %}
-{% block content %}
-<div class="container py-5">
-  <div class="row">
-    <div class="col-lg-8">
-      <h1 class="mb-4">Refund Policy</h1>
-      <p class="text-muted">Last updated: October 5, 2026</p>
+{% extends "legal/_page.html" %}
+{% block page_emoji %}💸{% endblock %}
+{% block page_title %}Refund Policy{% endblock %}
+{% block body %}
+<h2 class="h5 mt-4">1. In short</h2>
+<p>ChainBid does not handle real money, so there is nothing real to refund. This policy explains what happens to each kind of payment and how to raise a problem.</p>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">1. Auction Bids</h2>
-        <p>All auction bids are final and non-refundable. By placing a bid, you agree that you intend to purchase the item at your bid price if you win the auction. If you believe an item is misrepresented, you must contact the seller within 48 hours of auction completion.</p>
-      </section>
+<h2 class="h5 mt-4">2. Simulated payments (card, UPI, wallet)</h2>
+<ul>
+  <li>No money moves, so no refund is needed. A "successful" simulated payment is only a record in the system.</li>
+  <li>A failed or pending simulated payment never charges anything. You can retry a failed payment from the payment page.</li>
+  <li>There is no automatic refund feature. If a simulated payment was made by mistake, or the item was cancelled, ask an administrator (see section 5) to correct the record.</li>
+</ul>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">2. Item Not As Described</h2>
-        <p>If you receive an item that is significantly different from the seller's description, you may request a refund within 7 days. You must provide photographic evidence of the discrepancy. ChainBid will investigate and make a determination.</p>
-      </section>
+<h2 class="h5 mt-4">3. Cryptocurrency payments</h2>
+<ul>
+  <li>Payments are made in test ETH, which has no monetary value, straight from your wallet to the seller's wallet. ChainBid never holds the funds, so it cannot send them back. If the sale was for a registered card, its token has already moved to your wallet in the same transaction.</li>
+  <li><strong>Blockchain transactions are final.</strong> Neither we nor anyone else can reverse one.</li>
+  <li>If you sent the wrong amount, the server will not accept the payment and will tell you why. If a payment you sent was not accepted, contact us with the transaction hash. Returning test ETH would be a voluntary transfer by the seller; the software does not do it for you.</li>
+  <li>Network fees (gas) go to the network, not to ChainBid, and are not refundable.</li>
+</ul>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">3. Non-Delivery</h2>
-        <p>If you do not receive your item within the agreed timeframe and after contacting the seller, you may open a dispute. ChainBid will investigate and may issue a refund at our discretion.</p>
-      </section>
+<h2 class="h5 mt-4">4. Bids, wins and cancelled auctions</h2>
+<ul>
+  <li>A bid is binding and cannot be withdrawn (see the <a href="{{ url_for('legal.terms') }}">Terms of Service</a>).</li>
+  <li>If an administrator cancels an auction, the buyer is notified and, if a payment had been recorded, the administrator will correct it on request.</li>
+  <li>There is no cooling-off or return window for an auction win in this academic version. An operator who sells real goods must publish their own returns terms in addition to this page, as the law of their country requires.</li>
+</ul>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">4. Seller Refunds</h2>
-        <p>Sellers are responsible for refunding buyers who meet the criteria above. ChainBid can mediate disputes but does not guarantee refunds. In cases of fraud, ChainBid reserves the right to refund the buyer and pursue legal action against the seller.</p>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">5. Platform Fees</h2>
-        <p>ChainBid platform fees are non-refundable once an auction has been completed. These fees cover the cost of operating the platform and processing transactions.</p>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">6. Cryptocurrency Transactions</h2>
-        <p>Transactions made with cryptocurrency on the Sepolia test network are for testing purposes only. ChainBid is not liable for any losses related to cryptocurrency transactions. These transactions are irreversible.</p>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">7. Dispute Resolution Process</h2>
-        <ol>
-          <li>Contact the other party directly to resolve the issue</li>
-          <li>If unresolved, open a dispute on ChainBid with evidence</li>
-          <li>ChainBid will investigate and make a determination within 7 days</li>
-          <li>The determination is final and binding</li>
-        </ol>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">8. Contact Us</h2>
-        <p>For refund inquiries, please contact <strong>support@chainbid.test</strong></p>
-      </section>
-    </div>
-  </div>
-</div>
+<h2 class="h5 mt-4">5. How to raise a problem</h2>
+<p>Email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> or use <em>Send Feedback</em> when signed in. Include the auction number, the date, and for crypto payments the transaction hash. An administrator will look at the record and reply. There is no fixed response time.</p>
 {% endblock %}

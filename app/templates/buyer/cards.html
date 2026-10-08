@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}My cards - ChainBid{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">My cards</h1>
+{% include "buyer/_nav.html" %}
+
+<p class="text-muted small">Cards you have won or hold. A token is a digital ownership record for the physical card; the card itself is handed over by the seller.</p>
+{% if not current_user.has_verified_wallet %}
+<div class="alert alert-info small" role="status" id="wallet-needed"><span>Verify a wallet in <a href="{{ url_for("auth.profile") }}">your profile</a> to pay for cards in cryptocurrency and to see the tokens your wallet holds. You prove it is yours by signing a message with it.</span></div>
+{% endif %}
+
+<div class="table-responsive">
+  <table class="table align-middle" id="my-cards">
+    <thead><tr><th>Card</th><th>Purchase price</th><th>Auction</th><th>Token</th><th>Ownership</th><th>Transaction</th><th></th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      {% set c = r.card %}
+      <tr>
+        <td>
+          <div class="d-flex align-items-center gap-3">
+            {% if c.images %}<img src="{{ c.images[0].get_image_src() }}" alt="" width="40" height="56" style="object-fit: contain; background: var(--dt-bg-0); border: 1px solid var(--dt-border); border-radius: 4px;">{% endif %}
+            <div>
+              <a href="{{ url_for('collectibles.verify_card', platform_card_id=c.platform_card_id) }}">{{ c.card_name }}</a>
+              <div class="small text-muted">{{ [c.set_name, c.release_year, ('#' ~ c.card_number) if c.card_number else none]|select|join(' &middot; '|safe) }}</div>
+              <div class="small cd-mono text-muted">{{ c.platform_card_id }}</div>
+            </div>
+          </div>
+        </td>
+        <td>{% if r.price %}{{ r.price|money }}{% else %}&mdash;{% endif %}</td>
+        <td>{% if r.auction %}<a href="{{ url_for('auctions.detail', auction_id=r.auction.id) }}">Auction #{{ r.auction.id }}</a>{% else %}&mdash;{% endif %}</td>
+        <td>{% if r.asset and r.asset.token_id %}#{{ r.asset.token_id }}<div class="small text-muted">{{ r.asset.blockchain_network|capitalize }}</div>{% else %}&mdash;{% endif %}</td>
+        <td><span class="badge badge-plain text-bg-{{ r.badge }}">{{ r.label }}</span></td>
+        <td>
+          {% if r.transfer %}
+            {% if tx_url(r.transfer.transaction_hash) %}<a class="cd-mono" href="{{ tx_url(r.transfer.transaction_hash) }}" target="_blank" rel="noopener noreferrer" title="{{ r.transfer.transaction_hash }}">{{ r.transfer.transaction_hash[:10] }}&hellip;{{ r.transfer.transaction_hash[-6:] }}</a>
+            {% else %}<span class="cd-mono" title="{{ r.transfer.transaction_hash }}">{{ r.transfer.transaction_hash[:10] }}&hellip;{{ r.transfer.transaction_hash[-6:] }}</span>{% endif %}
+          {% else %}&mdash;{% endif %}
+        </td>
+        <td class="text-end">
+          {% if r.auction and r.payment and r.payment.awaiting_payment %}<a class="btn btn-sm btn-primary" href="{{ url_for('payments.pay_page', auction_id=r.auction.id) }}">Pay now</a>
+          {% elif r.invoice %}<a class="btn btn-sm btn-secondary" href="{{ url_for('invoices.download', auction_id=r.auction.id) }}">Invoice</a>{% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="7" class="text-center text-muted py-4">You do not own any cards yet. <a href="{{ url_for('auctions.browse') }}">Browse the auctions</a>.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

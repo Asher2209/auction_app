@@ -126,6 +126,9 @@ def quote(inr_amount):
 # ---- step 1: prepare -----------------------------------------------------------------------
 def prepare(payment, buyer_wallet_raw):
     """Lock a quote and build the transaction for the buyer's wallet to sign."""
+    from . import card_settlement_service as css
+    if css.applies(payment):  # a card: pay and receive the token in one settle() transaction
+        return css.prepare_payment(payment, buyer_wallet_raw)
     if not crypto_enabled():
         raise CryptoError("Cryptocurrency payments are not available right now.", 503)
     if not payment.awaiting_payment:
@@ -137,16 +140,17 @@ def prepare(payment, buyer_wallet_raw):
     if buyer_wallet is None:
         raise CryptoError("Connect your wallet first.")
     seller = payment.auction.product.seller
-    if not seller.wallet_address:
-        raise CryptoError("The seller has not added a payout wallet yet, so this cannot be paid in crypto.", 409)
-    if buyer_wallet.lower() == seller.wallet_address.lower():
+    seller_wallet = seller.verified_wallet
+    if not seller_wallet:
+        raise CryptoError("The seller has not verified a wallet yet, so this cannot be paid in crypto.", 409)
+    if buyer_wallet.lower() == seller_wallet.lower():
         raise CryptoError("Your wallet and the seller's wallet must be different.")
 
     cfg = current_app.config
     wei, eth, rate = quote(payment.amount)
     contract = _contract(get_web3())
     row = payment.crypto or CryptoPayment(payment_id=payment.id)
-    row.wallet_address, row.seller_address = buyer_wallet, seller.wallet_address
+    row.wallet_address, row.seller_address = buyer_wallet, seller_wallet
     row.contract_address = Web3.to_checksum_address(cfg["CONTRACT_ADDRESS"])
     row.cryptocurrency, row.expected_wei, row.amount, row.exchange_rate = "ETH", wei, eth, rate
     row.blockchain_network, row.chain_id = cfg["CHAIN_NAME"], cfg["CHAIN_ID"]
@@ -155,12 +159,12 @@ def prepare(payment, buyer_wallet_raw):
     db.session.add(row)
     db.session.commit()
 
-    data = contract.encode_abi("pay", args=[payment.auction_id, seller.wallet_address])
+    data = contract.encode_abi("pay", args=[payment.auction_id, seller_wallet])
     return {
         "tx": {"from": buyer_wallet, "to": row.contract_address, "value": hex(wei), "data": data},
         "chain": {"id": cfg["CHAIN_ID"], "id_hex": hex(cfg["CHAIN_ID"]), "name": cfg["CHAIN_NAME"]},
         "quote": {"inr": f"{payment.amount:.2f}", "eth": format(eth, "f"), "wei": str(wei), "rate": f"{rate:.2f}"},
-        "seller_address": seller.wallet_address,
+        "seller_address": seller_wallet,
     }
 
 
@@ -200,6 +204,14 @@ def submit(payment, tx_hash_raw, now=None):
 
 
 # ---- step 4: verify on chain --------------------------------------------------------------
+def _finish(w3, receipt, paid, required):
+    confirmations = max(0, w3.eth.block_number - receipt["blockNumber"] + 1)
+    if confirmations < required:
+        return Check("pending", f"Waiting for confirmations ({confirmations}/{required}).",
+                     confirmations, receipt["blockNumber"], paid)
+    return Check("confirmed", None, confirmations, receipt["blockNumber"], paid)
+
+
 def check_transaction(w3, row, payment, now):
     """Read the chain and decide. Pure with respect to the database: returns a Check."""
     cfg = current_app.config
@@ -233,6 +245,11 @@ def check_transaction(w3, row, payment, now):
     if tx["from"].lower() != row.wallet_address.lower():
         return Check("failed", "The transaction came from a different wallet than the one connected.")
 
+    from . import card_settlement_service as css
+    if css.applies(payment):  # a card: the CardSold event of the token contract
+        failure, paid = css.check_sale_event(w3, row, payment, receipt)
+        return failure or _finish(w3, receipt, paid, required)
+
     events = [e for e in _contract(w3).events.PaymentMade().process_receipt(receipt)
               if e["address"].lower() == contract_addr and e["args"]["auctionId"] == payment.auction_id]
     if len(events) != 1:
@@ -247,11 +264,7 @@ def check_transaction(w3, row, payment, now):
         return Check("failed", f"Underpaid: expected {Decimal(row.expected_wei) / 10**18:f} ETH, "
                                f"received {Decimal(paid) / 10**18:f} ETH.", amount_wei=paid)
 
-    confirmations = max(0, w3.eth.block_number - receipt["blockNumber"] + 1)
-    if confirmations < required:
-        return Check("pending", f"Waiting for confirmations ({confirmations}/{required}).",
-                     confirmations, receipt["blockNumber"], paid)
-    return Check("confirmed", None, confirmations, receipt["blockNumber"], paid)
+    return _finish(w3, receipt, paid, required)
 
 
 def verify_payment(payment, now=None):
@@ -293,6 +306,9 @@ def verify_payment(payment, now=None):
         row.status = "confirmed"
         row.amount = Decimal(result.amount_wei) / Decimal(10) ** 18
         row.failure_reason = None
+        from . import card_settlement_service as css, ownership_transfer_service as ots
+        if css.applies(payment):  # the token moved in the settlement: bring MySQL in line, in this same transaction
+            ots.record_settlement(payment, row, now)
         payment_service.on_success(payment, now)
     else:
         row.status, row.failure_reason = "failed", result.reason
@@ -308,8 +324,9 @@ def recheck(payment, now=None):
 
     Returns a Check, or None when the chain cannot be reached. Never writes to the database.
     """
+    from . import card_settlement_service as css
     row = payment.crypto
-    if not crypto_enabled() or row is None or not row.transaction_hash:
+    if row is None or not row.transaction_hash or not (css.applies(payment) or crypto_enabled()):
         return None
     try:
         return check_transaction(get_web3(), row, payment, now or utcnow())
@@ -320,7 +337,8 @@ def recheck(payment, now=None):
 
 def verify_pending(now=None):
     """Scheduler/background check of every submitted-but-unresolved crypto payment. Never raises."""
-    if not crypto_enabled():
+    from . import card_settlement_service as css
+    if get_web3() is None:
         return 0
     now = now or utcnow()
     checked = 0
@@ -330,6 +348,8 @@ def verify_pending(now=None):
         # (a real network does this by itself) and confirmations accrue while payments wait.
         get_web3().provider.ethereum_tester.mine_blocks(1)
     for payment in pending:
+        if not (css.applies(payment) or crypto_enabled()):
+            continue
         if payment.crypto and payment.crypto.transaction_hash:
             try:
                 verify_payment(payment, now)

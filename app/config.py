@@ -45,12 +45,21 @@ class Config:
     CONFIRMATIONS_REQUIRED = int(os.environ.get("CONFIRMATIONS_REQUIRED", "2"))
     INR_PER_ETH = Decimal(os.environ.get("INR_PER_ETH", "320000"))  # the configured exchange rate
     CRYPTO_NOT_FOUND_TIMEOUT_MINUTES = 30  # a submitted transaction the network never shows is failed after this
+    # Collectible-card identity token contract (separate from the AuctionPayment contract above).
+    COLLECTIBLE_CONTRACT_ADDRESS = os.environ.get("COLLECTIBLE_CONTRACT_ADDRESS")
+    # False: a registered BlockchainAsset with a matching owner wallet is enough to list a card.
+    # True: the token must also be minted and the on-chain owner must match (fails closed if the chain is unreachable).
+    LISTING_REQUIRES_MINTED_TOKEN = os.environ.get("LISTING_REQUIRES_MINTED_TOKEN", "0") == "1"
     # Development only: run an in-process test chain with a built-in demo wallet (no MetaMask needed).
     LOCAL_CHAIN = os.environ.get("LOCAL_CHAIN", "0") == "1"
     SIMULATED_SETTLE_SECONDS = 20  # how long a gateway-"pending" simulated payment takes to settle
     MIN_AUCTION_MINUTES = 5
     MAX_AUCTION_DAYS = 30
     CURRENCY_SYMBOL = "₹"
+    LEGAL_CONTACT_EMAIL = os.environ.get("LEGAL_CONTACT_EMAIL", "privacy@chainbid.local")  # shown on the policy pages
+    # Display zone: timestamps are stored as naive UTC, people type and see them in this fixed-offset zone (see timeutil.py).
+    TZ_NAME = os.environ.get("APP_TZ_NAME", "IST")
+    TZ_OFFSET_MINUTES = int(os.environ.get("APP_TZ_OFFSET_MINUTES", "330"))
     # Lets the seeded @demo.test accounts pass email validation. Set to 0 in production.
     ALLOW_TEST_EMAILS = os.environ.get("ALLOW_TEST_EMAILS", "1") == "1"
 
@@ -61,3 +70,9 @@ class TestConfig(Config):
     MAIL_ASYNC = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     WTF_CSRF_ENABLED = False
+    TZ_NAME, TZ_OFFSET_MINUTES = "UTC", 0  # tests pin UTC; tests/test_timezone.py switches to IST
+    # The real .env is still loaded, but tests never reach a real blockchain or depend on the contracts deployed
+    # there. Tests that need a chain start their own (see tests/test_crypto.py and tests/test_minting.py).
+    RPC_URL = None
+    CONTRACT_ADDRESS = None
+    COLLECTIBLE_CONTRACT_ADDRESS = None

@@ -185,6 +185,9 @@ def product_detail(product_id):
 @role_required("seller")
 def edit_product(product_id):
     product = _own_product_or_404(product_id)
+    if product.collectible_card is not None:
+        flash("Trading cards are managed from My Collectibles, not from this page.", "warning")
+        return redirect(url_for("seller.view_card", card_id=product.collectible_card.id))
     if not product.is_editable:
         flash("This auction has already started, so the product can no longer be edited.", "warning")
         return redirect(url_for("seller.product_detail", product_id=product.id))
@@ -248,6 +251,9 @@ def edit_product(product_id):
 @role_required("seller")
 def delete_product(product_id):
     product = _own_product_or_404(product_id)
+    if product.collectible_card is not None:
+        flash("Trading cards are managed from My Collectibles, not from this page.", "warning")
+        return redirect(url_for("seller.view_card", card_id=product.collectible_card.id))
     if not product.is_editable:
         flash("This auction has already started, so the product can no longer be deleted.", "warning")
         return redirect(url_for("seller.product_detail", product_id=product.id))

@@ -23,7 +23,7 @@
         {% if not n.is_read %}<span class="badge text-bg-primary ms-1">New</span>{% endif %}
       </div>
       <div>{{ n.message }}</div>
-      <div class="small text-muted">{{ n.created_at|utc }}</div>
+      <div class="small text-muted">{{ n.created_at|local }}</div>
     </div>
     {% if not n.is_read %}
     <form method="post" action="{{ url_for('notifications.mark_read', notification_id=n.id) }}">

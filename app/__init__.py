@@ -1,5 +1,4 @@
 import os
-from datetime import timedelta
 
 from dotenv import load_dotenv
 from flask import Flask, render_template
@@ -36,6 +35,7 @@ def create_app(config_class=Config):
     from .blueprints.auth import bp as auth_bp
     from .blueprints.buyer import bp as buyer_bp
     from .blueprints.invoices import bp as invoices_bp
+    from .blueprints.legal import bp as legal_bp
     from .blueprints.main import bp as main_bp
     from .blueprints.messaging import bp as messaging_bp
     from .blueprints.notifications import bp as notifications_bp
@@ -54,6 +54,7 @@ def create_app(config_class=Config):
     app.register_blueprint(messaging_bp)
     app.register_blueprint(payments_bp)
     app.register_blueprint(invoices_bp)
+    app.register_blueprint(legal_bp)
     app.register_blueprint(reviews_bp)
     app.register_blueprint(collectibles_bp)
 
@@ -112,23 +113,22 @@ def create_app(config_class=Config):
     def mask(name):
         return (name[:1] + "***") if name else "***"
 
-    @app.template_filter("utc")
-    def utc(value):
-        return value.strftime("%d %b %Y %H:%M UTC") if value else ""
+    from . import timeutil
 
-    @app.template_filter("ist")
-    def ist(value):
-        if not value:
-            return ""
-        ist_time = value + timedelta(hours=5, minutes=30)
-        return ist_time.strftime("%d %b %Y %H:%M IST")
+    @app.template_filter("local")
+    def local(value):
+        return timeutil.fmt(value)  # "04 Oct 2026 13:00 IST": stored UTC, shown in the site zone
 
     @app.template_filter("datetimeformat")
     def datetimeformat(value, fmt="%d %b %Y"):
-        return value.strftime(fmt) if value else ""
+        return timeutil.to_local(value).strftime(fmt) if value else ""
 
     @app.template_filter("date")
     def date_filter(value, fmt="%d %b %Y"):
-        return value.strftime(fmt) if value else ""
+        return timeutil.to_local(value).strftime(fmt) if value else ""
+
+    @app.context_processor
+    def inject_zone():
+        return {"tz_name": timeutil.tz_name(), "tz_offset": app.config["TZ_OFFSET_MINUTES"]}
 
     return app

@@ -1,4 +1,4 @@
-﻿"""Enhanced blockchain service with comprehensive error handling and logging."""
+"""Enhanced blockchain service with comprehensive error handling and logging."""
 
 import logging
 import time

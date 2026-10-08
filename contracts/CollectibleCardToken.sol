@@ -1,230 +1,126 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 /**
  * @title CollectibleCardToken
- * @notice Manages blockchain-backed digital identity for physical trading cards
- * @dev Combines payment settlement and NFT-style token ownership
+ * @notice One token per platform-verified physical trading card, with atomic settlement of auction sales.
+ * @dev The token is a digital identity and ownership record. It does not prove the physical card is
+ *      genuine: that is the platform's verification, whose hash is recorded at mint time.
+ *
+ *      Minting: only the owner (the platform admin wallet, signing through MetaMask) can mint, and a
+ *      platform card ID can be minted once.
+ *
+ *      Selling: once an auction has ended, the token's owner calls authorizeSale with the winning wallet
+ *      and the exact price. The winner's settle() then pays the seller and receives the token in ONE
+ *      transaction: either both happen or the whole transaction reverts and nobody loses anything.
+ *      The price and buyer are fixed on-chain by the owner, so nobody can take the token for less.
  */
-contract CollectibleCardToken {
-    
-    // Card Token Structure
-    struct CardToken {
-        uint256 tokenId;
-        address owner;
-        uint256 platformId; // Link to platform CARD-XXXXXX
-        uint256 mintedAt;
-        bool exists;
-    }
-    
-    // Ownership Transfer History
-    struct Transfer {
-        address from;
-        address to;
-        uint256 timestamp;
+contract CollectibleCardToken is ERC721, Ownable, ReentrancyGuard {
+    struct Sale {
+        address seller;
+        address buyer;
+        uint256 price;
         uint256 auctionId;
-        bytes32 txHash;
     }
-    
-    // Events
-    event CardMinted(
-        uint256 indexed tokenId,
-        uint256 indexed platformId,
-        address indexed owner,
-        string cardName
-    );
-    
-    event OwnershipTransferred(
-        uint256 indexed tokenId,
-        address indexed from,
-        address indexed to,
-        uint256 auctionId
-    );
-    
-    event PaymentMade(
-        uint256 indexed auctionId,
-        address indexed buyer,
-        address indexed seller,
-        uint256 amount
-    );
-    
-    // State
-    mapping(uint256 => CardToken) public tokens; // tokenId => CardToken
-    mapping(uint256 => Transfer[]) public transferHistory; // tokenId => Transfer[]
-    mapping(address => uint256[]) public balances; // owner => tokenIds[]
-    mapping(uint256 => bool) public auctionsPaid; // auctionId => paid
-    
-    uint256 public nextTokenId = 1;
-    
-    // Errors
-    error TokenAlreadyExists(uint256 tokenId);
-    error TokenDoesNotExist(uint256 tokenId);
+
+    uint256 private _nextTokenId = 1;
+
+    mapping(uint256 platformId => uint256 tokenId) public tokenIdOfPlatformId;
+    mapping(uint256 tokenId => uint256 platformId) public platformIdOf;
+    mapping(uint256 tokenId => bytes32 hash) public verificationHashOf;
+    mapping(uint256 tokenId => Sale) public sales;
+    mapping(uint256 auctionId => bool settled) public auctionSettled;
+
+    event CardMinted(uint256 indexed tokenId, uint256 indexed platformId, address indexed owner, bytes32 verificationHash);
+    event SaleAuthorized(uint256 indexed tokenId, uint256 indexed auctionId, address indexed seller, address buyer, uint256 price);
+    event SaleCancelled(uint256 indexed tokenId, uint256 indexed auctionId);
+    event CardSold(uint256 indexed auctionId, uint256 indexed tokenId, address indexed buyer, address seller, uint256 amount);
+
+    error InvalidPlatformId();
+    error PlatformIdAlreadyRegistered(uint256 platformId, uint256 tokenId);
     error NotTokenOwner(uint256 tokenId);
-    error InvalidSeller();
-    error NothingSent();
-    error AlreadyPaid(uint256 auctionId);
+    error InvalidBuyer();
+    error InvalidPrice();
+    error AuctionAlreadySettled(uint256 auctionId);
+    error NoSale(uint256 tokenId);
+    error WrongAuction(uint256 expected, uint256 given);
+    error NotTheBuyer();
+    error WrongPayment(uint256 expected, uint256 sent);
+    error SellerNoLongerOwns(uint256 tokenId);
     error TransferFailed();
-    error Unauthorized();
-    
-    // Constructor
-    constructor() {}
-    
+
+    constructor(address platformAdmin) ERC721("ChainBid Collectible Card", "CARD") Ownable(platformAdmin) {}
+
     /**
-     * @notice Mint a new card token
-     * @dev Only callable by contract owner (will be set to application address)
-     * @param _platformId Platform card ID (numeric)
-     * @param _owner Initial owner wallet
-     * @param _cardName Human-readable card name for event
-     * @return tokenId The minted token ID
+     * @param to Initial owner: the seller's wallet.
+     * @param platformId Numeric part of the platform card ID (CARD-000123 -> 123).
+     * @param verificationHash keccak256 of the verified card record held off-chain.
      */
-    function mint(
-        uint256 _platformId,
-        address _owner,
-        string memory _cardName
-    ) external returns (uint256) {
-        require(_owner != address(0), "Invalid owner");
-        
-        uint256 tokenId = nextTokenId++;
-        
-        CardToken storage token = tokens[tokenId];
-        require(!token.exists, "Token already exists");
-        
-        token.tokenId = tokenId;
-        token.owner = _owner;
-        token.platformId = _platformId;
-        token.mintedAt = block.timestamp;
-        token.exists = true;
-        
-        // Add to owner's balance
-        balances[_owner].push(tokenId);
-        
-        emit CardMinted(tokenId, _platformId, _owner, _cardName);
-        
-        return tokenId;
+    function mint(address to, uint256 platformId, bytes32 verificationHash) external onlyOwner returns (uint256 tokenId) {
+        if (platformId == 0) revert InvalidPlatformId();
+        uint256 existing = tokenIdOfPlatformId[platformId];
+        if (existing != 0) revert PlatformIdAlreadyRegistered(platformId, existing);
+
+        tokenId = _nextTokenId++;
+        tokenIdOfPlatformId[platformId] = tokenId;
+        platformIdOf[tokenId] = platformId;
+        verificationHashOf[tokenId] = verificationHash;
+        _mint(to, tokenId);
+
+        emit CardMinted(tokenId, platformId, to, verificationHash);
     }
-    
-    /**
-     * @notice Transfer card ownership
-     * @dev Verifies sender is current owner
-     * @param _tokenId Token to transfer
-     * @param _newOwner New owner address
-     * @param _auctionId Auction that triggered this transfer
-     */
-    function transferCard(
-        uint256 _tokenId,
-        address _newOwner,
-        uint256 _auctionId
-    ) external {
-        require(_newOwner != address(0), "Invalid new owner");
-        require(_newOwner != msg.sender, "Cannot transfer to self");
-        
-        CardToken storage token = tokens[_tokenId];
-        require(token.exists, "Token does not exist");
-        require(token.owner == msg.sender, "Not token owner");
-        
-        address previousOwner = token.owner;
-        
-        // Update ownership
-        token.owner = _newOwner;
-        
-        // Record transfer history
-        Transfer memory transfer = Transfer({
-            from: previousOwner,
-            to: _newOwner,
-            timestamp: block.timestamp,
-            auctionId: _auctionId,
-            txHash: blockhash(block.number - 1)
-        });
-        transferHistory[_tokenId].push(transfer);
-        
-        // Update balances
-        _removeFromBalance(previousOwner, _tokenId);
-        balances[_newOwner].push(_tokenId);
-        
-        emit OwnershipTransferred(_tokenId, previousOwner, _newOwner, _auctionId);
+
+    /// @notice The token's owner fixes the buyer and exact price for an ended auction and lets this
+    ///         contract move this one token when that buyer pays. Calling again replaces the terms.
+    function authorizeSale(uint256 tokenId, uint256 auctionId, address buyer, uint256 price) external {
+        address seller = ownerOf(tokenId);
+        if (msg.sender != seller) revert NotTokenOwner(tokenId);
+        if (buyer == address(0) || buyer == seller) revert InvalidBuyer();
+        if (price == 0) revert InvalidPrice();
+        if (auctionSettled[auctionId]) revert AuctionAlreadySettled(auctionId);
+
+        sales[tokenId] = Sale(seller, buyer, price, auctionId);
+        _approve(address(this), tokenId, seller);
+        emit SaleAuthorized(tokenId, auctionId, seller, buyer, price);
     }
-    
-    /**
-     * @notice Receive payment for auction
-     * @dev Settlement of auction with cryptocurrency
-     * @param _auctionId Auction ID for payment reference
-     * @param _seller Seller wallet address
-     */
-    function pay(uint256 _auctionId, address payable _seller) external payable {
-        require(msg.value > 0, "No payment received");
-        require(_seller != address(0), "Invalid seller");
-        require(!auctionsPaid[_auctionId], "Auction already paid");
-        
-        // Mark as paid before transfer (CEI pattern)
-        auctionsPaid[_auctionId] = true;
-        
-        // Transfer to seller
-        (bool ok, ) = _seller.call{value: msg.value}("");
-        require(ok, "Transfer failed");
-        
-        emit PaymentMade(_auctionId, msg.sender, _seller, msg.value);
+
+    /// @notice The seller withdraws a sale authorization (and the approval that came with it).
+    function cancelSale(uint256 tokenId) external {
+        Sale memory sale = sales[tokenId];
+        if (sale.seller == address(0)) revert NoSale(tokenId);
+        if (msg.sender != sale.seller) revert NotTokenOwner(tokenId);
+
+        delete sales[tokenId];
+        if (_ownerOf(tokenId) == sale.seller) _approve(address(0), tokenId, address(0));
+        emit SaleCancelled(tokenId, sale.auctionId);
     }
-    
-    /**
-     * @notice Get token owner
-     * @param _tokenId Token ID
-     * @return Owner address
-     */
-    function ownerOf(uint256 _tokenId) external view returns (address) {
-        require(tokens[_tokenId].exists, "Token does not exist");
-        return tokens[_tokenId].owner;
+
+    /// @notice The authorized buyer pays the exact price and receives the token, atomically.
+    function settle(uint256 auctionId, uint256 tokenId) external payable nonReentrant {
+        Sale memory sale = sales[tokenId];
+        if (sale.seller == address(0)) revert NoSale(tokenId);
+        if (sale.auctionId != auctionId) revert WrongAuction(sale.auctionId, auctionId);
+        if (auctionSettled[auctionId]) revert AuctionAlreadySettled(auctionId);
+        if (msg.sender != sale.buyer) revert NotTheBuyer();
+        if (msg.value != sale.price) revert WrongPayment(sale.price, msg.value);
+        if (ownerOf(tokenId) != sale.seller) revert SellerNoLongerOwns(tokenId);
+
+        // Effects before interactions, so nothing can re-enter and settle twice.
+        auctionSettled[auctionId] = true;
+        delete sales[tokenId];
+        _transfer(sale.seller, sale.buyer, tokenId);
+
+        (bool ok, ) = payable(sale.seller).call{value: msg.value}("");
+        if (!ok) revert TransferFailed();
+
+        emit CardSold(auctionId, tokenId, sale.buyer, sale.seller, msg.value);
     }
-    
-    /**
-     * @notice Get tokens owned by address
-     * @param _owner Owner address
-     * @return Array of token IDs
-     */
-    function tokensOf(address _owner) external view returns (uint256[] memory) {
-        return balances[_owner];
-    }
-    
-    /**
-     * @notice Get transfer history for a token
-     * @param _tokenId Token ID
-     * @return Array of transfers
-     */
-    function getTransferHistory(uint256 _tokenId) 
-        external 
-        view 
-        returns (Transfer[] memory) 
-    {
-        return transferHistory[_tokenId];
-    }
-    
-    /**
-     * @notice Check if auction has been paid
-     * @param _auctionId Auction ID
-     * @return Whether payment was made
-     */
-    function isPaid(uint256 _auctionId) external view returns (bool) {
-        return auctionsPaid[_auctionId];
-    }
-    
-    /**
-     * @notice Get token details
-     * @param _tokenId Token ID
-     * @return CardToken struct
-     */
-    function getToken(uint256 _tokenId) external view returns (CardToken memory) {
-        require(tokens[_tokenId].exists, "Token does not exist");
-        return tokens[_tokenId];
-    }
-    
-    // Internal helper
-    function _removeFromBalance(address _owner, uint256 _tokenId) internal {
-        uint256[] storage ownerTokens = balances[_owner];
-        for (uint256 i = 0; i < ownerTokens.length; i++) {
-            if (ownerTokens[i] == _tokenId) {
-                ownerTokens[i] = ownerTokens[ownerTokens.length - 1];
-                ownerTokens.pop();
-                break;
-            }
-        }
+
+    function nextTokenId() external view returns (uint256) {
+        return _nextTokenId;
     }
 }

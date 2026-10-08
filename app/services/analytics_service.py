@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from sqlalchemy import func
 
+from .. import timeutil
 from ..extensions import db
 from ..models import Auction, Bid, Category, CryptoPayment, Payment, Product, User, utcnow
 
@@ -43,6 +44,11 @@ def month_range(months, now):
     return out[::-1]
 
 
+def _month(when):
+    local = timeutil.to_local(when)
+    return local.year, local.month
+
+
 def _label(ym):
     return f"{MONTH_NAMES[ym[1] - 1]} {ym[0]}"
 
@@ -60,12 +66,12 @@ def _method_key(payment):
 def build(months=DEFAULT_MONTHS, now=None):
     """All chart datasets, JSON-ready."""
     now = now or utcnow()
-    keys = month_range(months, now)
+    keys = month_range(months, timeutil.to_local(now))  # months are the site zone's calendar months
     labels = [_label(k) for k in keys]
     index = {k: i for i, k in enumerate(keys)}
     start = keys[0]
     from datetime import datetime
-    window_start = datetime(start[0], start[1], 1)
+    window_start = timeutil.from_local(datetime(start[0], start[1], 1))
 
     # ---- revenue per month, split simulated vs crypto -----------------------------------
     simulated, crypto, eth = [0.0] * months, [0.0] * months, [0.0] * months
@@ -73,7 +79,7 @@ def build(months=DEFAULT_MONTHS, now=None):
                  .outerjoin(CryptoPayment, CryptoPayment.payment_id == Payment.id)
                  .filter(Payment.payment_status == "successful", Payment.payment_date >= window_start).all())
     for when, amount, method, eth_amount in paid_rows:
-        i = index.get((when.year, when.month))
+        i = index.get(_month(when))
         if i is None:  # a payment dated in the future of `now`
             continue
         if method == "crypto":
@@ -86,7 +92,7 @@ def build(months=DEFAULT_MONTHS, now=None):
     per_month = [0] * months
     for (when,) in db.session.query(Auction.start_time).filter(Auction.start_time >= window_start,
                                                                 Auction.status != "cancelled"):
-        i = index.get((when.year, when.month))
+        i = index.get(_month(when))
         if i is not None:
             per_month[i] += 1
 

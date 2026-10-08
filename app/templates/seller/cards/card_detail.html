@@ -8,7 +8,7 @@
     <p class="lead text-muted">{{ card.card_type.name }} • {{ card.set_name or 'Unspecified Set' }}</p>
   </div>
   <div class="col-auto">
-    {% if product.seller_id == current_user.id %}
+    {% if product.seller_id == current_user.id and can_edit %}
       <a href="{{ url_for('seller.edit_card', card_id=card.id) }}" class="btn btn-outline-primary">Edit Card</a>
     {% endif %}
   </div>
@@ -18,8 +18,8 @@
   <!-- Images -->
   <div class="col-lg-7">
     {% if card_images %}
-    <div id="gallery" class="carousel slide glass mb-5" style="border-radius: 1.5rem; overflow: hidden;">
-      <div class="carousel-inner" style="background: var(--cb-surface-secondary);">
+    <div id="gallery" class="carousel slide mb-5" style="border-radius: 1.5rem; overflow: hidden; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
+      <div class="carousel-inner" style="background: var(--dt-bg-2);">
         {% for image in card_images %}
         <div class="carousel-item {{ 'active' if loop.first }}">
           <img src="{{ url_for('static', filename='uploads/' ~ image.path) }}" class="d-block w-100" alt="{{ image.image_type }}" style="max-height:500px;object-fit:contain;padding:2rem;">
@@ -36,7 +36,7 @@
       {% endif %}
     </div>
     {% else %}
-    <div class="glass mb-5" style="border-radius: 1.5rem; padding: 4rem; text-align: center; background: var(--cb-surface-secondary);">
+    <div class="mb-5" style="border-radius: 1.5rem; padding: 4rem; text-align: center; background: var(--dt-bg-2); border: 1px solid var(--dt-border);">
       <p class="text-muted">No images uploaded</p>
     </div>
     {% endif %}
@@ -46,11 +46,11 @@
   <div class="col-lg-5">
     <!-- Status Badge -->
     {% if verification %}
-    <div class="glass p-4 mb-4" style="border-radius: 1.25rem;">
+    <div class="p-4 mb-4" style="border-radius: 1.25rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       {% set status_color = {
         'pending': '#f59e0b',
         'submitted': '#3b82f6',
-        'under_review': '#8b5cf6',
+        'under_review': '#3b82f6',
         'more_info_needed': '#ef4444',
         'verified': '#10b981',
         'rejected': '#ef4444'
@@ -72,11 +72,64 @@
       {% elif verification.admin_notes %}
       <p class="small text-muted mb-0">{{ verification.admin_notes }}</p>
       {% endif %}
+      {% if verification.verification_status == 'rejected' %}
+      <p class="small mt-2 mb-0" id="resubmission-note">{% if verification.resubmission_allowed %}You can edit the card and send it for verification again.{% else %}The reviewer did not allow this card to be resubmitted.{% endif %}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- PHASE 5: Auction -->
+    <div class="p-4 mb-4" style="border-radius: 1.25rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);" id="card-auction-panel">
+      <h6 class="text-muted small text-uppercase fw-600 mb-3">Auction</h6>
+      <p class="small mb-2">Card status: <strong id="card-lifecycle">{{ lifecycle.label }}</strong></p>
+      {% if auction %}
+        <p class="mb-2">Status: <strong>{{ auction.status }}</strong> &middot; current bid {{ auction.current_bid|money }}</p>
+        <a href="{{ url_for('auctions.detail', auction_id=auction.id) }}" class="btn btn-sm btn-outline-primary">View auction</a>
+        {% if auction.status == 'closed' and auction.payment %}
+          {% if auction.payment.payment_status == 'successful' %}
+            <p class="small mt-3 mb-0">Sold and paid.{% if lifecycle.code == 'TRANSFERRED' %} The token now belongs to the winner wallet.{% endif %}</p>
+          {% else %}
+            <p class="small mt-3 mb-2">The auction has a winner. To be paid in cryptocurrency, authorize the transfer of the token to the winner.</p>
+            <a href="{{ url_for('seller.card_sale', card_id=card.id) }}" class="btn btn-sm btn-primary">Authorize transfer</a>
+          {% endif %}
+        {% endif %}
+      {% elif listing.ok %}
+        <p class="small text-muted">This card is verified and linked to your wallet. You can put it up for auction.</p>
+        <a href="{{ url_for('seller.create_card_auction', card_id=card.id) }}" class="btn btn-sm btn-primary">Create auction</a>
+      {% else %}
+        <p class="small mb-2">This card cannot be listed yet:</p>
+        <ul class="small mb-0">{% for issue in listing.violations %}<li>{{ issue.message }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+
+    <!-- PHASE 1: Platform Card Identity -->
+    {% if card.platform_card_id %}
+    <div class="p-4 mb-4" style="border-radius: 1.25rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border); border-left: 3px solid var(--dt-accent);">
+      <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Identity</h6>
+      
+      <div class="mb-3">
+        <div class="small text-muted mb-1">Platform Card ID</div>
+        <div style="font-family: monospace; font-size: 0.95rem; font-weight: 600; color: var(--dt-text-primary);">
+          {{ card.platform_card_id }}
+        </div>
+        <div class="small text-muted mt-1">
+          <a href="{{ url_for('collectibles.verify_card', platform_card_id=card.platform_card_id) }}" target="_blank" class="link-primary">
+            View public card page →
+          </a>
+        </div>
+      </div>
+
+      <!-- QR Code -->
+      <div class="mb-0" style="text-align: center;">
+        <div class="small text-muted mb-2">Scan to verify this card</div>
+        {% set qr_path = 'qrcodes/card_' ~ card.id ~ '_' ~ card.platform_card_id ~ '.png' %}
+        <img src="{{ url_for('static', filename=qr_path) }}" alt="QR Code" style="width: 120px; height: 120px; border: 2px solid var(--dt-border); border-radius: 0.5rem; padding: 4px; background: white;">
+      </div>
     </div>
     {% endif %}
 
     <!-- Card Info -->
-    <div class="glass p-4" style="border-radius: 1.25rem; margin-bottom: 2rem;">
+    <div class="p-4" style="border-radius: 1.25rem; margin-bottom: 2rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Details</h6>
 
       <div class="row mb-3">
@@ -135,7 +188,7 @@
 
     <!-- Condition Notes -->
     {% if card.condition_notes %}
-    <div class="glass p-4" style="border-radius: 1.25rem;">
+    <div class="p-4" style="border-radius: 1.25rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-2">Condition Notes</h6>
       <p class="small mb-0">{{ card.condition_notes }}</p>
     </div>
@@ -143,7 +196,7 @@
 
     <!-- Type-Specific Details -->
     {% if type_details and type_details|length > 0 %}
-    <div class="glass p-4" style="border-radius: 1.25rem; margin-top: 2rem;">
+    <div class="p-4" style="border-radius: 1.25rem; margin-top: 2rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <h6 class="text-muted small text-uppercase fw-600 mb-3">{{ card.card_type.name }} Details</h6>
       {% if card.card_type.slug == 'pokemon' %}
         {% if type_details.pokemon_name %}

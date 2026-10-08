@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_form.html" import field %}
+{% from "_form.html" import checkbox, field %}
 {% block title %}{{ 'Edit' if product else 'Add' }} product - ChainBid{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
@@ -38,9 +38,11 @@
           {{ form.images.label(class="form-label") }}
           {{ form.images(class="form-control" ~ (" is-invalid" if form.images.errors else ""), accept="image/jpeg,image/png,image/webp,image/gif") }}
           {% for e in form.images.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-          <div class="form-text">Up to 5 images, 5 MB each (JPG, PNG, WEBP, GIF). Times are in UTC.</div>
+          <div class="form-text">Up to 5 images, 5 MB each (JPG, PNG, WEBP, GIF). Times are in {{ tz_name }}.</div>
         </div>
 
+        {% call checkbox(form.accept) %}I own this item, have the right to sell it, and have described it honestly, as the
+          <a href="{{ url_for('legal.terms') }}#selling">Terms of Service</a> require.{% endcall %}
         <button class="btn btn-primary" type="submit">{{ 'Save changes' if product else 'Submit for approval' }}</button>
         <a class="btn btn-outline-secondary" href="{{ url_for('seller.dashboard') }}">Cancel</a>
       </form>

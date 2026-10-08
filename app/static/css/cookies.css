@@ -1,81 +1,35 @@
+/* Cookie notice (templates/legal/_cookie_banner.html): a plain form pinned to the bottom of the page, shown until a choice is made.
+   It works without JavaScript; both buttons are the same size so declining is as easy as accepting. */
 .cookie-banner {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, 0.95);
-  color: white;
-  padding: 1.5rem 0;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1030;
+  background: var(--dt-bg-1);
+  color: var(--dt-text-primary);
+  border-top: 1px solid var(--dt-border);
 }
 
-.cookie-banner-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 2rem;
+.cookie-banner a {
+  color: var(--dt-accent);
 }
 
-.cookie-banner-text h5 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
-  font-weight: 600;
+.cookie-banner a:hover {
+  color: var(--dt-accent-hover);
 }
 
-.cookie-banner-text p {
-  margin: 0.5rem 0;
-  font-size: 0.875rem;
-  line-height: 1.4;
+/* keep the footer reachable above the banner while it is shown */
+body:has(.cookie-banner) {
+  padding-bottom: 7rem;
 }
 
-.cookie-banner-text a {
-  color: #4dabf7;
-  text-decoration: none;
-}
-
-.cookie-banner-text a:hover {
-  color: #74c0fc;
-  text-decoration: underline;
-}
-
-.cookie-banner-actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-shrink: 0;
-}
-
-.cookie-banner-actions .btn {
-  white-space: nowrap;
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .cookie-banner-content {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 767.98px) {
+  body:has(.cookie-banner) {
+    padding-bottom: 11rem;
   }
 
-  .cookie-banner-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .cookie-banner-actions .btn {
+  .cookie-banner form .btn {
     flex: 1;
-  }
-}
-
-/* Ensure page doesn't scroll under banner */
-body.cookie-banner-active {
-  padding-bottom: 120px;
-}
-
-@media (max-width: 768px) {
-  body.cookie-banner-active {
-    padding-bottom: 180px;
   }
 }

@@ -1,4 +1,4 @@
-﻿/* ChainBid Theme - Premium Dark Matte Marketplace (NEW)
+/* ChainBid Theme - Premium Dark Matte Marketplace (NEW)
    Uses design tokens for dark matte aesthetic
    Removes glassmorphism, gradients, and excessive decoration */
 
@@ -33,6 +33,9 @@
   --bs-secondary-color: var(--dt-text-secondary);
   --bs-link-color: var(--dt-accent);
   --bs-link-hover-color: var(--dt-accent-hover);
+  /* Bootstrap 5.3 colours links from these RGB triplets (its dark mode sets them to blue): keep them on the accent */
+  --bs-link-color-rgb: 199, 154, 82;          /* --dt-accent #C79A52 */
+  --bs-link-hover-color-rgb: 212, 168, 102;   /* --dt-accent-hover #D4A866 */
   --bs-border-radius: var(--dt-radius-md);
   --bs-border-color: var(--dt-border);
 }
@@ -90,9 +93,10 @@ p { line-height: var(--dt-line-height-relaxed); color: var(--dt-text-secondary);
 
 .navbar .nav-link, .navbar .navbar-brand { display: inline-flex; align-items: center; gap: var(--dt-space-md); font-weight: var(--dt-font-weight-medium); color: var(--dt-text-secondary); transition: color var(--dt-transition-base); }
 
-.navbar .nav-link:hover { color: var(--dt-text-primary); }
+/* the bar is always dark (bg-dark in base.html), so its text must not follow the light theme's dark text colour */
+.navbar .nav-link:hover { color: var(--dt-accent); }
 
-.navbar .navbar-brand { font-weight: var(--dt-font-weight-bold); font-size: 1.25rem; color: var(--dt-text-primary); }
+.navbar .navbar-brand, .navbar .navbar-brand:hover { font-weight: var(--dt-font-weight-bold); font-size: 1.25rem; color: var(--dt-accent); }
 
 .btn {
   transition: all var(--dt-transition-base);

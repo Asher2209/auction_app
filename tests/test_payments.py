@@ -43,7 +43,7 @@ def won(users, cats, amount="500"):  # noqa: F811
 
 
 def pay(c, a, kind, data):
-    return c.post(f"/payments/{a.id}/pay/{kind}", data=data)
+    return c.post(f"/payments/{a.id}/pay/{kind}", data={**data, "accept": "y"})  # ticks the Refund Policy box
 
 
 def fresh(a):

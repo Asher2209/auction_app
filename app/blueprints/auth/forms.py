@@ -1,13 +1,13 @@
 import re
 
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, SelectField, StringField, TextAreaField
+from wtforms import BooleanField, PasswordField, SelectField, StringField, TextAreaField
 from wtforms.validators import (
-    DataRequired, Email, EqualTo, Length, Optional, Regexp, ValidationError,
+    DataRequired, Email, EqualTo, Length, Regexp, ValidationError,
 )
 
+from ...legal import MUST_AGREE
 from ...models import User
-from ...services.blockchain_service import normalize_wallet
 
 PHONE_RE = r"^\+?[0-9 \-]{7,20}$"
 
@@ -29,6 +29,7 @@ class RegisterForm(FlaskForm):
     role = SelectField("I want to", choices=[("buyer", "Buy (bid on items)"), ("seller", "Sell (list items)")])
     password = PasswordField("Password", validators=PASSWORD)
     confirm = PasswordField("Confirm password", validators=[DataRequired(), EqualTo("password", "Passwords must match.")])
+    accept_terms = BooleanField("I agree to the Terms of Service and the Privacy Policy", validators=[DataRequired(message=MUST_AGREE)])
 
     def validate_email(self, field):
         if User.query.filter_by(email=field.data.strip().lower()).first():
@@ -59,11 +60,3 @@ class ProfileForm(FlaskForm):
     name = StringField("Full name", validators=[DataRequired(), Length(max=120)])
     phone = StringField("Phone", validators=[DataRequired(), Regexp(PHONE_RE, message="Enter a valid phone number.")])
     address = TextAreaField("Address", validators=[DataRequired(), Length(max=500)])
-    wallet_address = StringField("Wallet address (optional)", validators=[Optional(), Length(max=200)])
-
-    def validate_wallet_address(self, field):
-        try:
-            field.data = normalize_wallet(field.data)
-        except ValueError as e:
-            field.data = ""  # never echo a rejected value back: it may be a pasted secret
-            raise ValidationError(str(e))

@@ -1,5 +1,5 @@
 {% extends "auth/_card.html" %}
-{% from "_form.html" import field %}
+{% from "_form.html" import checkbox, field %}
 {% block title %}Send feedback - ChainBid{% endblock %}
 {% block heading %}Send feedback{% endblock %}
 {% block form %}
@@ -7,6 +7,8 @@
 <form method="post" novalidate>
   {{ form.hidden_tag() }}
   {{ field(form.message, rows=6, maxlength=1000) }}
+  {% call checkbox(form.consent) %}I agree that this message is stored with my account and read by the administrators, as the
+    <a href="{{ url_for('legal.privacy') }}">Privacy Policy</a> describes.{% endcall %}
   <button class="btn btn-primary" type="submit">Send</button>
 </form>
 {% endblock %}

@@ -1,263 +1,236 @@
-﻿{% extends "base.html" %}
-{% block title %}{{ product.title }} - ChainBid{% endblock %}
+{% extends "base.html" %}
+{% from "_auction_card.html" import card %}
+{% macro row(label, value, mono=false) %}{% if value %}<div class="cd-row"><dt>{{ label }}</dt><dd{% if mono %} class="cd-mono"{% endif %}>{{ value }}</dd></div>{% endif %}{% endmacro %}
+{% block title %}{{ product.collectible_card.card_name if product.collectible_card else product.title }} - ChainBid{% endblock %}
 {% block content %}
+{% set c = product.collectible_card %}
+{% set v = product.collectible_verification %}
+{% set asset = c.blockchain_asset if c else none %}
+{% set verified = c and v and v.verification_status == 'verified' %}
+{% set gallery = [] %}
+{% if c and c.images %}{% for i in c.images %}{% set _ = gallery.append({'src': i.get_image_src(), 'label': i.image_type|replace('_', ' ')}) %}{% endfor %}
+{% else %}{% for i in product.images %}{% set _ = gallery.append({'src': url_for('static', filename='uploads/' ~ i.path), 'label': 'photo'}) %}{% endfor %}{% endif %}
 
-<!-- ========== BREADCRUMB ========== -->
-<nav class="mb-4">
+<nav class="mb-4" aria-label="Breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ url_for('auctions.browse') }}">Auctions</a></li>
     <li class="breadcrumb-item"><a href="{{ url_for('auctions.browse', category=product.category.id) }}">{{ product.category.name }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">{{ product.title[:40] }}</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ (c.card_name if c else product.title)[:40] }}</li>
   </ol>
 </nav>
 
-<!-- ========== TWO-COLUMN PRODUCT DETAIL ========== -->
 <div class="product-detail-grid">
-  
-  <!-- LEFT: IMAGE GALLERY -->
   <div class="product-detail-gallery">
-    {% if product.collectible_card and product.collectible_card.images %}
+    {% if gallery %}
     <div class="product-detail-gallery-main">
-      <img id="gallery-main" src="{{ product.collectible_card.images[0].get_image_src() }}" alt="{{ product.title }}" style="height: 400px; object-fit: contain; background: #f5f5f5; padding: 10px;">
+      <img id="gallery-main" src="{{ gallery[0].src }}" alt="{{ c.card_name if c else product.title }}">
     </div>
-    {% if product.collectible_card.images|length > 1 %}
-    <div class="product-detail-gallery-thumbs">
-      {% for img in product.collectible_card.images[:4] %}
-      <div class="product-detail-gallery-thumb" onclick="document.getElementById('gallery-main').src='{{ img.get_image_src() }}'">
-        <img src="{{ img.get_image_src() }}" alt="thumbnail" style="height: 60px; object-fit: contain;">
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-    {% elif product.images %}
-    <div class="product-detail-gallery-main">
-      <img id="gallery-main" src="{{ url_for('static', filename='uploads/' ~ product.images[0].path) }}" alt="{{ product.title }}">
-    </div>
-    {% if product.images|length > 1 %}
-    <div class="product-detail-gallery-thumbs">
-      {% for img in product.images[:4] %}
-      <div class="product-detail-gallery-thumb" onclick="document.getElementById('gallery-main').src='{{ url_for('static', filename='uploads/' ~ img.path) }}'">
-        <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" alt="thumbnail">
-      </div>
+    {% if gallery|length > 1 %}
+    <div class="product-detail-gallery-thumbs" id="gallery-thumbs">
+      {% for g in gallery[:4] %}
+      <button type="button" class="product-detail-gallery-thumb" data-gallery-src="{{ g.src }}" aria-label="Show the {{ g.label }} image"><img src="{{ g.src }}" alt=""></button>
       {% endfor %}
     </div>
     {% endif %}
     {% else %}
-    <div class="product-detail-gallery-main" style="display: flex; align-items: center; justify-content: center;">
-      <div style="text-align: center;">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="color: var(--dt-text-muted); margin-bottom: var(--dt-space-lg); display: block;">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <circle cx="8.5" cy="8.5" r="1.5"></circle>
-          <polyline points="21 15 16 10 5 21"></polyline>
-        </svg>
-        <p style="color: var(--dt-text-muted);">No image available</p>
-      </div>
-    </div>
+    <div class="product-detail-gallery-main d-flex align-items-center justify-content-center"><p class="text-muted mb-0">No image available</p></div>
     {% endif %}
   </div>
-  
-  <!-- RIGHT: PRODUCT INFO & AUCTION DETAILS -->
-  <div class="product-detail-info">
-    
-    <!-- HEADER: Title, Category, Status -->
+
+  <div class="product-detail-info" id="auction-live"
+       data-auction-id="{{ auction.id }}" data-status="{{ state.status }}"
+       data-start="{{ state.start_time }}" data-end="{{ state.end_time }}" data-now="{{ state.server_now }}"
+       data-leading-id="{{ state.leading_bidder_id or '' }}"
+       data-user-id="{{ current_user.id if current_user.is_authenticated else '' }}"
+       data-currency="{{ currency }}">
     <div class="product-info-header">
-      <h1 class="product-info-title">{{ product.title }}</h1>
-      
+      {% if c %}<div class="section-eyebrow small text-uppercase text-muted">{{ [c.set_name, c.release_year, ('#' ~ c.card_number) if c.card_number else none]|select|join(' &middot; '|safe) }}</div>{% endif %}
+      <h1 class="product-info-title">{{ c.card_name if c else product.title }}</h1>
       <div class="product-info-meta">
         <span class="product-info-badge">{{ product.category.name }}</span>
-        
-        {% set status_color = {'active': 'accent', 'scheduled': 'info', 'closed': 'muted'}[auction.status] %}
-        {% set status_text = {'active': 'Live Now', 'scheduled': 'Upcoming', 'closed': 'Ended'}[auction.status] %}
-        <span class="badge badge-{{ status_color if status_color != 'muted' else 'secondary' }}">
-          {{ status_text }}
-        </span>
+        {% if verified %}<span class="badge text-bg-success" title="A ChainBid admin reviewed the submitted details and images. This is not a guarantee of authenticity.">&#10003; Platform verified</span>{% endif %}
+        {% set sb = {'active': ('Live', 'text-bg-success'), 'scheduled': ('Upcoming', 'text-bg-info'), 'closed': ('Ended', 'text-bg-dark')}[auction.status] %}
+        <span id="status-badge" class="badge {{ sb[1] }}">{{ sb[0] }}</span>
+        <span id="live-indicator" class="badge text-bg-light border text-muted">connecting&hellip;</span>
       </div>
     </div>
-    
-    <!-- AUCTION INFO PANEL -->
+
+    <div id="notice" class="alert d-none" role="alert"></div>
+
     <div class="product-auction-info">
-      <!-- Bid Amount (PROMINENT) -->
       <div class="product-auction-bid">
-        <div class="product-auction-bid-label">
-          {{ 'Current Bid' if auction.current_bid > product.starting_price else 'Starting Price' }}
-        </div>
-        <div class="product-auction-bid-value" id="current-bid">
-          {{ auction.current_bid|money }}
-        </div>
-        <div class="product-auction-bid-count" id="bid-count">
-          {{ bid_total }} bid{{ '' if bid_total == 1 else 's' }}
-        </div>
+        <div class="product-auction-bid-label" id="bid-label">{{ 'Current bid' if bid_total else 'Starting price' }}</div>
+        <div class="product-auction-bid-value" id="current-bid">{{ auction.current_bid|money }}</div>
       </div>
-      
-      <!-- Countdown Timer -->
       <div class="product-auction-timer">
-        <div class="product-auction-timer-label" id="countdown-label">
-          {% if auction.status == 'active' %}Ending in
-          {% elif auction.status == 'scheduled' %}Starts in
-          {% else %}Ended{% endif %}
-        </div>
-        <div class="product-auction-timer-value" id="countdown">
-          {{ (auction.start_time if auction.status == 'scheduled' else auction.end_time)|time_left }}
-        </div>
+        <div class="product-auction-timer-label" id="countdown-label">{{ {'active': 'Time remaining', 'scheduled': 'Starts in', 'closed': ''}[auction.status] }}</div>
+        <div class="product-auction-timer-value" id="countdown" aria-live="off">{{ (auction.start_time if auction.status == 'scheduled' else auction.end_time)|time_left }}</div>
       </div>
-      
-      <!-- Auction Details Grid -->
-      <div style="display: grid; gap: var(--dt-space-md); padding-top: var(--dt-space-xl); border-top: 1px solid var(--dt-border);">
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
-          <span style="color: var(--dt-text-muted);">Starting Price</span>
-          <strong style="color: var(--dt-text-primary);">{{ product.starting_price|money }}</strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
-          <span style="color: var(--dt-text-muted);">{{ 'Ended' if auction.status == 'closed' else 'Ends' }}</span>
-          <strong style="color: var(--dt-text-primary);">{{ auction.end_time|utc }}</strong>
-        </div>
+      <dl class="cd-grid mt-4">
+        <div class="cd-row"><dt>Starting price</dt><dd>{{ product.starting_price|money }}</dd></div>
+        <div class="cd-row"><dt>Number of bids</dt><dd id="bid-count">{{ bid_total }}</dd></div>
+        <div class="cd-row"><dt id="end-label">{{ 'Ended' if auction.status == 'closed' else 'Ends' }}</dt><dd id="end-time">{{ auction.end_time|local }}</dd></div>
+      </dl>
+
+      <div id="winner-box" class="alert alert-secondary mt-3 {{ '' if auction.status == 'closed' and auction.winner else 'd-none' }}">
+        {% if auction.winner %}Won by {{ auction.winner.buyer.name|mask }} for {{ auction.winner.winning_amount|money }}.{% endif %}
       </div>
-      
-      <!-- Action Buttons -->
-      <div class="product-auction-actions" style="margin-top: var(--dt-space-xl); padding-top: var(--dt-space-xl); border-top: 1px solid var(--dt-border);">
-        {% if current_user.is_authenticated and auction.status == 'active' %}
-        <form id="bid-form" method="post" action="{{ url_for('auctions.place_bid', auction_id=auction.id) }}" class="product-auction-bid-input">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="number" name="amount" class="form-control" placeholder="Enter bid amount" min="{{ (auction.current_bid|float) + 0.01 }}" step="0.01" required>
-          <button type="submit" class="btn btn-primary">Place Bid</button>
-        </form>
-        {% elif not current_user.is_authenticated %}
-        <p style="color: var(--dt-text-muted); text-align: center; margin-bottom: var(--dt-space-lg);">
-          <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Sign in to bid</a>
-        </p>
-        {% endif %}
-        
-        <button class="btn btn-secondary" style="width: 100%;">
-          {% if current_user.is_authenticated %}Remove from Watchlist{% else %}Add to Watchlist{% endif %}
-        </button>
-      </div>
+
+      {% if can_bid %}
+      <form id="bid-form" method="post" action="{{ url_for('auctions.place_bid', auction_id=auction.id) }}" class="mt-4 {{ '' if auction.status == 'active' else 'd-none' }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="form-label" for="amount">Your bid ({{ currency }})</label>
+        <div class="input-group">
+          <input class="form-control" id="amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="{{ state.min_next_bid }}" required>
+          <button class="btn btn-primary" type="submit" id="bid-btn">Place bid</button>
+        </div>
+        <div class="form-text">Minimum bid: <span id="min-bid">{{ currency }}{{ '{:,.2f}'.format(state.min_next_bid|float) }}</span>. A bid in the last minute extends the auction by 2 minutes.
+          Please note that a bid is binding: it cannot be withdrawn (<a href="{{ url_for('legal.terms') }}#bidding">Terms of Service</a>).</div>
+        <div class="text-danger small mt-1" id="bid-error" role="alert"></div>
+      </form>
+      <form method="post" action="{{ url_for('buyer.toggle_watch', auction_id=auction.id) }}" class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-secondary w-100" type="submit">{{ 'Remove from watchlist' if watching else 'Add to watchlist' }}</button>
+      </form>
+      {% elif not current_user.is_authenticated %}
+      <p class="small mt-4 mb-0"><a href="{{ url_for('auth.login', next=request.path) }}">Log in</a> as a buyer to bid or watch this auction.</p>
+      {% else %}
+      <p class="small text-muted mt-4 mb-0">Only buyer accounts can bid.</p>
+      {% endif %}
     </div>
-    
-    <!-- SELLER INFO PANEL -->
+
     <div class="product-seller-info">
       <div class="product-seller-header">
         <div class="product-seller-avatar">{{ product.seller.name[0].upper() }}</div>
         <div style="flex: 1;">
           <div class="product-seller-name">{{ product.seller.name }}</div>
-          <div class="product-seller-rating">
-            <span style="color: var(--dt-warning);">★★★★★</span>
-            <span style="color: var(--dt-text-muted);">(0 reviews)</span>
+          <div class="product-seller-rating text-muted small">
+            {% if seller_rating %}{{ seller_rating[0] }} / 5 ({{ seller_rating[1] }} review{{ '' if seller_rating[1] == 1 else 's' }}){% else %}No reviews yet{% endif %}
           </div>
         </div>
       </div>
-      <a href="{{ url_for('messaging.send_message', product_id=auction.product_id) }}" class="btn btn-secondary" style="width: 100%; margin-bottom: var(--dt-space-lg);">
-        Contact Seller
-      </a>
-      <div style="font-size: 0.9rem; line-height: 1.6;">
-        <div style="margin-bottom: var(--dt-space-md);">
-          <span style="color: var(--dt-text-muted);">Member since</span>
-          <span style="color: var(--dt-text-primary); font-weight: 600; display: block;">{{ product.seller.created_at|date('%b %Y') }}</span>
-        </div>
-        <div>
-          <span style="color: var(--dt-text-muted);">Response time</span>
-          <span style="color: var(--dt-text-primary); font-weight: 600; display: block;">Within 24 hours</span>
-        </div>
-      </div>
+      {% if can_bid %}<a href="{{ url_for('messaging.send_message', product_id=product.id) }}" class="btn btn-secondary w-100">Message seller</a>{% endif %}
     </div>
   </div>
 </div>
 
-<!-- ========== DESCRIPTION SECTION ========== -->
-<section class="description-section" style="margin-top: var(--dt-space-4xl);">
+{% if c %}
+<div class="cd-stack" id="card-identity">
+  <section class="cd-panel" id="card-details">
+    <h2 class="cd-heading">Card details</h2>
+    <dl class="cd-grid">
+      {{ row('Card', c.card_name) }}
+      {{ row('Set', c.set_name ~ (' (' ~ c.set_code ~ ')' if c.set_code else '') if c.set_name) }}
+      {{ row('Year', c.release_year) }}
+      {{ row('Card number', c.card_number) }}
+      {{ row('Rarity', c.rarity) }}
+      {{ row('Edition', c.edition) }}
+      {{ row('Language', c.language) }}
+      {{ row('Manufacturer', c.manufacturer) }}
+      {% for key, val in c.get_type_details().items() if val %}
+      {{ row(key|replace('_', ' ')|capitalize, 'Yes' if val is sameas true else val) }}
+      {% endfor %}
+    </dl>
+  </section>
+
+  <section class="cd-panel" id="card-condition">
+    <h2 class="cd-heading">Condition &amp; grading</h2>
+    <dl class="cd-grid">
+      {{ row('Condition', c.condition) }}
+      {% if c.is_graded %}
+      {{ row('Grading company', c.grading_company) }}
+      {{ row('Grade', c.grade) }}
+      {{ row('Certification number', c.certification_number, true) }}
+      {% else %}
+      {{ row('Grading', 'Ungraded') }}
+      {% endif %}
+    </dl>
+    {% if c.condition_notes %}<p class="cd-note">{{ c.condition_notes }}</p>{% endif %}
+    <p class="cd-note"><span class="cd-note-label">Seller provided</span>Condition and grading details are entered by the seller. A certification number is not proof of authenticity by itself.{% if c.certification_url %} <a href="{{ c.certification_url }}" target="_blank" rel="noopener noreferrer">Open the grading company certificate page</a>.{% endif %}</p>
+  </section>
+
+  <section class="cd-panel" id="card-verification">
+    <h2 class="cd-heading">Platform verification</h2>
+    {% if verified %}
+    <div class="cd-status cd-status-ok">&#10003; Platform verified</div>
+    <dl class="cd-grid mt-2">{{ row('Verified on', v.verification_date|local if v.verification_date) }}</dl>
+    <p class="cd-note"><span class="cd-note-label">Platform review</span>A ChainBid admin checked the submitted details and images against a checklist. This is a platform review, not a guarantee that the physical card is genuine.</p>
+    {% else %}
+    <div class="cd-status cd-status-wait">Not platform verified</div>
+    <p class="cd-note">The details on this page were entered by the seller and have not been reviewed by the platform.</p>
+    {% endif %}
+  </section>
+
+  <section class="cd-panel" id="card-blockchain">
+    <h2 class="cd-heading">Blockchain identity</h2>
+    <dl class="cd-grid">
+      {{ row('Platform card ID', c.platform_card_id, true) }}
+      {% if asset and asset.token_id %}
+      {{ row('Token ID', '#' ~ asset.token_id) }}
+      {{ row('Network', asset.blockchain_network|capitalize) }}
+      <div class="cd-row"><dt>Contract</dt><dd class="cd-mono" title="{{ asset.contract_address }}">{{ asset.contract_address[:8] }}&hellip;{{ asset.contract_address[-6:] }}</dd></div>
+      <div class="cd-row"><dt>Current owner</dt><dd class="cd-mono" title="{{ asset.owner_wallet }}">{{ asset.owner_wallet[:8] }}&hellip;{{ asset.owner_wallet[-6:] }}</dd></div>
+      {% if asset.mint_transaction_hash and tx_url(asset.mint_transaction_hash) %}
+      <div class="cd-row"><dt>Mint transaction</dt><dd><a href="{{ tx_url(asset.mint_transaction_hash) }}" target="_blank" rel="noopener noreferrer">View on the block explorer</a></dd></div>
+      {% endif %}
+      {% else %}
+      <div class="cd-row"><dt>Token</dt><dd>Not registered on the blockchain yet</dd></div>
+      {% endif %}
+    </dl>
+    <p class="cd-note">The token is a digital identity and ownership record for this exact physical card. It does not prove the card is genuine: that is the platform review.</p>
+    {% if transfers %}
+    <ul class="cd-history" aria-label="Ownership history">
+      {% for t in transfers %}
+      <li><span class="cd-mono">{{ t.from_wallet[:6] }}&hellip;{{ t.from_wallet[-4:] }}</span> &rarr; <span class="cd-mono">{{ t.to_wallet[:6] }}&hellip;{{ t.to_wallet[-4:] }}</span> &middot; {{ t.confirmed_at|local }}{% if tx_url(t.transaction_hash) %} &middot; <a href="{{ tx_url(t.transaction_hash) }}" target="_blank" rel="noopener noreferrer">transaction</a>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <a class="btn btn-secondary btn-sm mt-3" href="{{ url_for('collectibles.verify_card', platform_card_id=c.platform_card_id) }}">View the public record</a>
+  </section>
+</div>
+{% endif %}
+
+<section class="description-section" style="margin-top: var(--dt-space-3xl);">
   <h2 class="description-title">Description</h2>
-  <div class="description-content">
-    {{ product.description }}
-  </div>
+  <div class="description-content" style="white-space: pre-wrap;">{{ product.description }}</div>
 </section>
 
-<!-- ========== BID HISTORY ========== -->
+{% include "auctions/_reviews.html" %}
+
 <section class="description-section">
-  <h2 class="description-title">Bid History</h2>
-  
-  {% if bids %}
+  <h2 class="description-title">Bid history</h2>
+  <p class="text-muted {{ 'd-none' if bids }}" id="no-bids">No bids yet.</p>
   <div class="table-responsive">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Bidder</th>
-          <th style="text-align: right;">Amount</th>
-          <th style="text-align: right;">Time</th>
-        </tr>
-      </thead>
+    <table class="table table-sm {{ '' if bids else 'd-none' }}" id="bid-table" style="max-width: 560px;">
+      <thead><tr><th>Bidder</th><th>Amount</th><th>Time</th></tr></thead>
       <tbody id="bid-rows">
-        {% for bid in bids %}
+      {% for b in bids %}
         <tr>
-          <td style="color: var(--dt-text-primary);">{{ bid.bidder.name if bid.bidder else 'Anonymous' }}</td>
-          <td style="text-align: right; color: var(--dt-accent); font-weight: 600;">{{ bid.amount|money }}</td>
-          <td style="text-align: right; color: var(--dt-text-secondary); font-size: 0.9rem;">{{ bid.created_at|utc }}</td>
+          <td>{% if current_user.is_authenticated and b.buyer_id == current_user.id %}<strong>You</strong>{% else %}{{ b.buyer.name|mask }}{% endif %}</td>
+          <td>{{ b.amount|money }}</td>
+          <td>{{ b.bid_time|local }}</td>
         </tr>
-        {% endfor %}
+      {% endfor %}
       </tbody>
     </table>
   </div>
-  {% else %}
-  <p style="color: var(--dt-text-muted); text-align: center; padding: var(--dt-space-2xl) 0;">
-    No bids placed yet. Be the first to bid!
-  </p>
-  {% endif %}
+  {% if bid_total > bids|length %}<p class="small text-muted">Showing the {{ bids|length }} highest of {{ bid_total }} bids.</p>{% endif %}
 </section>
 
-<!-- ========== RELATED ITEMS ========== -->
 {% if similar %}
-<section style="margin-top: var(--dt-space-4xl);">
-  <div class="section-header">
-    <h2 class="section-title">Similar Items</h2>
-  </div>
-  
+<section style="margin-top: var(--dt-space-3xl);">
+  <div class="section-header"><h2 class="section-title">Similar items</h2></div>
   <div class="product-grid">
-    {% for item in similar[:4] %}
-      <a href="{{ url_for('auctions.detail', auction_id=item.id) }}" class="text-decoration-none text-reset" style="display: flex; flex-direction: column; height: 100%;">
-        <div class="card h-100">
-          {% if item.product.images %}
-            <img src="{{ url_for('static', filename='uploads/' ~ item.product.images[0].path) }}" alt="{{ item.product.title }}" style="height: 200px; object-fit: cover;">
-          {% else %}
-            <div style="height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;"><span>No image</span></div>
-          {% endif %}
-          <div class="card-body">
-            <h5>{{ item.product.title[:30] }}</h5>
-            <p style="color: #666; font-size: 0.9rem;">{{ item.current_bid|money }}</p>
-          </div>
-        </div>
-      </a>
-    {% endfor %}
+    {% for item in similar[:3] %}{{ card(item, similar_counts.get(item.id), similar_stats.get(item.product_id)) }}{% endfor %}
   </div>
 </section>
 {% endif %}
+{% endblock %}
 
-<!-- ========== SCRIPTS ========== -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Update countdown timer
-  const countdownEl = document.getElementById('countdown');
-  const endTime = new Date('{{ auction.end_time.strftime('%Y-%m-%dT%H:%M:%S') }}').getTime();
-  
-  function updateCountdown() {
-    const now = new Date().getTime();
-    const distance = endTime - now;
-    
-    if (distance < 0) {
-      countdownEl.textContent = 'Ended';
-      return;
-    }
-    
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    
-    countdownEl.textContent = String(days).padStart(2, '0') + ':' + 
-                              String(hours).padStart(2, '0') + ':' + 
-                              String(minutes).padStart(2, '0') + ':' + 
-                              String(seconds).padStart(2, '0');
-  }
-  
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
-});
-</script>
+{% block scripts %}
+{% if not current_user.is_authenticated %}{# signed-in pages already load the client in the base layout #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+{% endif %}
+<script src="{{ url_for('static', filename='js/auction.js') }}"></script>
+<script src="{{ url_for('static', filename='js/card-gallery.js') }}"></script>
 {% endblock %}

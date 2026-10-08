@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% from "_auction_card.html" import card %}
 {% block title %}ChainBid - Premium Auction Marketplace{% endblock %}
 {% block content %}
@@ -9,11 +9,11 @@
     <span class="hero-eyebrow">Verified Marketplace</span>
     
     <h1 class="hero-title">
-      Premium collectibles from trusted sellers
+      Trading cards, reviewed by the platform and auctioned live
     </h1>
     
     <p class="hero-subtitle">
-      Real-time auctions with blockchain verification. Bid on certified items, transparent pricing, and secure payments.
+      Real-time auctions for platform-verified trading cards, with transparent pricing and card ownership recorded on the blockchain.
     </p>
     
     <div class="hero-actions">
@@ -35,7 +35,7 @@
         </div>
         <div class="hero-trust-content">
           <h4>Verified Items</h4>
-          <p>Professional authentication for all collectibles</p>
+          <p>Card details and images reviewed by the platform against a checklist</p>
         </div>
       </div>
       
@@ -46,8 +46,8 @@
           </svg>
         </div>
         <div class="hero-trust-content">
-          <h4>Secure Bidding</h4>
-          <p>Blockchain-powered transactions</p>
+          <h4>Live Bidding</h4>
+          <p>Real-time bids; crypto payments checked on the blockchain</p>
         </div>
       </div>
       
@@ -59,8 +59,8 @@
           </svg>
         </div>
         <div class="hero-trust-content">
-          <h4>Trusted Community</h4>
-          <p>Verified seller ratings</p>
+          <h4>Seller Ratings</h4>
+          <p>Reviews only from buyers who paid</p>
         </div>
       </div>
     </div>
@@ -168,7 +168,7 @@
           Browse Listings
         </h3>
         <p style="color: var(--dt-text-secondary); margin-bottom: 0;">
-          Explore verified collectibles from trusted sellers
+          Explore platform-verified trading cards
         </p>
       </div>
     </div>
@@ -218,7 +218,7 @@
           Win & Receive
         </h3>
         <p style="color: var(--dt-text-secondary); margin-bottom: 0;">
-          Secure payment and delivery of your collectible
+          Pay, and the seller sends the card once your payment is confirmed
         </p>
       </div>
     </div>
@@ -238,7 +238,7 @@
       Ready to start collecting?
     </h2>
     <p class="lead" style="margin-bottom: var(--dt-space-2xl);">
-      Join thousands of collectors buying and selling verified items
+      Create an account to bid on and sell platform-verified trading cards
     </p>
     <div style="display: flex; gap: var(--dt-space-lg); justify-content: center; flex-wrap: wrap;">
       <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary btn-lg">

@@ -4,6 +4,7 @@ from sqlalchemy import func
 
 from ...extensions import db
 from ...models import Auction, Bid, Product, Watchlist, Winner
+from ...services import blockchain_service, buyer_cards_service
 from ...services import review_service as rs
 from ...services.catalog import PUBLIC_STATUSES, bid_counts, visible_auction_or_404
 from ...utils import role_required, safe_redirect_target
@@ -73,3 +74,12 @@ def won():
     wins = (Winner.query.filter_by(buyer_id=current_user.id)
             .order_by(Winner.winning_time.desc()).all())
     return render_template("buyer/won.html", wins=wins)
+
+
+@bp.route("/cards")
+@role_required("buyer")
+def cards():
+    """My cards: what the buyer owns on the blockchain and what is still being paid for."""
+    rows = buyer_cards_service.buyer_cards(current_user)
+    return render_template("buyer/cards.html", rows=rows, tx_url=blockchain_service.explorer_url,
+                           owned=sum(1 for r in rows if r["code"] == "OWNED"))

@@ -12,7 +12,7 @@ from flask import g
 from PIL import Image
 from sqlalchemy.exc import IntegrityError
 
-from app import create_app
+from app import create_app, legal
 from app.config import TestConfig
 from app.extensions import db, mail
 from app.models import (
@@ -271,7 +271,7 @@ def test_forgot_password_is_limited_per_client_and_per_address(app, users):
 
 def test_registration_is_limited_per_client(app):
     c = app.test_client()
-    base = {"name": "N", "phone": "9876543210", "address": "A", "role": "buyer", "password": "Passw0rdX", "confirm": "Passw0rdX"}
+    base = {"name": "N", "phone": "9876543210", "address": "A", "role": "buyer", "password": "Passw0rdX", "confirm": "Passw0rdX", "accept_terms": "y"}
     codes = [c.post("/auth/register", data={**base, "email": f"n{i}@t.test"}).status_code for i in range(11)]
     assert codes[:10] == [302] * 10 and codes[10] == 429
     assert c.get("/auth/register").status_code == 200  # only submissions are counted, not page views
@@ -374,7 +374,7 @@ def test_passwords_never_reach_the_logs(app, users, caplog):
     with caplog.at_level(logging.DEBUG):
         c = app.test_client()
         bad_login(c, password=secret)
-        c.post("/auth/register", data={"name": "N", "email": "n@t.test", "phone": "9876543210", "address": "A", "role": "buyer", "password": secret, "confirm": secret})
+        c.post("/auth/register", data={"name": "N", "email": "n@t.test", "phone": "9876543210", "address": "A", "role": "buyer", "password": secret, "confirm": secret, "accept_terms": "y"})
         c.post("/auth/forgot-password", data={"email": "buyer@t.test"})
     assert secret not in caplog.text
 
@@ -410,9 +410,13 @@ def test_each_unsafe_production_setting_stops_the_app(over, phrase):
 
 
 def test_all_problems_are_reported_together():
-    class Bad(TestConfig):
+    class Bad(TestConfig):  # every unsafe value is explicit, so the real .env cannot make the test pass or fail
         APP_ENV = "production"
+        SECRET_KEY = "dev-only-secret"
+        SESSION_COOKIE_SECURE = False
         ALLOW_TEST_EMAILS = True
+        LOCAL_CHAIN = False
+        APP_BASE_URL = "http://localhost:5000"
 
     with pytest.raises(RuntimeError) as e:
         create_app(Bad)
@@ -525,7 +529,10 @@ def test_unique_rules_hold_at_the_database_level(app, users, cats):  # noqa: F81
 
 # ============================ default deny and roles =======================================================================
 PUBLIC = {"main.index", "main.health", "auctions.browse", "auctions.detail", "auctions.state", "auth.login", "auth.register",
-          "auth.forgot_password", "auth.reset_password", "invoices.verify", "static"}
+          "auth.forgot_password", "auth.reset_password", "invoices.verify", "static",
+          "legal.privacy", "legal.terms", "legal.refunds", "legal.cookies", "legal.cookie_consent",  # the legal pages and the cookie choice
+          "main.shop", "main.browse_cards", "main.search_cards", "main.api_search_cards", "main.view_card",  # the public card catalogue
+          "collectibles.verify_card"}  # the public QR record
 FILL = {"integer": 1, "string": "x", "path": "x", "uuid": "00000000-0000-0000-0000-000000000000"}
 
 
@@ -710,7 +717,7 @@ def test_stored_text_is_escaped_on_every_page_that_shows_it(app, users, cats, pa
     db.session.commit()
     pages = [(anon(app), p) for p in ("/", "/auctions/", f"/auctions/{a.id}", f"/auctions/?q=x&category={cats['Books'].id}")]
     pages += [(client_for(app, "buyer@t.test"), p) for p in ("/notifications/", "/buyer/", "/buyer/bids", "/auth/profile", "/feedback")]
-    pages += [(client_for(app, "seller@t.test"), p) for p in ("/seller/", f"/seller/products/{a.product_id}", "/seller/reviews")]
+    pages += [(client_for(app, "seller@t.test"), p) for p in ("/seller/collectibles", f"/seller/products/{a.product_id}", "/seller/reviews")]
     pages += [(client_for(app, "admin@t.test"), p) for p in ("/admin/products?status=all", f"/admin/products/{a.product_id}", "/admin/users",
                                                           "/admin/categories", "/admin/reviews", "/admin/feedback", "/admin/reports/top-products?from=2000-01-01")]
     for c, path in pages:
@@ -804,10 +811,12 @@ def test_clients_cannot_set_fields_they_should_not(app, client, seller, cat, use
 
 
 def test_registration_cannot_grant_privileges(app):
-    base = {"name": "N", "email": "n@t.test", "phone": "9876543210", "address": "A", "role": "buyer", "password": "Passw0rdX", "confirm": "Passw0rdX"}
-    anon(app).post("/auth/register", data={**base, "is_active_user": "0", "wallet_address": "0x" + "1" * 40, "id": "77", "created_at": "2000-01-01", "role": "buyer"})
+    base = {"name": "N", "email": "n@t.test", "phone": "9876543210", "address": "A", "role": "buyer", "password": "Passw0rdX", "confirm": "Passw0rdX", "accept_terms": "y"}
+    anon(app).post("/auth/register", data={**base, "is_active_user": "0", "wallet_address": "0x" + "1" * 40, "id": "77", "created_at": "2000-01-01", "role": "buyer",
+                                         "consent_version": "1999-01-01", "consented_at": "2000-01-01", "wallet_verified_at": "2000-01-01"})
     u = User.query.filter_by(email="n@t.test").one()
     assert u.role == "buyer" and u.is_active_user and u.wallet_address is None and u.id != 77 and u.created_at.year > 2000
+    assert u.consent_version == legal.POLICY_VERSION and u.consented_at.year > 2000 and u.wallet_verified_at is None  # set by the server only
     r = anon(app).post("/auth/register", data={**base, "email": "adm@t.test", "role": "admin"})
     assert r.status_code == 200 and User.query.filter_by(email="adm@t.test").count() == 0
 
@@ -845,3 +854,11 @@ def test_referer_based_redirects_ignore_foreign_origins(app, users, cats):  # no
     assert r.location == f"/auctions/{a.id}"
     r = c.post(f"/buyer/watchlist/{a.id}/toggle", headers={"Referer": "http://localhost/auctions/?q=x"})
     assert r.location == "/auctions/?q=x"
+
+
+# ---- the test app never reaches a real chain, whatever .env contains ------------------------------------------------
+def test_the_test_app_never_connects_to_a_real_blockchain(app):
+    from app.services import blockchain_service as bc
+    assert app.config["RPC_URL"] is None and app.config["CONTRACT_ADDRESS"] is None
+    assert app.config["COLLECTIBLE_CONTRACT_ADDRESS"] is None
+    assert bc.get_web3() is None and not bc.crypto_enabled()

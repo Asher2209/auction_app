@@ -21,7 +21,7 @@
       <td>{% if a.status != 'cancelled' %}<a href="{{ url_for('auctions.detail', auction_id=a.id) }}">{{ a.product.title }}</a>{% else %}{{ a.product.title }}{% endif %}</td>
       <td>{{ b.amount|money }}</td><td>{{ a.current_bid|money }}</td>
       <td><span class="badge text-bg-{{ {'Won': 'success', 'Leading': 'success', 'Outbid': 'warning', 'Cancelled': 'dark'}.get(label, 'secondary') }}">{{ label }}</span></td>
-      <td>{{ b.bid_time|utc }}</td>
+      <td>{{ b.bid_time|local }}</td>
     </tr>
   {% else %}
     <tr><td colspan="5" class="text-center text-muted py-4">You haven't placed any bids yet.</td></tr>

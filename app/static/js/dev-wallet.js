@@ -18,6 +18,8 @@
           return json("/dev-wallet/account").then((d) => d.chain_id);
         case "wallet_switchEthereumChain":
           return Promise.resolve(null); // the demo wallet is always on the local chain
+        case "personal_sign":
+          return post("/dev-wallet/sign", { message: params[0], address: params[1] }).then((d) => d.signature);
         case "eth_sendTransaction":
           return post("/dev-wallet/send", { tx: params[0] }).then((d) => d.hash); // the server advances the chain
         default:

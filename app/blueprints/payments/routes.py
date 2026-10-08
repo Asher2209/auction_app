@@ -5,6 +5,8 @@ from ...extensions import db
 from ...models import Payment, utcnow
 from ...ratelimit import limited
 from ...services import blockchain_service as bc
+from ...services import card_settlement_service as css
+from ...services import ownership_transfer_service as ots
 from ...services import payment_service as ps
 from ...services.payment_service import PaymentError
 from ...utils import role_required
@@ -22,13 +24,15 @@ def _own_payment_or_404(auction_id):
 
 def _crypto_context(payment):
     """What the crypto tab needs to render. Empty/disabled when crypto is not configured."""
+    if css.applies(payment):
+        return css.pay_context(payment)
     if not bc.crypto_enabled():
         return {"enabled": False}
     wei, eth, rate = bc.quote(payment.amount)
     seller = payment.auction.product.seller
     row = payment.crypto
     return {
-        "enabled": True, "eth": format(eth, "f"), "rate": f"{rate:,.2f}", "seller_wallet": seller.wallet_address,
+        "enabled": True, "eth": format(eth, "f"), "rate": f"{rate:,.2f}", "seller_wallet": seller.verified_wallet,
         "chain_name": current_app.config["CHAIN_NAME"], "chain_id_hex": hex(current_app.config["CHAIN_ID"]),
         "required": current_app.config["CONFIRMATIONS_REQUIRED"],
         "tx_hash": row.transaction_hash if row else None,
@@ -38,11 +42,21 @@ def _crypto_context(payment):
     }
 
 
+def _ownership(payment):
+    """The recorded token transfer for a completed card sale, or None."""
+    if payment.payment_status != "successful" or not css.applies(payment):
+        return None
+    transfer = ots.transfer_for_payment(payment)
+    if transfer is None:
+        return None
+    return {"transfer": transfer, "asset": transfer.blockchain_asset, "explorer": bc.explorer_url(transfer.transaction_hash)}
+
+
 def _render(payment, active="card", forms=None):
     forms = forms or {k: cls(formdata=None) for k, cls in FORMS.items()}
     return render_template("payments/pay.html", payment=payment, auction=payment.auction,
                            product=payment.auction.product, forms=forms, active=active,
-                           crypto=_crypto_context(payment))
+                           crypto=_crypto_context(payment), ownership=_ownership(payment))
 
 
 @bp.route("/<int:auction_id>")
@@ -88,8 +102,12 @@ def _json_body():
 @limited("crypto", 20, 60, by="user")
 def crypto_prepare(auction_id):
     payment = _own_payment_or_404(auction_id)
+    body = _json_body()
+    if body.get("accept_terms") is not True:  # exactly JSON true: the box on the page, not a truthy string or number
+        return jsonify(ok=False, error="Please tick the box to confirm you have read the Refund Policy: "
+                                       "a blockchain payment cannot be reversed."), 400
     try:
-        return jsonify(ok=True, **bc.prepare(payment, _json_body().get("wallet_address")))
+        return jsonify(ok=True, **bc.prepare(payment, body.get("wallet_address")))
     except bc.CryptoError as e:
         return jsonify(ok=False, error=e.message), e.status
 
@@ -127,7 +145,7 @@ def pay(auction_id, kind):
                 getattr(form, name).data = ""
         return _render(payment, active=kind, forms=forms), 400
 
-    data = {k: (v.strip() if isinstance(v, str) else v) for k, v in form.data.items() if k != "csrf_token"}
+    data = {k: (v.strip() if isinstance(v, str) else v) for k, v in form.data.items() if k not in ("csrf_token", "accept")}
     if kind == "card":
         data["card_number"] = ps.clean_card_number(data["card_number"])
     try:

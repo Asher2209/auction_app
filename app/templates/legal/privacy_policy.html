@@ -1,80 +1,67 @@
-{% extends "base.html" %}
-{% block title %}Privacy Policy - ChainBid{% endblock %}
-{% block content %}
-<div class="container py-5">
-  <div class="row">
-    <div class="col-lg-8">
-      <h1 class="mb-4">Privacy Policy</h1>
-      <p class="text-muted">Last updated: October 5, 2026</p>
+{% extends "legal/_page.html" %}
+{% block page_emoji %}🔒{% endblock %}
+{% block page_title %}Privacy Policy{% endblock %}
+{% block body %}
+<h2 class="h5 mt-4">1. Who is responsible</h2>
+<p>The operator of this ChainBid site decides why and how your personal data is used. You can reach them at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
 
-      <section class="mb-5">
-        <h2 class="h4 mb-3">1. Introduction</h2>
-        <p>ChainBid ("we," "us," "our," or "Company") operates the ChainBid platform. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services.</p>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">2. Information We Collect</h2>
-        <p>We collect information you provide directly:</p>
-        <ul>
-          <li>Account information (name, email, password)</li>
-          <li>Profile information (address, phone number)</li>
-          <li>Payment and billing information</li>
-          <li>Messages and communications</li>
-          <li>Auction listings and bids</li>
-          <li>Feedback and reviews</li>
-        </ul>
-        <p class="mt-3">We also collect information automatically:</p>
-        <ul>
-          <li>Device information (browser type, IP address)</li>
-          <li>Usage data (pages visited, time spent)</li>
-          <li>Cookies and tracking technologies</li>
-        </ul>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">3. How We Use Your Information</h2>
-        <p>We use your information to:</p>
-        <ul>
-          <li>Provide and improve our services</li>
-          <li>Process transactions and send confirmations</li>
-          <li>Send notifications and updates</li>
-          <li>Prevent fraud and enforce our policies</li>
-          <li>Comply with legal obligations</li>
-          <li>Communicate with you about changes to our services</li>
-        </ul>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">4. Data Security</h2>
-        <p>We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the internet is 100% secure.</p>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">5. Third-Party Sharing</h2>
-        <p>We do not sell or rent your personal information to third parties. We may share information with:</p>
-        <ul>
-          <li>Service providers who assist us in operating our platform</li>
-          <li>Law enforcement if required by law</li>
-          <li>Other users as necessary to facilitate transactions</li>
-        </ul>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">6. Your Rights</h2>
-        <p>You have the right to:</p>
-        <ul>
-          <li>Access your personal information</li>
-          <li>Correct inaccurate information</li>
-          <li>Delete your account and associated data</li>
-          <li>Opt-out of marketing communications</li>
-        </ul>
-      </section>
-
-      <section class="mb-5">
-        <h2 class="h4 mb-3">7. Contact Us</h2>
-        <p>If you have questions about this Privacy Policy, please contact us at <strong>privacy@chainbid.test</strong></p>
-      </section>
-    </div>
-  </div>
+<h2 class="h5 mt-4">2. What we collect and why</h2>
+<div class="table-responsive">
+<table class="table table-sm align-middle">
+  <caption class="visually-hidden">Personal data collected, purpose and who can see it</caption>
+  <thead><tr><th scope="col">Data</th><th scope="col">Why</th><th scope="col">Who can see it</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">Name, email, phone, postal address, role (buyer or seller)</th><td>To create your account, run auctions, send notices and print invoices</td><td>You and the administrators. Other users see only your name shortened to its first letter (for example "A***")</td></tr>
+    <tr><th scope="row">Password</th><td>To log you in</td><td>Nobody: only a salted one-way hash is stored, never the password itself</td></tr>
+    <tr><th scope="row">Wallet address (optional), and when you proved you control it</th><td>To register your cards on the blockchain, receive card tokens and receive test-ETH payments. You prove control by signing a one-time message in your wallet; the signature is checked and not kept</td><td>The administrators, and the other party in a sale. Wallet addresses are public on the blockchain anyway</td></tr>
+    <tr><th scope="row">Cards you submit: details, images, condition and grading information, the platform card ID and QR code</th><td>To review the card, run the auction and show buyers what they are bidding on</td><td>The administrators while the card is reviewed; everyone once it is listed</td></tr>
+    <tr><th scope="row">Card token and ownership history</th><td>To record which wallet owns a registered card</td><td>Anyone: token records on a blockchain are public and cannot be erased (see section 6)</td></tr>
+    <tr><th scope="row">Bids (amount, time)</th><td>To decide the winner</td><td>Everyone sees bids with shortened names; you see your own as "You"</td></tr>
+    <tr><th scope="row">Payment records: amount, method, status, a masked reference such as "Card **** 4242", a gateway reference</th><td>To confirm payment and issue invoices</td><td>You, the seller of that item, and the administrators</td></tr>
+    <tr><th scope="row">Crypto payments: your wallet address, the transaction hash, amount and network</th><td>To verify the payment on the blockchain</td><td>Anyone: transactions on a blockchain are public and cannot be erased (see section 6)</td></tr>
+    <tr><th scope="row">Messages between buyers and sellers</th><td>To let you ask about a listing</td><td>You and the person you write to</td></tr>
+    <tr><th scope="row">Reviews and ratings</th><td>To help other buyers</td><td>Everyone, with your name shortened</td></tr>
+    <tr><th scope="row">Feedback messages</th><td>To improve the service</td><td>You and the administrators</td></tr>
+    <tr><th scope="row">Notifications, notification settings and emails we send you</th><td>To tell you about bids, results and payments</td><td>You</td></tr>
+    <tr><th scope="row">The version of these terms you accepted, and when</th><td>To keep a record of your agreement</td><td>The administrators</td></tr>
+  </tbody>
+</table>
 </div>
+<p><strong>Card numbers and CVVs are never stored.</strong> The simulated gateway checks them and discards them. We never ask for, receive or store a wallet private key, seed phrase or wallet password.</p>
+
+<h2 class="h5 mt-4">3. Technical data and cookies</h2>
+<p>Your browser's IP address is used briefly, in memory, to limit repeated login attempts and other abuse; it is not saved in the database. The web server's own logs may contain IP addresses and requested addresses. We set only the cookies described in the <a href="{{ url_for('legal.cookies') }}">Cookie Policy</a>: all of them are needed for the site to work, and there are no advertising or tracking cookies.</p>
+
+<h2 class="h5 mt-4">4. Who else receives data</h2>
+<ul>
+  <li><strong>Content delivery networks</strong> (cdn.jsdelivr.net and cdnjs.cloudflare.com) serve the Bootstrap, Socket.IO and Chart.js files. Your browser contacts them directly, so they see your IP address and browser details.</li>
+  <li><strong>An email service</strong> delivers messages if the operator has configured one. In development, emails are only written to a log.</li>
+  <li><strong>Your wallet and a blockchain node</strong> are involved when you link a wallet, register a card or pay with cryptocurrency: the wallet software you choose (for example MetaMask) is run by its own provider, and the server reads the chain through the node the operator configured.</li>
+  <li>Administrators, and authorities where the law requires it.</li>
+</ul>
+<p>We do not sell personal data and we do not use it for advertising or profiling.</p>
+
+<h2 class="h5 mt-4">5. How long we keep it</h2>
+<p>Account, card, bid, payment and invoice records are kept while your account exists, and afterwards for as long as needed to keep auction, ownership and invoice history consistent (for example an invoice the buyer or seller may need). Feedback is kept until an administrator removes it. Cookies expire as stated in the Cookie Policy.</p>
+
+<h2 class="h5 mt-4">6. The blockchain</h2>
+<p>When a card is registered, sold or paid for with cryptocurrency, a transaction is written to a public ledger run by many independent computers. We cannot edit or delete it, and neither can you. It contains wallet addresses, a token number, an amount and a contract call, but not your name. Link only a wallet you are comfortable connecting to your cards and purchases.</p>
+
+<h2 class="h5 mt-4">7. Your choices and rights</h2>
+<ul>
+  <li><strong>Correct</strong> your name, phone and address yourself on the Profile page. You can also link a different wallet there, or remove it.</li>
+  <li><strong>Ask for a copy</strong> of your data, or ask us to <strong>delete your account</strong> or <strong>stop using</strong> your data, by writing to <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>. There is no self-service export or deletion button yet, so an administrator handles these requests by hand.</li>
+  <li>We may have to keep some records (completed purchases, invoices, card ownership history) and cannot remove blockchain entries; we will tell you what was kept and why.</li>
+  <li><strong>Cookies:</strong> you can change your choice at any time on the <a href="{{ url_for('legal.cookies') }}#settings">Cookie Policy</a> page.</li>
+  <li>Depending on where you live you may also have the right to complain to a data-protection authority.</li>
+</ul>
+
+<h2 class="h5 mt-4">8. Security</h2>
+<p>Passwords are hashed; connections should run over HTTPS in production; forms are protected against cross-site request forgery; a login ends after 8 hours; failed logins are rate-limited; uploaded images are checked and renamed. No system is perfectly secure, and a demonstration installation should not be used for real personal data.</p>
+
+<h2 class="h5 mt-4">9. Children</h2>
+<p>ChainBid is for people aged 18 and over. Do not register if you are younger.</p>
+
+<h2 class="h5 mt-4">10. Changes</h2>
+<p>When this policy changes we update the version and date above. If the change is significant, the cookie banner will ask for your choice again.</p>
 {% endblock %}

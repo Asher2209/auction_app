@@ -1,4 +1,4 @@
-﻿"""Enhanced minting service with comprehensive error handling."""
+"""Enhanced minting service with comprehensive error handling."""
 
 import logging
 from typing import Dict, Any

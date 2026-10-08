@@ -1,208 +1,68 @@
 {% extends "base.html" %}
-{% block title %}My Collectibles - ChainBid Seller{% endblock %}
-
+{% block title %}My cards - ChainBid{% endblock %}
 {% block content %}
-<!-- Header -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1.5rem;">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
   <div>
-    <h1 class="h2 mb-1">My Collectibles</h1>
-    <p class="lead text-muted">Manage your trading card listings</p>
+    <h1 class="h3 mb-1">My cards</h1>
+    <p class="text-muted small mb-0">Every card you have submitted, from verification to sale.</p>
   </div>
-  <a href="{{ url_for('seller.create_card') }}" class="btn btn-primary" style="border-radius: 0.75rem;">+ Add New Card</a>
+  <a href="{{ url_for('seller.create_card') }}" class="btn btn-primary">Add a card</a>
 </div>
-
-<!-- Stats -->
-<div class="row g-3 mb-5">
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="glass p-3" style="border-radius: 1rem; text-align: center;">
-      <div class="h4 mb-1" style="color: #3b82f6;">{{ cards.total }}</div>
-      <div class="small text-muted">Total Cards</div>
-    </div>
-  </div>
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="glass p-3" style="border-radius: 1rem; text-align: center;">
-      <div class="h4 mb-1" style="color: #f59e0b;">{{ pending_count or 0 }}</div>
-      <div class="small text-muted">Pending Review</div>
-    </div>
-  </div>
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="glass p-3" style="border-radius: 1rem; text-align: center;">
-      <div class="h4 mb-1" style="color: #10b981;">{{ verified_count or 0 }}</div>
-      <div class="small text-muted">Verified</div>
-    </div>
-  </div>
-  <div class="col-12 col-sm-6 col-lg-3">
-    <div class="glass p-3" style="border-radius: 1rem; text-align: center;">
-      <div class="h4 mb-1" style="color: #ef4444;">{{ rejected_count or 0 }}</div>
-      <div class="small text-muted">Rejected</div>
-    </div>
-  </div>
-</div>
-
-<!-- Filters & Sorting -->
-<div class="glass p-4 mb-4" style="border-radius: 1.5rem;">
-  <div class="row g-3 align-items-end">
-    <div class="col-12 col-sm-6 col-md-4">
-      <label class="small fw-600 mb-2">Status</label>
-      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="{{ url_for('seller.collectibles_dashboard') }}" class="btn btn-sm {% if status == 'all' %}btn-primary{% else %}btn-ghost{% endif %}" style="border-radius: 0.5rem;">All</a>
-        <a href="{{ url_for('seller.collectibles_dashboard', status='pending') }}" class="btn btn-sm {% if status == 'pending' %}btn-primary{% else %}btn-ghost{% endif %}" style="border-radius: 0.5rem;">Pending</a>
-        <a href="{{ url_for('seller.collectibles_dashboard', status='verified') }}" class="btn btn-sm {% if status == 'verified' %}btn-primary{% else %}btn-ghost{% endif %}" style="border-radius: 0.5rem;">Verified</a>
-        <a href="{{ url_for('seller.collectibles_dashboard', status='rejected') }}" class="btn btn-sm {% if status == 'rejected' %}btn-primary{% else %}btn-ghost{% endif %}" style="border-radius: 0.5rem;">Rejected</a>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-md-4">
-      <label class="small fw-600 mb-2">Sort By</label>
-      <select class="form-select form-select-sm" style="border-radius: 0.5rem;" onchange="window.location.href='{{ url_for('seller.collectibles_dashboard') }}?status={{ status }}&sort=' + this.value">
-        <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
-        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest First</option>
-        <option value="name" {% if sort == 'name' %}selected{% endif %}>Name (A-Z)</option>
-      </select>
-    </div>
-  </div>
-</div>
-
-<!-- Cards Grid -->
-{% if cards.items %}
-<div class="row g-4">
-  {% for card in cards.items %}
-  {% set product = card.product %}
-  {% set verification = card.collectible_verifications[0] if card.collectible_verifications else None %}
-  {% set primary_image = card.images[0] if card.images else None %}
-
-  <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-    <div class="glass" style="border-radius: 1.5rem; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 25px -5px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-
-      <!-- Card Image -->
-      <div style="position: relative; height: 200px; background: var(--cb-surface-secondary); overflow: hidden;">
-        {% if primary_image %}
-        <img src="{{ url_for('static', filename='uploads/' ~ primary_image.path) }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ card.card_name }}">
-        {% else %}
-        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--cb-surface) 0%, var(--cb-surface-secondary) 100%);">
-          <div class="text-muted small">No image</div>
-        </div>
-        {% endif %}
-
-        <!-- Status Badge -->
-        {% if verification %}
-        {% set status_color = {
-          'pending': '#f59e0b',
-          'submitted': '#3b82f6',
-          'under_review': '#8b5cf6',
-          'more_info_needed': '#f97316',
-          'verified': '#10b981',
-          'rejected': '#ef4444'
-        } %}
-        <div style="position: absolute; top: 0.75rem; right: 0.75rem;">
-          <span class="badge" style="background: {{ status_color.get(verification.verification_status, '#6b7280') }}; color: white; font-size: 0.75rem; padding: 0.4rem 0.6rem; border-radius: 0.4rem;">
-            {% if verification.verification_status == 'pending' %}⏳ Pending
-            {% elif verification.verification_status == 'under_review' %}👁️ In Review
-            {% elif verification.verification_status == 'more_info_needed' %}❓ More Info
-            {% elif verification.verification_status == 'verified' %}✓ Verified
-            {% elif verification.verification_status == 'rejected' %}✗ Rejected
-            {% endif %}
-          </span>
-        </div>
-        {% endif %}
-      </div>
-
-      <!-- Card Details -->
-      <div style="padding: 1rem;">
-        <!-- Card Name -->
-        <h6 class="mb-2" style="font-size: 0.95rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-          <a href="{{ url_for('seller.view_card', card_id=card.id) }}" style="color: var(--cb-link); text-decoration: none;">
-            {{ card.card_name }}
-          </a>
-        </h6>
-
-        <!-- Card Type & Set -->
-        <div class="small text-muted mb-3">
-          <div>{{ card.card_type.name }}</div>
-          <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ card.set_name or 'Unspecified Set' }}</div>
-        </div>
-
-        <!-- Condition Badge -->
-        <div class="mb-3">
-          <span class="badge" style="background: rgba(107, 114, 128, 0.15); color: #4b5563; border-radius: 0.4rem; font-size: 0.75rem; padding: 0.3rem 0.6rem;">
-            {{ card.condition }}
-          </span>
-        </div>
-
-        <!-- Card Info Row -->
-        <div class="row g-2 mb-3" style="font-size: 0.85rem;">
-          {% if card.card_number %}
-          <div class="col-6">
-            <div class="small text-muted">Card #</div>
-            <strong>{{ card.card_number }}</strong>
-          </div>
-          {% endif %}
-          {% if card.release_year %}
-          <div class="col-6">
-            <div class="small text-muted">Year</div>
-            <strong>{{ card.release_year }}</strong>
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- Grading Info (if graded) -->
-        {% if card.is_graded %}
-        <div style="padding: 0.75rem; background: var(--cb-surface-secondary); border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.85rem;">
-          <div class="small text-muted">{{ card.grading_company }}</div>
-          <strong>Grade {{ card.grade }}</strong>
-        </div>
-        {% endif %}
-
-        <!-- Actions -->
-        <div style="display: flex; gap: 0.5rem;">
-          <a href="{{ url_for('seller.view_card', card_id=card.id) }}" class="btn btn-sm btn-outline-primary" style="flex: 1; border-radius: 0.5rem; font-size: 0.85rem;">View</a>
-          <a href="{{ url_for('seller.edit_card', card_id=card.id) }}" class="btn btn-sm btn-outline-secondary" style="border-radius: 0.5rem; font-size: 0.85rem;">Edit</a>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endfor %}
-</div>
-
-<!-- Pagination -->
-{% if cards.pages > 1 %}
-<nav class="mt-5" style="text-align: center;">
-  <ul class="pagination" style="justify-content: center; margin: 0;">
-    {% if cards.has_prev %}
-    <li class="page-item">
-      <a class="page-link" href="{{ url_for('seller.collectibles_dashboard', page=cards.prev_num, status=status, sort=sort) }}">← Previous</a>
-    </li>
-    {% endif %}
-
-    {% for page_num in cards.iter_pages() %}
-      {% if page_num %}
-        {% if page_num == cards.page %}
-        <li class="page-item active">
-          <span class="page-link">{{ page_num }}</span>
-        </li>
-        {% else %}
-        <li class="page-item">
-          <a class="page-link" href="{{ url_for('seller.collectibles_dashboard', page=page_num, status=status, sort=sort) }}">{{ page_num }}</a>
-        </li>
-        {% endif %}
-      {% endif %}
-    {% endfor %}
-
-    {% if cards.has_next %}
-    <li class="page-item">
-      <a class="page-link" href="{{ url_for('seller.collectibles_dashboard', page=cards.next_num, status=status, sort=sort) }}">Next →</a>
-    </li>
-    {% endif %}
-  </ul>
-</nav>
+{% if current_user.has_verified_wallet %}
+<p class="small text-muted mb-3" id="seller-wallet">Wallet <code>{{ current_user.wallet_address[:6] }}...{{ current_user.wallet_address[-4:] }}</code> (verified). Your cards are registered to it and buyers pay it.</p>
+{% else %}
+<div class="alert alert-warning small mb-3" role="status" id="seller-wallet"><span><strong>No verified wallet.</strong> Your verified cards can be registered on the blockchain and listed only after you <a href="{{ url_for("auth.profile") }}">verify a wallet</a> by signing a message with it.</span></div>
 {% endif %}
 
+<ul class="nav nav-tabs mb-3" id="card-tabs">
+  {% for key, label, count in tabs %}
+  <li class="nav-item"><a class="nav-link {{ 'active' if key == group }}" href="{{ url_for('seller.collectibles_dashboard', status=key, sort=sort) }}">{{ label }} <span class="text-muted">({{ count }})</span></a></li>
+  {% endfor %}
+</ul>
+
+<p class="small text-muted mb-2">Sort:
+  {% for key, label in sorts.items() %}<a class="{{ 'fw-bold' if key == sort else '' }}" href="{{ url_for('seller.collectibles_dashboard', status=group, sort=key) }}">{{ label }}</a>{{ ' &middot; '|safe if not loop.last }}{% endfor %}
+</p>
+
+{% if rows %}
+<div class="table-responsive">
+  <table class="table align-middle" id="seller-cards">
+    <thead><tr><th>Card</th><th>Verification</th><th>Blockchain</th><th>Auction</th><th class="text-end">Current bid</th><th></th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      {% set c = r.card %}
+      <tr>
+        <td>
+          <div class="d-flex align-items-center gap-3">
+            {% if c.images %}<img src="{{ c.images[0].get_image_src() }}" alt="" width="40" height="56" style="object-fit: contain; background: var(--dt-bg-0); border: 1px solid var(--dt-border); border-radius: 4px;">{% endif %}
+            <div>
+              <a href="{{ url_for('seller.view_card', card_id=c.id) }}">{{ c.card_name }}</a>
+              <div class="small text-muted">{{ [c.set_name, c.release_year, ('#' ~ c.card_number) if c.card_number else none]|select|join(' &middot; '|safe) }}</div>
+              <div class="small cd-mono text-muted">{{ c.platform_card_id }}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="badge badge-plain text-bg-{{ r.badge }}">{{ r.lifecycle.label }}</span><div class="small text-muted mt-1">Review: {{ r.verification }}</div></td>
+        <td class="small">{{ r.blockchain }}</td>
+        <td class="small">{% if r.auction %}{{ r.auction.status|capitalize }}<div class="text-muted">{{ r.bids }} bid{{ '' if r.bids == 1 else 's' }}</div>{% else %}&mdash;{% endif %}</td>
+        <td class="text-end">{% if r.auction %}{{ r.auction.current_bid|money }}{% else %}&mdash;{% endif %}</td>
+        <td class="text-end text-nowrap">
+          <a class="btn btn-sm btn-secondary" href="{{ url_for('seller.view_card', card_id=c.id) }}">View</a>
+          {% if r.can_list %}<a class="btn btn-sm btn-primary" href="{{ url_for('seller.create_card_auction', card_id=c.id) }}">Create auction</a>{% endif %}
+          {% if r.can_authorize %}<a class="btn btn-sm btn-primary" href="{{ url_for('seller.card_sale', card_id=c.id) }}">Authorize transfer</a>{% endif %}
+          {% if r.can_edit %}<a class="btn btn-sm btn-secondary" href="{{ url_for('seller.edit_card', card_id=c.id) }}">Edit</a>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% elif tabs[0][2] %}
+<p class="text-muted text-center py-4">No cards in this group.</p>
 {% else %}
-<!-- Empty State -->
-<div class="glass p-5" style="border-radius: 1.5rem; text-align: center;">
-  <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-  <h5 class="mb-2">No collectible cards yet</h5>
-  <p class="text-muted mb-4">Start listing your trading cards to build your inventory.</p>
-  <a href="{{ url_for('seller.create_card') }}" class="btn btn-primary" style="border-radius: 0.75rem;">+ Add Your First Card</a>
+<div class="text-center py-5">
+  <p class="text-muted">You have not added any cards yet.</p>
+  <a href="{{ url_for('seller.create_card') }}" class="btn btn-primary">Add your first card</a>
 </div>
 {% endif %}
 {% endblock %}

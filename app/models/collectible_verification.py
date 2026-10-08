@@ -47,6 +47,8 @@ class CollectibleVerification(db.Model):
     rejection_reason = db.Column(db.String(255))  # Why it was rejected
     seller_response = db.Column(db.Text)  # Seller's response to "more info needed" request
     submission_count = db.Column(db.Integer, default=1)  # Track resubmissions
+    # False when the admin rejected the card for good: the seller may not edit and resubmit it
+    resubmission_allowed = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
 
     # Timestamps
     notes = db.Column(db.Text)  # Legacy field
@@ -54,7 +56,7 @@ class CollectibleVerification(db.Model):
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationships
-    product = db.relationship('Product', backref='collectible_verification', uselist=False)
+    product = db.relationship('Product', backref=db.backref('collectible_verification', uselist=False))
     collectible_card = db.relationship('CollectibleCard', foreign_keys=[collectible_card_id])
     verification_history = db.relationship('CardVerificationHistory', backref='verification', cascade='all, delete-orphan')
     checklists = db.relationship('CardVerificationChecklist', backref='verification', cascade='all, delete-orphan')

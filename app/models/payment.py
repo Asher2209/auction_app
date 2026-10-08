@@ -1,5 +1,35 @@
+from decimal import Decimal
+
+from sqlalchemy.types import String, TypeDecorator
+
 from ..extensions import db
 from . import utcnow
+
+
+class ExactDecimal(TypeDecorator):
+    """A decimal that is never rounded. MySQL keeps it in a NUMERIC column. SQLite has no decimal type and would pass it
+    through a float, which cannot hold a wei amount exactly (a quote would drift by a few wei), so there it is kept as text."""
+
+    impl = String(64)
+    cache_ok = True
+
+    def __init__(self, precision, scale=0):
+        super().__init__()
+        self.precision, self.scale = precision, scale
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "sqlite":
+            return dialect.type_descriptor(String(64))
+        return dialect.type_descriptor(db.Numeric(self.precision, self.scale))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        exact = Decimal(str(value)).quantize(Decimal(1).scaleb(-self.scale))
+        return format(exact, "f") if dialect.name == "sqlite" else exact
+
+    def process_result_value(self, value, dialect):
+        return None if value is None else Decimal(str(value))
 
 
 class Payment(db.Model):
@@ -47,8 +77,8 @@ class CryptoPayment(db.Model):
     contract_address = db.Column(db.String(42))
     exchange_rate = db.Column(db.Numeric(18, 2))  # INR per ETH used for the quote
     cryptocurrency = db.Column(db.String(10), nullable=False, default="ETH")
-    expected_wei = db.Column(db.Numeric(38, 0))
-    amount = db.Column(db.Numeric(38, 18), nullable=False)
+    expected_wei = db.Column(ExactDecimal(38, 0))
+    amount = db.Column(ExactDecimal(38, 18), nullable=False)
     transaction_hash = db.Column(db.String(66), unique=True)
     blockchain_network = db.Column(db.String(30), nullable=False, default="sepolia")
     chain_id = db.Column(db.Integer)

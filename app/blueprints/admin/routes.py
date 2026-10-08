@@ -4,10 +4,12 @@ from flask import Response, abort, flash, jsonify, redirect, render_template, re
 from flask_login import current_user
 from sqlalchemy import func
 
+from ... import timeutil
 from ...extensions import db
-from ...models import Auction, Bid, Category, CryptoPayment, Feedback, Product, Review, User, utcnow, CollectibleVerification
+from ...models import (Auction, Bid, BlockchainAsset, BlockchainTransfer, Category, CollectibleCard, CollectibleVerification,
+                       CryptoPayment, Feedback, Payment, Product, Review, User, utcnow)
 from ...services import analytics_service, payment_service, report_export, report_service
-from ...services import review_service
+from ...services import auction_validation_service, review_service
 from ...services.notifications import notify
 from ...utils import like_pattern, role_required, safe_redirect_target
 from . import bp
@@ -23,6 +25,26 @@ def _product_or_404(product_id):
     if product is None:
         abort(404)
     return product
+
+
+def _card_stats():
+    """Counters for the trading-card side of the marketplace and its blockchain records."""
+    verification = dict(db.session.query(CollectibleVerification.verification_status, func.count(CollectibleVerification.id))
+                        .group_by(CollectibleVerification.verification_status).all())
+    on_cards = (Auction.query.join(Product, Auction.product_id == Product.id)
+                .join(CollectibleCard, CollectibleCard.product_id == Product.id))
+    return {
+        "total": CollectibleCard.query.count(),
+        "pending": verification.get("pending", 0) + verification.get("under_review", 0),
+        "verified": verification.get("verified", 0), "rejected": verification.get("rejected", 0),
+        "more_info": verification.get("more_info_needed", 0),
+        "live": on_cards.filter(Auction.status.in_(("scheduled", "active"))).count(),
+        "completed": on_cards.filter(Auction.status == "closed").count(),
+        "sold": on_cards.join(Payment, Payment.auction_id == Auction.id).filter(Payment.payment_status == "successful").count(),
+        "assets": BlockchainAsset.query.count(),
+        "minted": BlockchainAsset.query.filter(BlockchainAsset.status.in_(("minted", "transferred"))).count(),
+        "transfers": BlockchainTransfer.query.filter_by(status="confirmed").count(),
+    }
 
 
 @bp.route("/")
@@ -45,7 +67,7 @@ def dashboard():
     }
     pending = (Product.query.filter_by(approval_status="pending")
                .order_by(Product.created_at.asc()).limit(5).all())
-    return render_template("admin/dashboard.html", stats=stats, pending=pending)
+    return render_template("admin/dashboard.html", stats=stats, pending=pending, cs=_card_stats())
 
 
 # ---- product moderation -------------------------------------------------
@@ -81,6 +103,13 @@ def approve_product(product_id):
     if product.approval_status != "pending" or product.auction is not None:
         flash("Only pending listings can be approved.", "warning")
         return redirect(url_for("admin.product_review", product_id=product.id))
+
+    listing = auction_validation_service.check_listing(product)
+    if not listing.ok:
+        flash("This card cannot be listed: " + " ".join(i.message for i in listing.violations), "danger")
+        return redirect(url_for("admin.product_review", product_id=product.id))
+    for warning in listing.warnings:
+        flash(warning.message, "warning")
 
     now = utcnow()
     if product.auction_end <= now:
@@ -374,7 +403,7 @@ def report_view(key):
     report = _report_or_404(key)
     params, errors = report_service.parse_params(report, request.args)
     data = report_service.run(report, params)
-    today = utcnow().date()
+    today = timeutil.to_local(utcnow()).date()  # presets end on the site's today
     keep = {"status": params.status} if report.statuses and params.status != "all" else {}
     spans = [("Last 7 days", 7), ("Last 30 days", 30), ("Last 90 days", 90), ("Last 12 months", 365)]
     presets = [(label, url_for("admin.report_view", key=key, **{"from": (today - timedelta(days=d - 1)).isoformat(), "to": today.isoformat()}, **keep))
@@ -384,7 +413,7 @@ def report_view(key):
         "admin/report.html", report=report, data=data, params=params, errors=errors, fmt=report_export.fmt,
         shown=data.rows[:HTML_ROWS], html_rows=HTML_ROWS, description=report_export.describe_params(report, params),
         qs={k: request.args[k] for k in REPORT_ARGS if request.args.get(k)}, presets=presets, status_choices=report_service.STATUS_CHOICES,
-        from_value=params.start.date().isoformat() if params.start else "", to_value=params.last_day.isoformat() if params.end else "",
+        from_value=params.first_day.isoformat() if params.start else "", to_value=params.last_day.isoformat() if params.end else "",
         day_value=params.day.isoformat() if params.day else "")
 
 
@@ -405,73 +434,5 @@ def report_export_file(key, ext):
 @bp.route("/collectibles/verify", methods=["GET"])
 @role_required("admin")
 def collectibles_dashboard():
-    """Admin dashboard for collectible verification"""
-    page = request.args.get('page', 1, type=int)
-    status = request.args.get('status')
-    collectible_type = request.args.get('collectible_type')
-    grader = request.args.get('grader')
-    sort = request.args.get('sort', 'newest')
-
-    # Build base query
-    query = CollectibleVerification.query
-
-    # Apply status filter
-    if status and status in ('pending', 'verified', 'failed', 'manual_review'):
-        query = query.filter(CollectibleVerification.verification_status == status)
-
-    # Apply collectible type filter
-    if collectible_type:
-        query = query.filter(CollectibleVerification.collectible_type == collectible_type)
-
-    # Apply grader filter
-    if grader:
-        query = query.filter(CollectibleVerification.grader == grader)
-
-    # Apply sorting
-    if sort == 'oldest':
-        query = query.order_by(CollectibleVerification.created_at.asc())
-    elif sort == 'high_value':
-        query = query.join(Product).order_by(Product.estimated_value.desc())
-    else:  # newest (default)
-        query = query.order_by(CollectibleVerification.created_at.desc())
-
-    # Paginate
-    verifications = query.paginate(page=page, per_page=20)
-
-    # Calculate stats
-    all_verifications = CollectibleVerification.query
-    pending_count = all_verifications.filter(CollectibleVerification.verification_status.in_(('pending', 'manual_review'))).count()
-    verified_count = all_verifications.filter(CollectibleVerification.verification_status == 'verified').count()
-    failed_count = all_verifications.filter(CollectibleVerification.verification_status == 'failed').count()
-
-    # Verified this week
-    week_ago = utcnow() - timedelta(days=7)
-    verified_this_week = all_verifications.filter(
-        CollectibleVerification.verification_status == 'verified',
-        CollectibleVerification.verification_date >= week_ago
-    ).count()
-
-    # Verification rate
-    total_submissions = all_verifications.count()
-    verification_rate = round((verified_count / total_submissions * 100) if total_submissions > 0 else 0)
-
-    # Average review time (in minutes)
-    reviewed = all_verifications.filter(CollectibleVerification.verification_date.isnot(None)).all()
-    if reviewed:
-        total_time = sum((v.verification_date - v.created_at).total_seconds() for v in reviewed if v.verification_date)
-        avg_review_time = int(total_time / len(reviewed) / 60)  # convert to minutes
-    else:
-        avg_review_time = 0
-
-    now = utcnow()
-
-    return render_template('admin/collectibles_dashboard.html',
-                          verifications=verifications,
-                          pending_count=pending_count,
-                          verified_count=verified_count,
-                          failed_count=failed_count,
-                          verified_this_week=verified_this_week,
-                          verification_rate=verification_rate,
-                          avg_review_time=avg_review_time,
-                          status=status,
-                          now=now)
+    """The earlier grader-API dashboard was superseded by the card verification workflow (and could no longer render)."""
+    return redirect(url_for("admin.cards_verify_dashboard"))

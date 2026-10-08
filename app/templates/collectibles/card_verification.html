@@ -1,13 +1,138 @@
 {% extends "base.html" %}
-{% block title %}{{ collectible_card.card_name }} - Platform Verified{% endblock %}
+{% macro row(label, value, mono=false) %}{% if value %}<div class="cd-row"><dt>{{ label }}</dt><dd{% if mono %} class="cd-mono"{% endif %}>{{ value }}</dd></div>{% endif %}{% endmacro %}
+{% block title %}{{ collectible_card.card_name }} - {% if is_verified %}Platform Verified{% else %}Card Record{% endif %} - ChainBid{% endblock %}
 {% block content %}
-<div class="container py-5">
-  <h1>{{ collectible_card.card_name }}</h1>
-  <p>Set: {{ collectible_card.set_name }} | Card #: {{ collectible_card.card_number }}</p>
-  <p>Platform ID: {{ platform_card_id }}</p>
-  {% if blockchain_asset %}
-    <p>Token ID: {{ blockchain_asset.token_id }}</p>
-    <p>Owner: {{ blockchain_asset.owner_wallet }}</p>
-  {% endif %}
+{% set c = collectible_card %}
+{% set asset = blockchain_asset %}
+{% set vstatus = verification.verification_status if verification else 'pending' %}
+
+<div class="product-detail-grid">
+  <div class="product-detail-gallery">
+    {% if card_images %}
+    <div class="product-detail-gallery-main"><img id="gallery-main" src="{{ card_images[0].get_image_src() }}" alt="{{ c.card_name }}"></div>
+    {% if card_images|length > 1 %}
+    <div class="product-detail-gallery-thumbs" id="gallery-thumbs">
+      {% for image in card_images[:4] %}
+      <button type="button" class="product-detail-gallery-thumb" data-gallery-src="{{ image.get_image_src() }}" aria-label="Show the {{ image.image_type|replace('_', ' ') }} image"><img src="{{ image.get_image_src() }}" alt=""></button>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="product-detail-gallery-main d-flex align-items-center justify-content-center"><p class="text-muted mb-0">No image available</p></div>
+    {% endif %}
+  </div>
+
+  <div class="product-detail-info">
+    <div class="product-info-header">
+      <div class="section-eyebrow small text-uppercase text-muted">{{ [c.set_name, c.release_year, ('#' ~ c.card_number) if c.card_number else none]|select|join(' &middot; '|safe) }}</div>
+      <h1 class="product-info-title">{{ c.card_name }}</h1>
+      <div class="product-info-meta">
+        {% if is_verified %}<span class="badge text-bg-success">&#10003; Platform verified</span>
+        {% else %}<span class="badge text-bg-secondary">Not yet platform verified</span>{% endif %}
+        {% if c.is_graded and c.grade %}<span class="product-info-badge">{{ c.grade }}</span>{% endif %}
+        <span class="product-info-badge">{{ c.condition }}</span>
+      </div>
+    </div>
+
+    <section class="cd-panel" id="card-verification">
+      <h2 class="cd-heading">Platform verification</h2>
+      <dl class="cd-grid">{{ row('Platform card ID', platform_card_id, true) }}</dl>
+      {% if is_verified %}
+      <div class="cd-status cd-status-ok mt-3">&#10003; Platform Verified</div>
+      {% if verification.verification_date %}<dl class="cd-grid mt-2">{{ row('Verified On', verification.verification_date|local) }}</dl>{% endif %}
+      <p class="cd-note"><span class="cd-note-label">Platform review</span>This card has been reviewed and verified by the ChainBid platform. The review checks the submitted details and images against a checklist. It is not a guarantee that the physical card is genuine.</p>
+      {% else %}
+      <div class="cd-status {{ 'cd-status-bad' if vstatus == 'rejected' else 'cd-status-wait' }} mt-3">
+        {% if vstatus == 'rejected' %}Not verified{% elif vstatus == 'under_review' %}Under review{% elif vstatus == 'more_info_needed' %}More information needed{% else %}Awaiting review{% endif %}
+      </div>
+      <p class="cd-note">This card has not been platform verified. The details shown were provided by the seller and have not been confirmed by the platform.</p>
+      {% endif %}
+    </section>
+
+    {% if active_auction %}
+    <section class="cd-panel" id="card-auction">
+      <h2 class="cd-heading">Current auction</h2>
+      <dl class="cd-grid">
+        {{ row('Status', 'Live now' if active_auction.status == 'active' else 'Upcoming') }}
+        {{ row('Current bid', active_auction.current_bid|money) }}
+        {{ row('Ends' if active_auction.status == 'active' else 'Starts', (active_auction.end_time if active_auction.status == 'active' else active_auction.start_time)|local) }}
+      </dl>
+      <a href="{{ url_for('auctions.detail', auction_id=active_auction.id) }}" class="btn btn-primary btn-sm mt-3">View the auction</a>
+    </section>
+    {% endif %}
+  </div>
 </div>
+
+<div class="cd-stack">
+  <section class="cd-panel" id="card-details">
+    <h2 class="cd-heading">Card details</h2>
+    <dl class="cd-grid">
+      {{ row('Card', c.card_name) }}
+      {{ row('Set', c.set_name ~ (' (' ~ c.set_code ~ ')' if c.set_code else '') if c.set_name) }}
+      {{ row('Year', c.release_year) }}
+      {{ row('Card number', c.card_number) }}
+      {{ row('Rarity', c.rarity) }}
+      {{ row('Edition', c.edition) }}
+      {{ row('Language', c.language) }}
+      {{ row('Manufacturer', c.manufacturer) }}
+      {% for key, val in type_details.items() if val %}
+      {{ row(key|replace('_', ' ')|capitalize, 'Yes' if val is sameas true else val) }}
+      {% endfor %}
+    </dl>
+  </section>
+
+  <section class="cd-panel" id="card-condition">
+    <h2 class="cd-heading">Condition &amp; grading</h2>
+    <dl class="cd-grid">
+      {{ row('Condition', c.condition) }}
+      {% if c.is_graded %}
+      {{ row('Grading company', c.grading_company) }}
+      {{ row('Grade', c.grade) }}
+      {{ row('Certification number', c.certification_number, true) }}
+      {% else %}
+      {{ row('Grading', 'Ungraded') }}
+      {% endif %}
+    </dl>
+    {% if c.condition_notes %}<p class="cd-note">{{ c.condition_notes }}</p>{% endif %}
+    <p class="cd-note"><span class="cd-note-label">Seller provided</span>Condition and grading details are entered by the seller. A certification number is not proof of authenticity by itself.</p>
+  </section>
+
+  <section class="cd-panel" id="card-blockchain">
+    <h2 class="cd-heading">Blockchain Identity</h2>
+    {% if asset and asset.status in ('minted', 'transferred') %}
+    <dl class="cd-grid">
+      {{ row('Token ID', '#' ~ asset.token_id) }}
+      {{ row('Network', asset.blockchain_network|capitalize) }}
+      {{ row('Contract', asset.contract_address, true) }}
+      {{ row('Current Owner', asset.owner_wallet, true) }}
+      {% if asset.mint_transaction_hash and tx_url(asset.mint_transaction_hash) %}
+      <div class="cd-row"><dt>Mint transaction</dt><dd><a href="{{ tx_url(asset.mint_transaction_hash) }}" target="_blank" rel="noopener noreferrer">View on the block explorer</a></dd></div>
+      {% endif %}
+    </dl>
+    {% if transfers %}
+    <ul class="cd-history" aria-label="Ownership history">
+      <li class="cd-heading" style="margin-bottom: 0.5rem;">Ownership history</li>
+      {% for t in transfers %}
+      <li><span class="cd-mono">{{ t.to_wallet[:6] }}...{{ t.to_wallet[-4:] }}</span> from <span class="cd-mono">{{ t.from_wallet[:6] }}...{{ t.from_wallet[-4:] }}</span> &middot; {{ t.confirmed_at|local }}{% if tx_url(t.transaction_hash) %} &middot; <a href="{{ tx_url(t.transaction_hash) }}" target="_blank" rel="noopener noreferrer">transaction</a>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% else %}
+    <p class="cd-note mt-0">This card is not registered on the blockchain yet.</p>
+    {% endif %}
+    <p class="cd-note">The token is a digital identity and ownership record for this exact physical card. It does not prove the card is genuine: that is the platform review.</p>
+  </section>
+
+  <section class="cd-panel" id="card-qr">
+    <h2 class="cd-heading">This record</h2>
+    <div style="max-width: 160px; background: #fff; padding: 6px; border-radius: 4px;">{{ qr_svg|safe }}</div>
+    <p class="cd-note">Scan the QR code on the card holder to open this page. It shows public information only.</p>
+  </section>
+</div>
+
+<p class="cd-note" style="margin-top: var(--dt-space-2xl);">Platform verification does not guarantee card authenticity. For ungraded cards, third-party grading is recommended. Ownership of a registered card is recorded on {{ asset.blockchain_network|capitalize if asset else 'the blockchain' }}.</p>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/card-gallery.js') }}"></script>
 {% endblock %}

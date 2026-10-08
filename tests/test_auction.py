@@ -1,3 +1,4 @@
+import re
 import threading
 from datetime import timedelta
 from decimal import Decimal
@@ -335,7 +336,8 @@ def test_detail_page_bid_form_visibility(app, auction, users):
 def test_detail_page_hides_form_when_closed(app, auction, users):
     svc.close_auction(auction.id, now=ended(auction))
     d = client_for(app, "buyer@t.test").get(f"/auctions/{auction.id}").data.decode()
-    assert 'class="card card-body mb-3 d-none"' in d  # form present but hidden once the auction ended
+    form = re.search(r'<form id="bid-form"[^>]*>', d)
+    assert form and "d-none" in form.group(0)  # the form is present but hidden once the auction has ended
 
 
 # ---- Socket.IO --------------------------------------------------------------

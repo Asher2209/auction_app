@@ -33,7 +33,7 @@
             {{ msg.subject }}
           </a>
         </td>
-        <td><small class="text-muted">{{ msg.sent_time|utc }}</small></td>
+        <td><small class="text-muted">{{ msg.sent_time|local }}</small></td>
         <td>
           {% if is_sent %}
             <span class="badge text-bg-secondary">Sent</span>

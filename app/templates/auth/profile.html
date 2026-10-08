@@ -4,7 +4,7 @@
 {% block content %}
 
 <!-- ========== PAGE HEADER ========== -->
-<div style="padding-bottom: 2rem; border-bottom: 1px solid var(--cb-border); margin-bottom: 3rem;">
+<div style="padding-bottom: 2rem; border-bottom: 1px solid var(--dt-border); margin-bottom: 3rem;">
   <h1 class="h1 mb-2">Account Settings</h1>
   <p class="lead text-muted">Manage your profile and account preferences</p>
 </div>
@@ -12,14 +12,14 @@
 <div class="row g-4">
   <!-- ========== SIDEBAR: ACCOUNT INFO ========== -->
   <div class="col-lg-3">
-    <div class="glass p-5" style="border-radius: 1.5rem; text-align: center;">
+    <div class="p-5" style="border-radius: 1.5rem; text-align: center; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       <!-- Avatar -->
-      <div style="width: 100px; height: 100px; background: var(--cb-grad); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: white; font-size: 2.5rem; font-weight: 700;">
+      <div style="width: 100px; height: 100px; background: var(--dt-bg-2); border: 1px solid var(--dt-border); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: var(--dt-accent); font-size: 2.5rem; font-weight: 700;">
         {{ current_user.name[0] }}
       </div>
 
       <!-- User Info -->
-      <h3 class="h5 mb-1" style="color: var(--cb-text);">{{ current_user.name }}</h3>
+      <h3 class="h5 mb-1" style="color: var(--dt-text-primary);">{{ current_user.name }}</h3>
       <p class="text-muted small mb-3">{{ current_user.email }}</p>
 
       <!-- Badge -->
@@ -30,9 +30,9 @@
       </div>
 
       <!-- Member Since -->
-      <p class="text-muted small mb-4" style="border-top: 1px solid var(--cb-border); padding-top: 1rem;">
+      <p class="text-muted small mb-4" style="border-top: 1px solid var(--dt-border); padding-top: 1rem;">
         Member since<br>
-        <strong style="color: var(--cb-text);">{{ current_user.created_at|datetimeformat("%b %Y") }}</strong>
+        <strong style="color: var(--dt-text-primary);">{{ current_user.created_at|datetimeformat("%b %Y") }}</strong>
       </p>
 
       <!-- Quick Links -->
@@ -49,12 +49,12 @@
 
   <!-- ========== MAIN FORM ========== -->
   <div class="col-lg-9">
-    <form method="post" novalidate class="glass p-5" style="border-radius: 1.5rem;">
+    <form method="post" novalidate class="p-5" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
       {{ form.hidden_tag() }}
 
       <!-- Personal Information Section -->
       <div class="mb-5">
-        <h2 class="h5 mb-4" style="color: var(--cb-text);">
+        <h2 class="h5 mb-4" style="color: var(--dt-text-primary);">
           <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 0.5rem;">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
@@ -70,8 +70,8 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Email Address</label>
-            <input type="email" class="form-control" value="{{ current_user.email }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
+            <label class="form-label" for="profile-email">Email Address</label>
+            <input id="profile-email" type="email" class="form-control" value="{{ current_user.email }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
             <small class="text-muted d-block mt-1">Your email cannot be changed</small>
           </div>
 
@@ -82,16 +82,16 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">Account Role</label>
-            <input type="text" class="form-control" value="{{ current_user.role|capitalize }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
+            <label class="form-label" for="profile-role">Account Role</label>
+            <input id="profile-role" type="text" class="form-control" value="{{ current_user.role|capitalize }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
             <small class="text-muted d-block mt-1">Your account type cannot be changed</small>
           </div>
         </div>
       </div>
 
       <!-- Address Section -->
-      <div class="mb-5" style="border-top: 1px solid var(--cb-border); padding-top: 2rem;">
-        <h2 class="h5 mb-4" style="color: var(--cb-text);">
+      <div class="mb-5" style="border-top: 1px solid var(--dt-border); padding-top: 2rem;">
+        <h2 class="h5 mb-4" style="color: var(--dt-text-primary);">
           <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 0.5rem;">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
             <circle cx="12" cy="10" r="3"></circle>
@@ -105,37 +105,8 @@
         <small class="text-muted d-block mt-1">Used for shipping and correspondence</small>
       </div>
 
-      <!-- Wallet Address Section -->
-      <div class="mb-4" style="border-top: 1px solid var(--cb-border); padding-top: 2rem;">
-        <h2 class="h5 mb-4" style="color: var(--cb-text);">
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 0.5rem;">
-            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-            <line x1="1" y1="10" x2="23" y2="10"></line>
-          </svg>
-          Wallet Address
-        </h2>
-
-        {{ form.wallet_address.label(class="form-label") }}
-        {{ form.wallet_address(class="form-control" ~ (" is-invalid" if form.wallet_address.errors else ""), placeholder="0x...", style="border-radius: 0.75rem; padding: 0.75rem 1rem; font-family: 'Courier New', monospace;") }}
-        {% for e in form.wallet_address.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
-
-        <div style="background: rgba(109, 40, 217, 0.1); border-left: 4px solid var(--cb-link); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem;">
-          <p class="text-muted small mb-2">
-            <strong>⚠️ Important:</strong>
-            {% if current_user.role == 'seller' %}
-              This is where buyers' cryptocurrency payments are sent (Sepolia test network address only).
-            {% else %}
-              Optional. Your public wallet address (for reference only).
-            {% endif %}
-          </p>
-          <p class="text-danger small mb-0">
-            <strong>Never share your private key or seed phrase.</strong>
-          </p>
-        </div>
-      </div>
-
       <!-- Action Buttons -->
-      <div class="d-flex gap-2 pt-2" style="border-top: 1px solid var(--cb-border);">
+      <div class="d-flex gap-2 pt-2" style="border-top: 1px solid var(--dt-border);">
         <button class="btn btn-primary" type="submit">
           <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="20 6 9 17 4 12"></polyline>
@@ -151,7 +122,39 @@
         </a>
       </div>
     </form>
+
+    <!-- ========== WALLET (linked only by signing a message with it) ========== -->
+    <section class="p-5 mt-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);" id="wallet-root"
+             data-challenge-url="{{ url_for("auth.wallet_challenge") }}" data-verify-url="{{ url_for("auth.wallet_verify") }}">
+      <h2 class="h5 mb-3" style="color: var(--dt-text-primary);">Wallet</h2>
+      {% if current_user.has_verified_wallet %}
+        <p class="mb-1">Linked wallet: <code class="text-break" id="linked-wallet">{{ current_user.wallet_address }}</code></p>
+        <p class="small text-muted mb-3" id="wallet-state">Verified on {{ current_user.wallet_verified_at|datetimeformat("%d %b %Y") }}: you proved you control it by signing a message with it.</p>
+      {% elif current_user.wallet_address %}
+        <p class="mb-1">Wallet on record: <code class="text-break" id="linked-wallet">{{ current_user.wallet_address }}</code></p>
+        <p class="small mb-3" id="wallet-state"><strong>Not verified.</strong> Verify it below before it can receive payments or card tokens.</p>
+      {% else %}
+        <p class="small mb-3" id="wallet-state">No wallet linked yet.</p>
+      {% endif %}
+      <p class="small text-muted">
+        {% if current_user.role == "seller" %}Your verified cards are registered to this wallet and buyers pay it.{% else %}Cards you win are transferred to this wallet when you pay.{% endif %}
+        Linking asks your wallet (for example MetaMask) to sign a short message. Signing proves you hold the wallet; it does not send a transaction or cost gas.
+      </p>
+      <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-primary" id="wallet-verify">{{ "Link a different wallet" if current_user.has_verified_wallet else "Connect and verify wallet" }}</button>
+        {% if current_user.wallet_address %}
+        <form method="post" action="{{ url_for("auth.wallet_remove") }}" data-confirm="Remove this wallet from your account?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline-secondary">Remove wallet</button>
+        </form>
+        {% endif %}
+      </div>
+      <p class="small mt-3 mb-2" id="wallet-error" role="status" aria-live="polite"></p>
+      <p class="small mb-0"><strong>Never share your private key or seed phrase.</strong> ChainBid never asks for them.</p>
+    </section>
   </div>
 </div>
 
+<script src="{{ url_for("static", filename="js/wallet-verify.js") }}"></script>
+{% if config.LOCAL_CHAIN %}<script src="{{ url_for("static", filename="js/dev-wallet.js") }}"></script>{% endif %}
 {% endblock %}
