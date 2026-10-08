@@ -106,7 +106,7 @@ def test_every_icon_used_in_a_template_exists_in_the_sprite():
     used = set()
     for f in (ROOT / "app" / "templates").rglob("*.html"):
         used |= set(re.findall(r"icon\(\s*['\"]([a-z0-9-]+)['\"]", f.read_text(encoding="utf-8")))
-    assert used and used - have == set()
+    assert used - have == set()  # no template calls icon() today; any that does must name a real symbol
 
 
 def test_the_sprite_is_well_formed_and_every_symbol_draws_something():
