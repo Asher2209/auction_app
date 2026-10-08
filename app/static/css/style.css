@@ -1,14 +1,4 @@
 /* Page-wide enhancements for premium look */
-body {
-  background-color: var(--cb-bg);
-  scroll-behavior: smooth;
-}
-
-/* Container padding improvements */
-main {
-  padding-top: var(--cb-spacing-lg);
-  padding-bottom: var(--cb-spacing-xl);
-}
 
 /* Scrollbar styling (Webkit browsers) */
 ::-webkit-scrollbar {
@@ -17,7 +7,7 @@ main {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--cb-bg);
+  background: var(--dt-bg-0);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -72,7 +62,7 @@ main {
 /* Code blocks */
 code {
   background-color: rgba(199, 154, 82, 0.12);
-  color: var(--cb-link);
+  color: var(--dt-accent);
   padding: 0.2rem 0.5rem;
   border-radius: 0.4rem;
   font-family: 'Fira Code', monospace;

@@ -74,58 +74,58 @@
   </main>
 
   <!-- ========== PREMIUM FOOTER ========== -->
-  <footer style="border-top: 1px solid var(--cb-border); background: transparent; padding: var(--cb-spacing-xl) 0; margin-top: var(--cb-spacing-2xl);">
+  <footer style="border-top: 1px solid var(--dt-border); background: transparent; padding: var(--dt-space-3xl) 0; margin-top: var(--dt-space-4xl);">
     <div class="container">
       <div class="row g-5 mb-5">
         <!-- Brand Column -->
         <div class="col-lg-4 mb-4 mb-lg-0">
-          <h5 class="h6 mb-3" style="color: var(--cb-text); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">ChainBid</h5>
-          <p style="color: var(--cb-text-secondary); font-size: 0.9rem; line-height: 1.6;">
+          <h5 class="h6 mb-3" style="color: var(--dt-text-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">ChainBid</h5>
+          <p style="color: var(--dt-text-secondary); font-size: 0.9rem; line-height: 1.6;">
             An auction platform for platform-verified trading cards, with card ownership recorded on the blockchain.
           </p>
-          <p style="color: var(--cb-muted); font-size: 0.8rem; margin-top: 1rem;">
+          <p style="color: var(--dt-text-muted); font-size: 0.8rem; margin-top: 1rem;">
             <strong>Test Network:</strong> Sepolia only • No real funds
           </p>
         </div>
 
         <!-- Links Column 1 -->
         <div class="col-6 col-lg-2">
-          <h6 class="h6 mb-3" style="color: var(--cb-text); font-weight: 700; font-size: 0.9rem;">Platform</h6>
+          <h6 class="h6 mb-3" style="color: var(--dt-text-primary); font-weight: 700; font-size: 0.9rem;">Platform</h6>
           <ul style="list-style: none; padding: 0; margin: 0;">
-            <li class="mb-2"><a href="{{ url_for('auctions.browse') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Browse Auctions</a></li>
-            <li class="mb-2"><a href="{{ url_for('main.browse_cards') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Trading Cards</a></li>
-            <li class="mb-2"><a href="{{ url_for('auth.register') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Create Account</a></li>
-            <li class="mb-2"><a href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('auth.login') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Dashboard</a></li>
+            <li class="mb-2"><a href="{{ url_for('auctions.browse') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Browse Auctions</a></li>
+            <li class="mb-2"><a href="{{ url_for('main.browse_cards') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Trading Cards</a></li>
+            <li class="mb-2"><a href="{{ url_for('auth.register') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Create Account</a></li>
+            <li class="mb-2"><a href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('auth.login') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Dashboard</a></li>
           </ul>
         </div>
 
         <!-- Links Column 2 -->
         <div class="col-6 col-lg-2">
-          <h6 class="h6 mb-3" style="color: var(--cb-text); font-weight: 700; font-size: 0.9rem;">Legal</h6>
+          <h6 class="h6 mb-3" style="color: var(--dt-text-primary); font-weight: 700; font-size: 0.9rem;">Legal</h6>
           <ul style="list-style: none; padding: 0; margin: 0;">
-            <li class="mb-2"><a href="{{ url_for('legal.privacy') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Privacy</a></li>
-            <li class="mb-2"><a href="{{ url_for('legal.terms') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Terms</a></li>
-            <li class="mb-2"><a href="{{ url_for('legal.refunds') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Refunds</a></li>
-            <li class="mb-2"><a href="{{ url_for('legal.cookies') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Cookies</a></li>
-            <li class="mb-2"><a href="{{ url_for('legal.cookies') }}#settings" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Cookie settings</a></li>
+            <li class="mb-2"><a href="{{ url_for('legal.privacy') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Privacy</a></li>
+            <li class="mb-2"><a href="{{ url_for('legal.terms') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Terms</a></li>
+            <li class="mb-2"><a href="{{ url_for('legal.refunds') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Refunds</a></li>
+            <li class="mb-2"><a href="{{ url_for('legal.cookies') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Cookies</a></li>
+            <li class="mb-2"><a href="{{ url_for('legal.cookies') }}#settings" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Cookie settings</a></li>
           </ul>
         </div>
 
         <!-- Links Column 3 -->
         <div class="col-6 col-lg-2">
-          <h6 class="h6 mb-3" style="color: var(--cb-text); font-weight: 700; font-size: 0.9rem;">Support</h6>
+          <h6 class="h6 mb-3" style="color: var(--dt-text-primary); font-weight: 700; font-size: 0.9rem;">Support</h6>
           <ul style="list-style: none; padding: 0; margin: 0;">
             {% if current_user.is_authenticated %}
-            <li class="mb-2"><a href="{{ url_for('main.feedback') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Send Feedback</a></li>
+            <li class="mb-2"><a href="{{ url_for('main.feedback') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Send Feedback</a></li>
             {% endif %}
-            <li class="mb-2"><a href="{{ url_for('notifications.index') if current_user.is_authenticated else url_for('auth.login') }}" style="color: var(--cb-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Notifications</a></li>
+            <li class="mb-2"><a href="{{ url_for('notifications.index') if current_user.is_authenticated else url_for('auth.login') }}" style="color: var(--dt-text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s;">Notifications</a></li>
           </ul>
         </div>
       </div>
 
       <!-- Footer Divider -->
-      <div style="border-top: 1px solid var(--cb-border); padding-top: var(--cb-spacing-lg); text-align: center;">
-        <p style="color: var(--cb-muted); font-size: 0.85rem; margin-bottom: 0;">
+      <div style="border-top: 1px solid var(--dt-border); padding-top: var(--dt-space-2xl); text-align: center;">
+        <p style="color: var(--dt-text-muted); font-size: 0.85rem; margin-bottom: 0;">
           © 2026 ChainBid. All rights reserved. Sepolia test network only.
         </p>
       </div>
