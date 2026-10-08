@@ -1,6 +1,6 @@
 """Deploy contracts/AuctionPayment.sol to the network at RPC_URL (use a TEST network such as Sepolia).
 
-    $env:RPC_URL = "https://sepolia.infura.io/v3/<project id>"
+    (RPC_URL is read from .env, or from the environment if set there)
     $env:DEPLOYER_PRIVATE_KEY = "<private key of a TEST-ONLY wallet>"
     python scripts/deploy_contract.py            # the AuctionPayment contract
     $env:PLATFORM_ADMIN_WALLET = "<PUBLIC address of the admin wallet that will mint in MetaMask>"
@@ -11,12 +11,15 @@ Security notes
 * The key is read from the environment for this one command, signs locally and is never printed,
   logged or written to disk. The web application itself never needs or sees any private key.
 * Clear it afterwards:  Remove-Item Env:DEPLOYER_PRIVATE_KEY
+* Never put the private key in .env: the script refuses to run if it finds it there.
+* The RPC URL contains your provider key, so it is not printed either.
 """
 import json
 import os
 import sys
 from pathlib import Path
 
+from dotenv import dotenv_values
 from eth_account import Account
 from web3 import Web3
 
@@ -55,9 +58,14 @@ def main():
     which = sys.argv[1] if len(sys.argv) > 1 else "payment"
     if which not in ("payment", "token"):
         sys.exit("Usage: python scripts/deploy_contract.py [payment|token]")
-    rpc, key = os.environ.get("RPC_URL"), os.environ.get("DEPLOYER_PRIVATE_KEY")
-    if not rpc or not key:
-        sys.exit("Set RPC_URL and DEPLOYER_PRIVATE_KEY in the environment first (see the docstring).")
+    dotenv = dotenv_values(ROOT / ".env") if (ROOT / ".env").exists() else {}
+    if dotenv.get("DEPLOYER_PRIVATE_KEY"):
+        sys.exit("Remove DEPLOYER_PRIVATE_KEY from .env: a private key must never be stored in a file. Set it only in this terminal.")
+    rpc, key = os.environ.get("RPC_URL") or dotenv.get("RPC_URL"), os.environ.get("DEPLOYER_PRIVATE_KEY")
+    if not rpc:
+        sys.exit("Set RPC_URL in .env first (see the docstring).")
+    if not key:
+        sys.exit("Set DEPLOYER_PRIVATE_KEY in this terminal first (see the docstring).")
     w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 30}))
     if not w3.is_connected():
         sys.exit("Could not connect to RPC_URL.")
@@ -71,8 +79,7 @@ def main():
         address, chain_id = deploy(w3, key)
         variable = "CONTRACT_ADDRESS"
     print()
-    print("Deployed. Put these in your .env file:")
-    print(f"  RPC_URL={rpc}")
+    print("Deployed. Put these in your .env file (RPC_URL is already there):")
     print(f"  {variable}={address}")
     print(f"  CHAIN_ID={chain_id}")
 
