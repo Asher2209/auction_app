@@ -75,25 +75,29 @@ CARD_TYPES = [
 ]
 
 
+def seed():
+    """Add the card types inside an app context. Returns how many were added (0 if any already exist)."""
+    if CardType.query.first():
+        return 0
+    for card_type_data in CARD_TYPES:
+        card_type = CardType(
+            name=card_type_data['name'],
+            slug=card_type_data['slug'],
+            description=card_type_data['description'],
+            is_active=True,
+        )
+        card_type.set_field_schema(card_type_data['field_schema'])
+        db.session.add(card_type)
+    db.session.commit()
+    return len(CARD_TYPES)
+
+
 def main():
     app = create_app()
     with app.app_context():
-        # Check if card types already exist
-        if CardType.query.first():
+        if not seed():
             print("Card types already seeded, skipping.")
             return
-
-        for card_type_data in CARD_TYPES:
-            card_type = CardType(
-                name=card_type_data['name'],
-                slug=card_type_data['slug'],
-                description=card_type_data['description'],
-                is_active=True,
-            )
-            card_type.set_field_schema(card_type_data['field_schema'])
-            db.session.add(card_type)
-
-        db.session.commit()
         print(f"✓ Seeded {len(CARD_TYPES)} card types")
         for ct in CARD_TYPES:
             print(f"  - {ct['name']} ({ct['slug']})")

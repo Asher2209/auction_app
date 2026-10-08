@@ -17,7 +17,7 @@ python -m venv .venv
 .venv/Scripts/activate            # Windows; on macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env              # then edit .env
-python scripts/seed.py            # creates the tables and loads demo data
+python scripts/seed.py            # creates the tables, demo accounts and demo trading cards
 python run.py                     # http://127.0.0.1:5000
 ```
 
@@ -30,7 +30,11 @@ python scripts/seed.py
 
 Use `python run.py`, not `flask run`: it serves the WebSocket connection for live bids and starts the auction scheduler.
 
-The demo accounts (admin, sellers, buyers) are listed at the top of `scripts/seed.py`. They exist for local development only. All demo data (users, products, bids) is synthetic.
+The demo accounts (admin, sellers, buyers) are listed at the top of `scripts/seed.py`. They exist for local development only. All demo data (users, cards, bids) is synthetic.
+
+`scripts/seed.py` also adds the card types, the "Trading Cards" category and 10 demo cards (Pokemon and football) for `seller1@demo.test`, each with a platform card ID and a placeholder image. They are submitted, not verified: sign in as `admin@demo.test` and verify them through the checklist at `/admin/cards/verify`, like any other card. Only a verified card can be auctioned, so a fresh install has no live auctions. To add the same cards for another seller, run `python scripts/seed_collectible_cards.py seller-email`.
+
+For several months of closed auctions, payments and reviews in the analytics charts, run `python scripts/seed_demo_activity.py` after `scripts/seed.py`. Those listings carry card titles but no card record, so none of them is shown as Platform Verified, and their crypto payments are synthetic (no blockchain behind them).
 
 To try the whole card flow without MetaMask, set `LOCAL_CHAIN=1`: the app starts an in-process test chain with a built-in demo wallet at `/dev-wallet`.
 
