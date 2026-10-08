@@ -8,9 +8,10 @@
     <span class="badge text-bg-secondary">{{ product.category.name }}</span>
     <span class="badge text-bg-primary">{{ product.display_status|capitalize }}</span>
   </div>
-  {% if product.is_editable %}
+  {% if product.collectible_card %}
+  <a class="btn btn-outline-secondary" href="{{ url_for('seller.view_card', card_id=product.collectible_card.id) }}">Manage card</a>
+  {% elif product.is_editable %}
   <div class="d-flex gap-2">
-    <a class="btn btn-outline-secondary" href="{{ url_for('seller.edit_product', product_id=product.id) }}">Edit</a>
     <form method="post" action="{{ url_for('seller.delete_product', product_id=product.id) }}"
           data-confirm="Delete this product permanently?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -22,7 +23,7 @@
 
 {% if product.rejection_reason %}
 <div class="alert alert-danger"><strong>Rejected by administrator:</strong> {{ product.rejection_reason }}
-  {% if product.is_editable %}<div class="small mt-1">Edit the product and save to resubmit it for approval.</div>{% endif %}</div>
+  {% if product.collectible_card %}<div class="small mt-1">Open the card to see whether it can be corrected and sent again.</div>{% endif %}</div>
 {% endif %}
 
 <div class="row g-4">

@@ -7,11 +7,12 @@ import pytest
 
 from app import timeutil
 from app.config import Config
-from app.models import Product, utcnow
+from app.models import Auction, utcnow
 
 from .test_buyer import cats, make_auction  # noqa: F401  (cats is a fixture)
 from .test_payments import client_for
-from .test_seller import FMT, form_data, post_new
+from .test_card_auction import FMT, ready_card
+from .test_listing_validation import card_type, cat, seller  # noqa: F401  (fixtures)
 
 IST = timedelta(hours=5, minutes=30)
 ROOT = Path(__file__).resolve().parent.parent
@@ -42,59 +43,51 @@ def test_conversion_round_trips_and_formats_with_the_zone_name(ist):
     assert timeutil.fmt(None) == "" and timeutil.to_local(None) is None
 
 
-def test_one_pm_typed_by_a_seller_is_one_pm_ist_not_one_pm_utc(ist, users, cats):  # noqa: F811
+def list_card(client, product, start):
+    """Put a ready card up for auction from the seller's form, with the start time typed in site time."""
+    return client.post(f"/seller/cards/{product.collectible_card.id}/auction",
+                       data={"starting_bid": "500", "duration_hours": "24", "start_time": start.strftime(FMT), "confirm_ownership": "y"})
+
+
+def test_one_pm_typed_by_a_seller_is_one_pm_ist_not_one_pm_utc(ist, users, seller, cat, card_type):  # noqa: F811
     """The reported bug: a start of 1pm showed '5 hours to wait' because 13:00 was taken as UTC."""
+    p = ready_card(seller, cat, card_type)
     c = client_for(ist, "seller@t.test")
     start = (local_now() + timedelta(hours=3)).replace(second=0, microsecond=0)
-    r = post_new(c, cats["Books"], auction_start=start.strftime(FMT), auction_end=(start + timedelta(days=1)).strftime(FMT))
-    assert r.status_code == 302
-    p = Product.query.one()
-    assert p.auction_start == start - IST  # stored as UTC
-    assert p.auction_end == start + timedelta(days=1) - IST
+    assert list_card(c, p, start).status_code == 302
+    a = Auction.query.one()
+    assert a.status == "scheduled" and a.start_time == start - IST  # stored as UTC
+    assert a.end_time == start + timedelta(days=1) - IST
     page = c.get(f"/seller/products/{p.id}").data.decode()
     assert start.strftime("%d %b %Y %H:%M") + " IST" in page  # shown back exactly as typed
     assert "UTC" not in page.split("Starts", 1)[1][:200]
 
 
-def test_the_edit_form_is_prefilled_in_ist(ist, users, cats):  # noqa: F811
+def test_a_refused_auction_form_shows_the_time_as_typed_in_ist(ist, users, seller, cat, card_type):  # noqa: F811
+    p = ready_card(seller, cat, card_type)
     c = client_for(ist, "seller@t.test")
     start = (local_now() + timedelta(hours=4)).replace(second=0, microsecond=0)
-    post_new(c, cats["Books"], auction_start=start.strftime(FMT), auction_end=(start + timedelta(days=2)).strftime(FMT))
-    p = Product.query.one()
-    html = c.get(f"/seller/products/{p.id}/edit").data.decode()
-    assert f'value="{start.strftime(FMT)}"' in html
-    assert f'value="{(start + timedelta(days=2)).strftime(FMT)}"' in html
+    r = c.post(f"/seller/cards/{p.collectible_card.id}/auction",
+               data={"starting_bid": "0", "duration_hours": "24", "start_time": start.strftime(FMT), "confirm_ownership": "y"})
+    assert r.status_code == 200 and Auction.query.count() == 0
+    assert f'value="{start.strftime(FMT)}"' in r.data.decode()  # not shifted by 5h30 on the way back
 
 
-def test_saving_the_edit_form_unchanged_does_not_shift_the_times(ist, users, cats):  # noqa: F811
-    c = client_for(ist, "seller@t.test")
-    start = (local_now() + timedelta(hours=4)).replace(second=0, microsecond=0)
-    end = start + timedelta(days=2)
-    post_new(c, cats["Books"], auction_start=start.strftime(FMT), auction_end=end.strftime(FMT))
-    p = Product.query.one()
-    for _ in range(3):  # each round trip would drift by 5h30 if a conversion were missing or doubled
-        c.post(f"/seller/products/{p.id}/edit", data=form_data(cats["Books"], auction_start=start.strftime(FMT), auction_end=end.strftime(FMT)),
-               content_type="multipart/form-data")
-    from app.extensions import db
-    db.session.expire_all()
-    assert db.session.get(Product, p.id).auction_start == start - IST
-
-
-def test_past_start_is_judged_in_ist(ist, users, cats):  # noqa: F811
+def test_past_start_is_judged_in_ist(ist, users, seller, cat, card_type):  # noqa: F811
+    p = ready_card(seller, cat, card_type)
     c = client_for(ist, "seller@t.test")
     past = (local_now() - timedelta(hours=1)).replace(second=0, microsecond=0)  # one hour ago in IST
-    r = post_new(c, cats["Books"], auction_start=past.strftime(FMT), auction_end=(past + timedelta(days=1)).strftime(FMT))
-    assert r.status_code == 200 and b"cannot be in the past" in r.data and Product.query.count() == 0
-    # the same wall-clock digits read as UTC would have been 5.5 hours in the past too, but a UTC clock reading is now far in the past here:
-    utc_wall = utcnow().replace(second=0, microsecond=0)
-    r = post_new(c, cats["Books"], auction_start=utc_wall.strftime(FMT), auction_end=(utc_wall + timedelta(days=1)).strftime(FMT))
-    assert r.status_code == 200 and Product.query.count() == 0
+    r = list_card(c, p, past)
+    assert b"cannot be in the past" in r.data and Auction.query.count() == 0
+    # the current UTC wall-clock digits, read as IST, are 5.5 hours in the past too
+    r = list_card(c, p, utcnow().replace(second=0, microsecond=0))
+    assert b"cannot be in the past" in r.data and Auction.query.count() == 0
 
 
-def test_the_form_says_which_zone_to_use(ist, users):
-    html = client_for(ist, "seller@t.test").get("/seller/products/new").data.decode()
-    assert "Auction start (IST)" in html and "Auction end (IST)" in html and "Times are in IST." in html
-    assert "(UTC)" not in html
+def test_the_form_says_which_zone_to_use(ist, users, seller, cat, card_type):  # noqa: F811
+    p = ready_card(seller, cat, card_type)
+    html = client_for(ist, "seller@t.test").get(f"/seller/cards/{p.collectible_card.id}/auction").data.decode()
+    assert "Start time (IST)" in html and "(UTC)" not in html
 
 
 def test_auction_pages_and_cards_show_ist(ist, users, cats):  # noqa: F811

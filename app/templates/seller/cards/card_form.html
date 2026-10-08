@@ -1,4 +1,4 @@
-{% extends "seller/product_form.html" %}
+{% extends "base.html" %}
 {% block title %}Create Trading Card - ChainBid{% endblock %}
 
 {% block content %}
@@ -241,6 +241,7 @@
         <!-- Card Images -->
         <h5 class="h6 mb-3 mt-4">Card Images *</h5>
         <div class="mb-3">
+          <label class="form-label fw-600" for="card_images">Photos of the card (front first, then back) *</label>
           {{ form.card_images(class="form-control form-control-lg") }}
           {% if form.card_images.errors %}
             <div class="text-danger small mt-1">{{ form.card_images.errors[0] }}</div>
@@ -253,7 +254,8 @@
           <div class="form-check">
             {{ form.confirm_accuracy(class="form-check-input") }}
             <label class="form-check-label" for="confirm_accuracy">
-              I confirm that all information above is accurate and complete
+              I own this card, have the right to sell it, and have described it honestly, as the
+              <a href="{{ url_for('legal.terms') }}#selling">Terms of Service</a> require.
             </label>
           </div>
           {% if form.confirm_accuracy.errors %}
@@ -263,7 +265,7 @@
 
         <!-- Submit -->
         <div class="d-grid gap-2">
-          {{ form.submit(class="btn btn-primary btn-lg") }}
+          <button class="btn btn-primary btn-lg" type="submit">{{ form.submit.label.text }}</button>
         </div>
       </form>
     </div>

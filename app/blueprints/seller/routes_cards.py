@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from ...extensions import db
 from ...models import (
-    Category, Notification, Product, ProductImage, ProductDetails, CollectibleCard, CardType, CardImage,
+    Category, Notification, Product, ProductImage, CollectibleCard, CardType, CardImage,
     CollectibleVerification, CardVerificationHistory, utcnow
 )
 from ...ratelimit import limited
@@ -179,9 +179,8 @@ def create_card():
                 db.session.commit()
 
                 flash(
-                    f"Card '{collectible_card.card_name}' created successfully! "
-                    f"Platform ID: <strong>{platform_card_id}</strong>. "
-                    "It's awaiting verification. You'll be able to create an auction once approved.",
+                    f"Card '{collectible_card.card_name}' created. Platform ID: {platform_card_id}. "
+                    "It is waiting for verification; you can put it up for auction once it is Platform Verified.",
                     "success"
                 )
                 return redirect(url_for('seller.product_detail', product_id=product.id))

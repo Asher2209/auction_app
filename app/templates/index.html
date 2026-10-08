@@ -133,9 +133,13 @@
     <div class="empty-state-icon">⏰</div>
     <h3 class="empty-state-title">No Active Auctions</h3>
     <p class="empty-state-description">
-      Check back soon for new collectible listings. Run <code>python scripts/seed.py</code> to load demo data.
+      A card goes up for auction once it is Platform Verified and its seller lists it. Check back soon.
     </p>
+    {% if current_user.is_authenticated and current_user.role == 'admin' %}
+    <a href="{{ url_for('admin.cards_verify_dashboard') }}" class="btn btn-primary">Review pending cards</a>
+    {% else %}
     <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary">Browse Auctions</a>
+    {% endif %}
   </div>
 </section>
 {% endif %}

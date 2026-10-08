@@ -24,7 +24,7 @@ from app.security import content_security_policy, production_problems
 from .conftest import PASSWORD, login, make_user
 from .test_buyer import cats, make_auction  # noqa: F401  (cats is a fixture)
 from .test_payments import card, client_for, pay, won
-from .test_seller import cat, form_data, img_bytes, post_new, seller  # noqa: F401  (fixtures)
+from .test_seller import card_type, cat, img_bytes, post_new, seller  # noqa: F401  (fixtures)
 
 TEMPLATES = os.path.join("app", "templates")
 
@@ -495,14 +495,10 @@ def test_csrf_failure_is_a_friendly_400():
         assert j.status_code == 400 and j.get_json()["ok"] is False
 
 
-def test_oversized_requests_are_refused(app, client, seller, cat):  # noqa: F811
+def test_oversized_requests_are_refused(app, client, seller, card_type):  # noqa: F811
     app.config["MAX_CONTENT_LENGTH"] = 2000
-    r = seller_post(client, cat, images=[(io.BytesIO(b"x" * 5000), "a.png")])
+    r = post_new(client, card_type, card_images=[(io.BytesIO(b"x" * 5000), "a.png")])
     assert r.status_code == 413 and b"too large" in r.data.lower() and Product.query.count() == 0
-
-
-def seller_post(client, category, **over):
-    return client.post("/seller/products/new", data=form_data(category, **over), content_type="multipart/form-data")
 
 
 # ============================ database integrity ==========================================================================
@@ -748,9 +744,9 @@ def png(size=(10, 10)):
     return img_bytes("PNG", size)
 
 
-def test_filenames_cannot_escape_the_upload_folder(app, client, seller, cat):  # noqa: F811
+def test_filenames_cannot_escape_the_upload_folder(app, client, seller, card_type):  # noqa: F811
     for name in ("../../evil.png", "..\\..\\evil.png", "/etc/passwd.png", "a/b/c.png", "shell.php.png", "x" * 300 + ".png", "na\u00efve \u65e5\u672c.png"):
-        r = seller_post(client, cat, images=[(png(), name)])
+        r = post_new(client, card_type, card_images=[(png(), name)])
         assert r.status_code == 302, name
     root = app.config["UPLOAD_FOLDER"]
     stored = [i.path for i in ProductImage.query.all()]
@@ -766,19 +762,19 @@ def test_filenames_cannot_escape_the_upload_folder(app, client, seller, cat):  #
     ("x.png\x00.php", png().getvalue()), ("x.jpg", b""), ("x.png", b"\x89PNG\r\n\x1a\n" + b"junk"), ("x.exe", b"MZ\x90\x00"), ("noextension", png().getvalue()),
     ("x.bmp", img_bytes("BMP").getvalue()), ("x.tiff", img_bytes("TIFF").getvalue()), ("x.ico", img_bytes("ICO").getvalue()),
 ])
-def test_dangerous_or_fake_uploads_are_rejected(app, client, seller, cat, name, data):  # noqa: F811
-    r = seller_post(client, cat, images=[(io.BytesIO(data), name)])
+def test_dangerous_or_fake_uploads_are_rejected(app, client, seller, card_type, name, data):  # noqa: F811
+    r = post_new(client, card_type, card_images=[(io.BytesIO(data), name)])
     assert r.status_code == 200 and Product.query.count() == 0 and ProductImage.query.count() == 0
     folder = os.path.join(app.config["UPLOAD_FOLDER"], "products")
     assert not os.path.exists(folder) or os.listdir(folder) == []
 
 
-def test_decompression_bombs_are_rejected(app, client, seller, cat):  # noqa: F811
+def test_decompression_bombs_are_rejected(app, client, seller, card_type):  # noqa: F811
     big = io.BytesIO()
     Image.new("1", (9000, 9000)).save(big, "PNG")  # 81 million pixels, a few KB on disk
     big.seek(0)
     assert big.getbuffer().nbytes < 200_000
-    r = seller_post(client, cat, images=[(big, "bomb.png")])
+    r = post_new(client, card_type, card_images=[(big, "bomb.png")])
     assert r.status_code == 200 and b"too large" in r.data.lower() and Product.query.count() == 0
 
 
@@ -798,14 +794,14 @@ def test_static_files_are_served_as_what_they_are_and_cannot_be_sniffed(app):
         assert anon(app).get(evil).status_code == 404, evil
 
 
-def test_too_many_images_in_one_request_are_refused(app, client, seller, cat):  # noqa: F811
-    r = seller_post(client, cat, images=[(png(), f"{i}.png") for i in range(6)])
+def test_too_many_images_in_one_request_are_refused(app, client, seller, card_type):  # noqa: F811
+    r = post_new(client, card_type, card_images=[(png(), f"{i}.png") for i in range(11)])
     assert r.status_code == 200 and Product.query.count() == 0 and ProductImage.query.count() == 0
 
 
 # ============================ mass assignment, redirects ========================================================================
-def test_clients_cannot_set_fields_they_should_not(app, client, seller, cat, users):  # noqa: F811
-    seller_post(client, cat, **{"approval_status": "approved", "seller_id": str(users["admin"].id), "rejection_reason": "x", "id": "999", "is_hidden": "1"})
+def test_clients_cannot_set_fields_they_should_not(app, client, seller, card_type, users):  # noqa: F811
+    post_new(client, card_type, **{"approval_status": "approved", "seller_id": str(users["admin"].id), "rejection_reason": "x", "id": "999", "is_hidden": "1"})
     p = Product.query.one()
     assert p.approval_status == "pending" and p.seller_id == users["seller"].id and p.rejection_reason is None and p.id != 999
 

@@ -91,7 +91,7 @@ def site(app, users, cats):  # noqa: F811
     rs.save_review(users["buyer"], paid.id, "4", "Nice")
     live = make_auction(users["seller"], cats["Sports"], "Live one", 100)
     unpaid = won(users, cats, amount="900")
-    pending = make_product(users["seller"], cats["Books"])  # not started yet, so the seller may still edit it
+    pending = make_product(users["seller"], cats["Books"])  # not started yet, so the seller may still delete it
     return {"paid": paid, "live": live, "unpaid": unpaid, "pending": pending}
 
 
@@ -102,7 +102,7 @@ def pages(site):
                "/auth/login", "/auth/register", "/auth/forgot-password"],
         "buyer@t.test": ["/buyer/", "/buyer/bids", "/buyer/watchlist", "/buyer/won", f"/payments/{unpaid.id}", f"/payments/{paid.id}", f"/auctions/{paid.id}",
                          f"/auctions/{live.id}", "/notifications/", "/feedback", "/auth/profile", "/auth/change-password"],
-        "seller@t.test": ["/seller/collectibles", "/seller/products/new", f"/seller/products/{paid.product_id}", f"/seller/products/{site['pending'].id}/edit",
+        "seller@t.test": ["/seller/collectibles", "/seller/cards/new", f"/seller/products/{paid.product_id}", f"/seller/products/{site['pending'].id}",
                           "/seller/reviews", "/auth/profile"],
         "admin@t.test": ["/admin/", "/admin/analytics", "/admin/reports", "/admin/reports/payments?from=2000-01-01&to=2030-01-01",
                          "/admin/reports/daily-auctions", "/admin/reports/crypto-transactions", "/admin/products?status=all", f"/admin/products/{paid.product_id}",

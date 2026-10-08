@@ -5,6 +5,7 @@ from wtforms import (
     DecimalField, SubmitField, MultipleFileField
 )
 from wtforms.validators import DataRequired, Optional, Length, NumberRange, ValidationError
+from ...legal import MUST_AGREE
 from ...models import CardType
 
 
@@ -293,10 +294,10 @@ class CollectibleCardForm(FlaskForm):
         render_kw={'placeholder': 'If numbered, e.g., 5/100'}
     )
 
-    # General confirmation
+    # The seller declaration the Terms of Service require for every listing (asked again on every edit)
     confirm_accuracy = BooleanField(
-        'I confirm that all information above is accurate and complete',
-        validators=[DataRequired(message='Please confirm accuracy of information')]
+        'I own this card, have the right to sell it, and have described it honestly',
+        validators=[DataRequired(message=MUST_AGREE)]
     )
 
     submit = SubmitField('Save Card Listing')
