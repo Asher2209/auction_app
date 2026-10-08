@@ -21,7 +21,7 @@
           {% for msg in messages %}
             <div class="mb-3 {{ 'text-end' if msg.sender_id == current_user.id else '' }}">
               <div class="d-inline-block p-2 rounded" style="max-width:70%;background:{{ '#e3f2fd' if msg.sender_id == current_user.id else 'white' }};border:1px solid #ddd">
-                <div class="small text-muted mb-1">{{ msg.sender.name }} · {{ msg.sent_time|utc }}</div>
+                <div class="small text-muted mb-1">{{ msg.sender.name }} · {{ msg.sent_time|local }}</div>
                 <div class="fw-bold mb-1">{{ msg.subject }}</div>
                 <div style="white-space:pre-wrap">{{ msg.body }}</div>
               </div>

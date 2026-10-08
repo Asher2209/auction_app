@@ -41,7 +41,7 @@
       <ul class="list-unstyled small mb-0">
         {% for t in transfers %}
         <li class="mb-1"><code>{{ t.from_wallet[:6] }}...{{ t.from_wallet[-4:] }}</code> &rarr; <code>{{ t.to_wallet[:6] }}...{{ t.to_wallet[-4:] }}</code>
-          &middot; {{ t.confirmed_at|utc }}{% if t.auction_id %} &middot; auction #{{ t.auction_id }}{% endif %}
+          &middot; {{ t.confirmed_at|local }}{% if t.auction_id %} &middot; auction #{{ t.auction_id }}{% endif %}
           {% if explorer(t.transaction_hash) %}&middot; <a href="{{ explorer(t.transaction_hash) }}" target="_blank" rel="noopener">transaction</a>{% endif %}</li>
         {% endfor %}
       </ul>

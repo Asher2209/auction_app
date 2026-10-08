@@ -27,7 +27,7 @@
       <div class="small text-muted mt-1">{{ payment.reference }}{% if payment.gateway_ref %} &middot; {{ payment.gateway_ref }}{% endif %}</div>
       {% endif %}
       {% if payment.payment_status == 'successful' %}
-      <div class="small text-muted">Paid on {{ payment.payment_date|utc }}</div>
+      <div class="small text-muted">Paid on {{ payment.payment_date|local }}</div>
       {% endif %}
     </div></div>
     <p class="small text-muted mt-3 mb-0">This is a <strong>simulated</strong> payment: no real money moves, and card numbers and CVVs are never stored.</p>

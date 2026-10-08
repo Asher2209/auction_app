@@ -39,7 +39,7 @@
       <dl class="cd-grid">{{ row('Platform card ID', platform_card_id, true) }}</dl>
       {% if is_verified %}
       <div class="cd-status cd-status-ok mt-3">&#10003; Platform Verified</div>
-      {% if verification.verification_date %}<dl class="cd-grid mt-2">{{ row('Verified On', verification.verification_date|utc) }}</dl>{% endif %}
+      {% if verification.verification_date %}<dl class="cd-grid mt-2">{{ row('Verified On', verification.verification_date|local) }}</dl>{% endif %}
       <p class="cd-note"><span class="cd-note-label">Platform review</span>This card has been reviewed and verified by the ChainBid platform. The review checks the submitted details and images against a checklist. It is not a guarantee that the physical card is genuine.</p>
       {% else %}
       <div class="cd-status {{ 'cd-status-bad' if vstatus == 'rejected' else 'cd-status-wait' }} mt-3">
@@ -55,7 +55,7 @@
       <dl class="cd-grid">
         {{ row('Status', 'Live now' if active_auction.status == 'active' else 'Upcoming') }}
         {{ row('Current bid', active_auction.current_bid|money) }}
-        {{ row('Ends' if active_auction.status == 'active' else 'Starts', (active_auction.end_time if active_auction.status == 'active' else active_auction.start_time)|utc) }}
+        {{ row('Ends' if active_auction.status == 'active' else 'Starts', (active_auction.end_time if active_auction.status == 'active' else active_auction.start_time)|local) }}
       </dl>
       <a href="{{ url_for('auctions.detail', auction_id=active_auction.id) }}" class="btn btn-primary btn-sm mt-3">View the auction</a>
     </section>
@@ -113,7 +113,7 @@
     <ul class="cd-history" aria-label="Ownership history">
       <li class="cd-heading" style="margin-bottom: 0.5rem;">Ownership history</li>
       {% for t in transfers %}
-      <li><span class="cd-mono">{{ t.to_wallet[:6] }}...{{ t.to_wallet[-4:] }}</span> from <span class="cd-mono">{{ t.from_wallet[:6] }}...{{ t.from_wallet[-4:] }}</span> &middot; {{ t.confirmed_at|utc }}{% if tx_url(t.transaction_hash) %} &middot; <a href="{{ tx_url(t.transaction_hash) }}" target="_blank" rel="noopener noreferrer">transaction</a>{% endif %}</li>
+      <li><span class="cd-mono">{{ t.to_wallet[:6] }}...{{ t.to_wallet[-4:] }}</span> from <span class="cd-mono">{{ t.from_wallet[:6] }}...{{ t.from_wallet[-4:] }}</span> &middot; {{ t.confirmed_at|local }}{% if tx_url(t.transaction_hash) %} &middot; <a href="{{ tx_url(t.transaction_hash) }}" target="_blank" rel="noopener noreferrer">transaction</a>{% endif %}</li>
       {% endfor %}
     </ul>
     {% endif %}

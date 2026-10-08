@@ -59,6 +59,8 @@ Settings come from environment variables, read from `.env` (see `.env.example`).
 | `BLOCK_EXPLORER_TX_URL` | `https://sepolia.etherscan.io/tx/` | Prefix for transaction links |
 | `CONFIRMATIONS_REQUIRED` | `2` | Blocks to wait before a payment counts |
 | `INR_PER_ETH` | `320000` | Fixed exchange rate used to price auctions in ETH |
+| `APP_TZ_NAME` | `IST` | Name of the display time zone. Times are stored as UTC and typed and shown in this zone |
+| `APP_TZ_OFFSET_MINUTES` | `330` | Its fixed offset from UTC in minutes (IST is +5:30, no daylight saving) |
 | `LOCAL_CHAIN` | `0` | `1`: development-only in-process test chain with a demo wallet |
 
 Deploying the contracts to Sepolia needs a funded test-only wallet; see `docs/CRYPTO_SETUP.md`. The deploy script reads the deployer key from an environment variable for that one command; never put a key in `.env` or in the repository.

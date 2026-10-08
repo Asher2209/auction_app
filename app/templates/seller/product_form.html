@@ -38,7 +38,7 @@
           {{ form.images.label(class="form-label") }}
           {{ form.images(class="form-control" ~ (" is-invalid" if form.images.errors else ""), accept="image/jpeg,image/png,image/webp,image/gif") }}
           {% for e in form.images.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-          <div class="form-text">Up to 5 images, 5 MB each (JPG, PNG, WEBP, GIF). Times are in UTC.</div>
+          <div class="form-text">Up to 5 images, 5 MB each (JPG, PNG, WEBP, GIF). Times are in {{ tz_name }}.</div>
         </div>
 
         <button class="btn btn-primary" type="submit">{{ 'Save changes' if product else 'Submit for approval' }}</button>

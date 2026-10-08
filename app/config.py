@@ -56,6 +56,9 @@ class Config:
     MIN_AUCTION_MINUTES = 5
     MAX_AUCTION_DAYS = 30
     CURRENCY_SYMBOL = "₹"
+    # Display zone: timestamps are stored as naive UTC, people type and see them in this fixed-offset zone (see timeutil.py).
+    TZ_NAME = os.environ.get("APP_TZ_NAME", "IST")
+    TZ_OFFSET_MINUTES = int(os.environ.get("APP_TZ_OFFSET_MINUTES", "330"))
     # Lets the seeded @demo.test accounts pass email validation. Set to 0 in production.
     ALLOW_TEST_EMAILS = os.environ.get("ALLOW_TEST_EMAILS", "1") == "1"
 
@@ -66,6 +69,7 @@ class TestConfig(Config):
     MAIL_ASYNC = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     WTF_CSRF_ENABLED = False
+    TZ_NAME, TZ_OFFSET_MINUTES = "UTC", 0  # tests pin UTC; tests/test_timezone.py switches to IST
     # The real .env is still loaded, but tests never reach a real blockchain or depend on the contracts deployed
     # there. Tests that need a chain start their own (see tests/test_crypto.py and tests/test_minting.py).
     RPC_URL = None

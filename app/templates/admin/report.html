@@ -56,7 +56,7 @@
 <div class="table-responsive">
 <table class="table table-sm table-hover align-middle bg-white">
   <thead class="table-dark"><tr>
-    {% for c in report.columns %}<th scope="col" class="{{ 'text-end' if c.kind in ('int', 'money', 'eth', 'rating', 'pct') }}">{{ c.label }}</th>{% endfor %}
+    {% for c in report.columns %}<th scope="col" class="{{ 'text-end' if c.kind in ('int', 'money', 'eth', 'rating', 'pct') }}">{{ c.display_label }}</th>{% endfor %}
   </tr></thead>
   <tbody>
   {% for row in shown %}

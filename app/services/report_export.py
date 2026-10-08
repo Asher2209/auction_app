@@ -19,6 +19,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from .. import timeutil
 from .invoice_service import _t  # Latin-1 safe + XML-escaped text
 
 FORMULA_STARTS = ("=", "+", "-", "@", "\t", "\r", "\n")
@@ -36,7 +37,7 @@ def fmt(kind, value):
     if kind == "eth":
         return f"{float(value):,.6f}".rstrip("0").rstrip(".") if float(value) else "0"
     if kind == "datetime":
-        return value.strftime("%Y-%m-%d %H:%M") if isinstance(value, datetime) else str(value)
+        return timeutil.to_local(value).strftime("%Y-%m-%d %H:%M") if isinstance(value, datetime) else str(value)
     if kind == "date":
         return value.isoformat() if isinstance(value, (date, datetime)) else str(value)
     if kind == "rating":
@@ -54,7 +55,7 @@ def describe_params(report, params):
     elif report.filter == "range":
         label = f" ({report.filter_label})" if report.filter_label else ""
         if params.start or params.end:
-            a = params.start.date().isoformat() if params.start else "the beginning"
+            a = params.first_day.isoformat() if params.start else "the beginning"
             b = params.last_day.isoformat() if params.end else "today"
             parts.append(f"Period: {a} to {b}{label}")
         else:
@@ -66,8 +67,12 @@ def describe_params(report, params):
     return " | ".join(parts)
 
 
+def _generated(now):
+    return f"{timeutil.to_local(now).strftime('%Y-%m-%d %H:%M')} {timeutil.tz_name()}"
+
+
 def filename(report, ext, now):
-    return f"chainbid-{report.key}-{now.strftime('%Y%m%d')}.{ext}"
+    return f"chainbid-{report.key}-{timeutil.to_local(now).strftime('%Y%m%d')}.{ext}"
 
 
 # ---- Excel ------------------------------------------------------------------------------------------------------
@@ -80,6 +85,8 @@ def _put(cell, kind, value):
         return
     if isinstance(value, Decimal):
         value = float(value)
+    if kind == "datetime" and isinstance(value, datetime):
+        value = timeutil.to_local(value)  # the sheet holds site-zone times, as its header says
     cell.value = value
     if isinstance(value, str):
         if value.startswith(FORMULA_STARTS):
@@ -95,13 +102,13 @@ def render_xlsx(report, data, params, now):
     ws["A1"] = report.title
     ws["A1"].font = Font(bold=True, size=14)
     ws["A2"] = describe_params(report, params)
-    ws["A3"] = f"Generated {now.strftime('%Y-%m-%d %H:%M')} UTC. Amounts in INR unless stated."
+    ws["A3"] = f"Generated {_generated(now)}. Amounts in INR unless stated."
     ws["A2"].font = ws["A3"].font = Font(color="6C757D", size=9)
     header_row = 5
     head_fill = PatternFill("solid", fgColor="212529")
     thin = Side(style="thin", color="DEE2E6")
     for i, col in enumerate(report.columns, 1):
-        c = ws.cell(header_row, i, col.label)
+        c = ws.cell(header_row, i, col.display_label)
         c.font = Font(bold=True, color="FFFFFF")
         c.fill = head_fill
         c.alignment = Alignment(vertical="center", wrap_text=True, horizontal="left" if col.kind in ("text", "mono") else "right")
@@ -116,7 +123,7 @@ def render_xlsx(report, data, params, now):
     if data.rows:
         ws.auto_filter.ref = f"A{header_row}:{get_column_letter(len(report.columns))}{header_row + len(data.rows)}"
     for i, col in enumerate(report.columns, 1):
-        longest = max([len(col.label)] + [len(fmt(col.kind, row[i - 1])) for row in data.rows[:300]])
+        longest = max([len(col.display_label)] + [len(fmt(col.kind, row[i - 1])) for row in data.rows[:300]])
         ws.column_dimensions[get_column_letter(i)].width = min(max(10, longest + 2), 70)
 
     summary = wb.create_sheet("Summary")
@@ -177,10 +184,10 @@ def render_pdf(report, data, params, now):
 
     total_weight = sum(c.weight for _, c in cols)
     # proportional widths, but never narrower than the longest header word (so "Payment" never breaks mid-word)
-    widths = [max(width * c.weight / total_weight, 4.6 * max(len(w) for w in c.label.split()) + 8) for _, c in cols]
+    widths = [max(width * c.weight / total_weight, 4.6 * max(len(w) for w in c.display_label.split()) + 8) for _, c in cols]
     if sum(widths) > width:
         widths = [w * width / sum(widths) for w in widths]
-    table_rows = [[Paragraph(_t(c.label), ParagraphStyle("h", parent=head, alignment=2 if c.kind in right else 0)) for _, c in cols]]
+    table_rows = [[Paragraph(_t(c.display_label), ParagraphStyle("h", parent=head, alignment=2 if c.kind in right else 0)) for _, c in cols]]
     for row in data.rows:
         table_rows.append([Paragraph(_t(fmt(c.kind, row[i])), style_for(c, "c")) for i, c in cols])
     if not data.rows:
@@ -196,7 +203,7 @@ def render_pdf(report, data, params, now):
     title = ParagraphStyle("title", parent=base, fontName="Helvetica-Bold", fontSize=16, leading=19, textColor=INK)
     sub = ParagraphStyle("sub", parent=base, fontSize=8.5, leading=11, textColor=MUTED)
     story = [Paragraph(_t(report.title), title), Paragraph(_t(describe_params(report, params)), sub),
-             Paragraph(_t(f"Generated {now.strftime('%Y-%m-%d %H:%M')} UTC by ChainBid. Amounts in INR unless stated."), sub), Spacer(1, 4 * mm)]
+             Paragraph(_t(f"Generated {_generated(now)} by ChainBid. Amounts in INR unless stated."), sub), Spacer(1, 4 * mm)]
     if data.summary:
         cells = [[Paragraph(f'<font size=6.5 color="#6c757d">{_t(label).upper()}</font><br/><font size=11><b>{_t(fmt(kind, value))}</b></font>', base)
                   for label, value, kind in data.summary]]

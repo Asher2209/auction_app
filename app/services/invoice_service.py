@@ -24,6 +24,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import Image, KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from .. import timeutil
 from ..extensions import db
 from ..models import Invoice, utcnow
 from .notifications import notify
@@ -96,7 +97,7 @@ def _inr(amount):
 
 
 def _dt(value):
-    return value.strftime("%d %b %Y, %H:%M UTC") if value else "-"
+    return timeutil.fmt(value, "%d %b %Y, %H:%M") if value else "-"
 
 
 def method_label(payment):

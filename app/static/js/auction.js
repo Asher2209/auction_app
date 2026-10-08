@@ -19,7 +19,11 @@
   const $ = (id) => document.getElementById(id);
   const money = (v) => currency + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const pad = (n) => String(n).padStart(2, "0");
-  const fmtTime = (iso) => new Date(iso).toUTCString().replace("GMT", "UTC").slice(5, 22) + " UTC";
+  // Times are shown in the site zone (fixed offset, from <meta name="app-tz">); the countdown itself works on absolute UTC instants.
+  const tzMeta = document.querySelector('meta[name="app-tz"]');
+  const tzName = tzMeta ? tzMeta.content : "UTC";
+  const tzOffset = tzMeta ? parseInt(tzMeta.dataset.offset, 10) || 0 : 0;
+  const fmtTime = (iso) => new Date(Date.parse(iso) + tzOffset * 60000).toUTCString().slice(5, 22) + " " + tzName;
 
   function notice(text, kind) {
     const el = $("notice");

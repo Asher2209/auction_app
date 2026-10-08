@@ -4,6 +4,7 @@ from flask import Response, abort, flash, jsonify, redirect, render_template, re
 from flask_login import current_user
 from sqlalchemy import func
 
+from ... import timeutil
 from ...extensions import db
 from ...models import (Auction, Bid, BlockchainAsset, BlockchainTransfer, Category, CollectibleCard, CollectibleVerification,
                        CryptoPayment, Feedback, Payment, Product, Review, User, utcnow)
@@ -402,7 +403,7 @@ def report_view(key):
     report = _report_or_404(key)
     params, errors = report_service.parse_params(report, request.args)
     data = report_service.run(report, params)
-    today = utcnow().date()
+    today = timeutil.to_local(utcnow()).date()  # presets end on the site's today
     keep = {"status": params.status} if report.statuses and params.status != "all" else {}
     spans = [("Last 7 days", 7), ("Last 30 days", 30), ("Last 90 days", 90), ("Last 12 months", 365)]
     presets = [(label, url_for("admin.report_view", key=key, **{"from": (today - timedelta(days=d - 1)).isoformat(), "to": today.isoformat()}, **keep))
@@ -412,7 +413,7 @@ def report_view(key):
         "admin/report.html", report=report, data=data, params=params, errors=errors, fmt=report_export.fmt,
         shown=data.rows[:HTML_ROWS], html_rows=HTML_ROWS, description=report_export.describe_params(report, params),
         qs={k: request.args[k] for k in REPORT_ARGS if request.args.get(k)}, presets=presets, status_choices=report_service.STATUS_CHOICES,
-        from_value=params.start.date().isoformat() if params.start else "", to_value=params.last_day.isoformat() if params.end else "",
+        from_value=params.first_day.isoformat() if params.start else "", to_value=params.last_day.isoformat() if params.end else "",
         day_value=params.day.isoformat() if params.day else "")
 
 

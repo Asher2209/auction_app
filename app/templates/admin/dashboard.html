@@ -54,7 +54,7 @@
   {% for p in pending %}
   <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ url_for('admin.card_verification_detail', verification_id=p.collectible_verification.id) if p.collectible_verification else url_for('admin.product_review', product_id=p.id) }}">
     <span>{{ p.title }} <span class="text-muted small">by {{ p.seller.name }}</span></span>
-    <span class="text-muted small">{{ p.created_at|utc }}</span>
+    <span class="text-muted small">{{ p.created_at|local }}</span>
   </a>
   {% else %}
   <div class="list-group-item text-muted">Nothing waiting.</div>

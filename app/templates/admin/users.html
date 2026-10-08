@@ -22,7 +22,7 @@
   {% for u in page.items %}
     <tr>
       <td>{{ u.name }}</td><td>{{ u.email }}</td><td>{{ u.role|capitalize }}</td>
-      <td>{{ u.created_at|utc }}</td>
+      <td>{{ u.created_at|local }}</td>
       <td>{% if u.is_active_user %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Deactivated</span>{% endif %}</td>
       <td class="text-end">
         {% if u.id != current_user.id %}

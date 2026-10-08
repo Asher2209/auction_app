@@ -23,7 +23,7 @@
         <span class="text-warning">{{ r.rating|stars }}</span>
         <a class="fw-semibold ms-1" href="{{ url_for('admin.product_review', product_id=r.product_id) }}">{{ r.product.title }}</a>
         {% if r.is_hidden %}<span class="badge text-bg-warning ms-1">Hidden</span>{% endif %}
-        <div class="small text-muted">by {{ r.buyer.name }} ({{ r.buyer.email }}) &middot; {{ r.created_at|utc }}</div>
+        <div class="small text-muted">by {{ r.buyer.name }} ({{ r.buyer.email }}) &middot; {{ r.created_at|local }}</div>
       </div>
       <div class="d-flex gap-2 align-items-start">
         {% if r.is_hidden %}

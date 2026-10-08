@@ -3,9 +3,9 @@ from datetime import timedelta
 from flask import current_app
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, DecimalField, IntegerField, MultipleFileField, SelectField, StringField, TextAreaField
-from wtforms.fields import DateTimeLocalField
 from wtforms.validators import DataRequired, Length, NumberRange, ValidationError, Optional
 
+from ... import timeutil
 from ...models import utcnow
 from ...services.category_questionnaires import get_category_questions
 
@@ -20,8 +20,8 @@ class ProductForm(FlaskForm):
         "Starting price", places=2,
         validators=[DataRequired(), NumberRange(min=1, max=10_000_000, message="Enter a price between 1 and 10,000,000.")],
     )
-    auction_start = DateTimeLocalField("Auction start (UTC)", format=DT_FORMAT, validators=[DataRequired()])
-    auction_end = DateTimeLocalField("Auction end (UTC)", format=DT_FORMAT, validators=[DataRequired()])
+    auction_start = timeutil.LocalDateTimeField("Auction start", format=DT_FORMAT, validators=[DataRequired()])  # typed in site time, .data is UTC
+    auction_end = timeutil.LocalDateTimeField("Auction end", format=DT_FORMAT, validators=[DataRequired()])
     images = MultipleFileField("Product images")
 
     # Common detail fields
@@ -75,6 +75,12 @@ class ProductForm(FlaskForm):
     material_home = StringField("Material (Home)", validators=[Optional(), Length(max=100)])
     dimensions_home = StringField("Dimensions", validators=[Optional(), Length(max=100)])
     assembly_required = BooleanField("Assembly Required", validators=[Optional()])
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        zone = timeutil.tz_name()
+        self.auction_start.label.text = f"Auction start ({zone})"
+        self.auction_end.label.text = f"Auction end ({zone})"
 
     def validate_auction_start(self, field):
         # small grace period so "start now" survives the round trip

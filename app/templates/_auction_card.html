@@ -30,7 +30,7 @@
       <span>{{ count or 0 }} bid{{ '' if count == 1 else 's' }}</span>
       <span class="cc-time">
         {% if a.status == 'active' %}{{ a.end_time|time_left }} left
-        {% elif a.status == 'scheduled' %}Starts {{ a.start_time|utc }}
+        {% elif a.status == 'scheduled' %}Starts {{ a.start_time|local }}
         {% else %}Ended{% endif %}
       </span>
     </div>

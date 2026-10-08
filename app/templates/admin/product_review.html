@@ -27,8 +27,8 @@
       <dt class="col-5">Seller</dt><dd class="col-7">{{ product.seller.name }} ({{ product.seller.email }})</dd>
       <dt class="col-5">Category</dt><dd class="col-7">{{ product.category.name }}</dd>
       <dt class="col-5">Starting price</dt><dd class="col-7">{{ product.starting_price|money }}</dd>
-      <dt class="col-5">Requested start</dt><dd class="col-7">{{ product.auction_start|utc }}</dd>
-      <dt class="col-5">Requested end</dt><dd class="col-7">{{ product.auction_end|utc }}</dd>
+      <dt class="col-5">Requested start</dt><dd class="col-7">{{ product.auction_start|local }}</dd>
+      <dt class="col-5">Requested end</dt><dd class="col-7">{{ product.auction_end|local }}</dd>
       {% if auction %}
       <dt class="col-5">Bids</dt><dd class="col-7">{{ auction.bids|length }}{% if auction.bids %} (highest {{ auction.current_bid|money }}){% endif %}</dd>
       {% endif %}

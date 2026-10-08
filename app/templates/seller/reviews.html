@@ -12,7 +12,7 @@
   <div><span class="text-warning">{{ r.rating|stars }}</span>
     <a class="fw-semibold ms-2" href="{{ url_for('seller.product_detail', product_id=r.product_id) }}">{{ r.product.title }}</a></div>
   {% if r.comment %}<p class="mb-1" style="white-space:pre-wrap">{{ r.comment }}</p>{% endif %}
-  <div class="small text-muted">{{ r.buyer.name }} &middot; {{ r.created_at|utc }}</div>
+  <div class="small text-muted">{{ r.buyer.name }} &middot; {{ r.created_at|local }}</div>
 </div>
 {% else %}
 <p class="text-muted">No reviews yet. Buyers can review an item once they have paid for it.</p>

@@ -69,7 +69,7 @@
       <dl class="cd-grid mt-4">
         <div class="cd-row"><dt>Starting price</dt><dd>{{ product.starting_price|money }}</dd></div>
         <div class="cd-row"><dt>Number of bids</dt><dd id="bid-count">{{ bid_total }}</dd></div>
-        <div class="cd-row"><dt id="end-label">{{ 'Ended' if auction.status == 'closed' else 'Ends' }}</dt><dd id="end-time">{{ auction.end_time|utc }}</dd></div>
+        <div class="cd-row"><dt id="end-label">{{ 'Ended' if auction.status == 'closed' else 'Ends' }}</dt><dd id="end-time">{{ auction.end_time|local }}</dd></div>
       </dl>
 
       <div id="winner-box" class="alert alert-secondary mt-3 {{ '' if auction.status == 'closed' and auction.winner else 'd-none' }}">
@@ -152,7 +152,7 @@
     <h2 class="cd-heading">Platform verification</h2>
     {% if verified %}
     <div class="cd-status cd-status-ok">&#10003; Platform verified</div>
-    <dl class="cd-grid mt-2">{{ row('Verified on', v.verification_date|utc if v.verification_date) }}</dl>
+    <dl class="cd-grid mt-2">{{ row('Verified on', v.verification_date|local if v.verification_date) }}</dl>
     <p class="cd-note"><span class="cd-note-label">Platform review</span>A ChainBid admin checked the submitted details and images against a checklist. This is a platform review, not a guarantee that the physical card is genuine.</p>
     {% else %}
     <div class="cd-status cd-status-wait">Not platform verified</div>
@@ -180,7 +180,7 @@
     {% if transfers %}
     <ul class="cd-history" aria-label="Ownership history">
       {% for t in transfers %}
-      <li><span class="cd-mono">{{ t.from_wallet[:6] }}&hellip;{{ t.from_wallet[-4:] }}</span> &rarr; <span class="cd-mono">{{ t.to_wallet[:6] }}&hellip;{{ t.to_wallet[-4:] }}</span> &middot; {{ t.confirmed_at|utc }}{% if tx_url(t.transaction_hash) %} &middot; <a href="{{ tx_url(t.transaction_hash) }}" target="_blank" rel="noopener noreferrer">transaction</a>{% endif %}</li>
+      <li><span class="cd-mono">{{ t.from_wallet[:6] }}&hellip;{{ t.from_wallet[-4:] }}</span> &rarr; <span class="cd-mono">{{ t.to_wallet[:6] }}&hellip;{{ t.to_wallet[-4:] }}</span> &middot; {{ t.confirmed_at|local }}{% if tx_url(t.transaction_hash) %} &middot; <a href="{{ tx_url(t.transaction_hash) }}" target="_blank" rel="noopener noreferrer">transaction</a>{% endif %}</li>
       {% endfor %}
     </ul>
     {% endif %}
@@ -207,7 +207,7 @@
         <tr>
           <td>{% if current_user.is_authenticated and b.buyer_id == current_user.id %}<strong>You</strong>{% else %}{{ b.buyer.name|mask }}{% endif %}</td>
           <td>{{ b.amount|money }}</td>
-          <td>{{ b.bid_time|utc }}</td>
+          <td>{{ b.bid_time|local }}</td>
         </tr>
       {% endfor %}
       </tbody>

@@ -13,7 +13,7 @@
       <td><a href="{{ url_for('auctions.detail', auction_id=a.id) }}">{{ a.product.title }}</a></td>
       <td>{{ a.product.seller.name }}</td>
       <td>{{ w.winning_amount|money }}</td>
-      <td>{{ w.winning_time|utc }}</td>
+      <td>{{ w.winning_time|local }}</td>
       {% set pay = a.payment %}
       <td>
         {% if not pay %}<span class="badge text-bg-warning">Pending</span>

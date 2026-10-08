@@ -16,7 +16,7 @@
     <div>
       <div class="fw-semibold">{{ f.user.name }} <span class="text-muted fw-normal small">({{ f.user.email }}, {{ f.user.role }})</span></div>
       <div style="white-space:pre-wrap">{{ f.message }}</div>
-      <div class="small text-muted">{{ f.created_at|utc }}</div>
+      <div class="small text-muted">{{ f.created_at|local }}</div>
     </div>
     <form method="post" action="{{ url_for('admin.delete_feedback', feedback_id=f.id) }}" data-confirm="Delete this feedback?">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
