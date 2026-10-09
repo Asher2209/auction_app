@@ -15,3 +15,6 @@ node_modules/
 
 # created by the claude-mem plugin, not part of the project
 claude-mem/
+
+# official card scans for the local demo (scripts/fetch_demo_card_images.py): The Pokemon Company artwork, never commit
+scripts/demo_card_images/
