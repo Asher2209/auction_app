@@ -24,7 +24,7 @@ against an in-memory database; blockchain tests use a real EVM (eth-tester) with
 | Product editing | `tests/test_phase10_hardening.py::test_editing_a_card_throws_away_the_checks_made_on_the_old_details`, `tests/test_phase10_hardening.py::test_the_edit_rule_follows_the_state_of_the_card`, `tests/test_seller.py::test_a_listing_without_a_card_can_no_longer_be_edited`, `tests/test_seller.py::test_cannot_edit_or_delete_after_auction_starts`, `tests/test_seller.py::test_cannot_touch_another_sellers_product` |
 | Product deletion | `tests/test_seller.py::test_delete_removes_product_auction_and_files`, `tests/test_seller.py::test_delete_requires_post` |
 | Image upload | `tests/test_seller.py::test_upload_rejects_non_image_with_image_extension`, `tests/test_seller.py::test_one_bad_file_stores_nothing`, `tests/test_security.py::test_dangerous_or_fake_uploads_are_rejected` |
-| Auction creation | `tests/test_card_auction.py::test_the_service_enforces_the_start_window`, `tests/test_card_auction.py::test_the_service_enforces_the_duration_limits`, `tests/test_admin.py::test_approve_creates_auction_and_notifies` |
+| Auction creation | `tests/test_card_auction.py::test_the_service_enforces_the_start_window`, `tests/test_card_auction.py::test_the_service_enforces_the_duration_limits`, `tests/test_card_auction.py::test_seller_creates_an_auction_for_a_verified_card` |
 
 ## Buyer
 

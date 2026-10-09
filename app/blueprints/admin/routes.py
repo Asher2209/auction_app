@@ -6,14 +6,14 @@ from sqlalchemy import func
 
 from ... import timeutil
 from ...extensions import db
-from ...models import (Auction, Bid, BlockchainAsset, BlockchainTransfer, Category, CollectibleCard, CollectibleVerification,
+from ...models import (Auction, Bid, BlockchainAsset, BlockchainTransfer, CollectibleCard, CollectibleVerification,
                        CryptoPayment, Feedback, Payment, Product, Review, User, utcnow)
 from ...services import analytics_service, payment_service, report_export, report_service
-from ...services import auction_validation_service, review_service
+from ...services import review_service
 from ...services.notifications import notify
 from ...utils import like_pattern, role_required, safe_redirect_target
 from . import bp
-from .forms import CategoryForm, ReasonForm
+from .forms import ReasonForm
 
 PER_PAGE = 15
 PRODUCT_FILTERS = ("pending", "approved", "rejected", "all")
@@ -60,7 +60,6 @@ def dashboard():
         "active_auctions": Auction.query.filter(Auction.status.in_(("scheduled", "active"))).count(),
         "completed_auctions": Auction.query.filter_by(status="closed").count(),
         "bids": Bid.query.count(),
-        "categories": Category.query.count(),
         "crypto_payments": CryptoPayment.query.filter_by(status="confirmed").count(),
         "pending_payments": payment_service.pending_total(),
         "revenue": payment_service.revenue_total(),
@@ -70,7 +69,9 @@ def dashboard():
     return render_template("admin/dashboard.html", stats=stats, pending=pending, cs=_card_stats())
 
 
-# ---- product moderation -------------------------------------------------
+# ---- listing moderation -------------------------------------------------
+# Cards are approved or rejected only through the verification checklist (routes_verification.py) and the
+# seller schedules the auction. These pages list every listing and keep the power to take one down, live or not.
 @bp.route("/products")
 @role_required("admin")
 def products():
@@ -96,66 +97,6 @@ def product_review(product_id):
                            form=ReasonForm())
 
 
-@bp.route("/products/<int:product_id>/approve", methods=["POST"])
-@role_required("admin")
-def approve_product(product_id):
-    product = _product_or_404(product_id)
-    if product.approval_status != "pending" or product.auction is not None:
-        flash("Only pending listings can be approved.", "warning")
-        return redirect(url_for("admin.product_review", product_id=product.id))
-
-    listing = auction_validation_service.check_listing(product)
-    if not listing.ok:
-        flash("This card cannot be listed: " + " ".join(i.message for i in listing.violations), "danger")
-        return redirect(url_for("admin.product_review", product_id=product.id))
-    for warning in listing.warnings:
-        flash(warning.message, "warning")
-
-    now = utcnow()
-    if product.auction_end <= now:
-        flash("This listing's auction window has already passed. Ask the seller to reschedule it.", "danger")
-        return redirect(url_for("admin.product_review", product_id=product.id))
-
-    product.approval_status = "approved"
-    product.rejection_reason = None
-    db.session.add(Auction(
-        product_id=product.id,
-        start_time=product.auction_start,
-        end_time=product.auction_end,
-        original_end_time=product.auction_end,
-        # first bid must be at least the starting price; later bids must beat current_bid
-        current_bid=product.starting_price,
-        status="active" if product.auction_start <= now else "scheduled",
-    ))
-    notify(product.seller_id, "Product approved",
-           f'Your listing "{product.title}" was approved and the auction is set up.',
-           url=f"/seller/products/{product.id}", email=True)
-    db.session.commit()
-    flash("Listing approved and auction created.", "success")
-    return redirect(url_for("admin.products", status="pending"))
-
-
-@bp.route("/products/<int:product_id>/reject", methods=["POST"])
-@role_required("admin")
-def reject_product(product_id):
-    product = _product_or_404(product_id)
-    form = ReasonForm()
-    if product.approval_status != "pending":
-        flash("Only pending listings can be rejected. Use Remove for live listings.", "warning")
-        return redirect(url_for("admin.product_review", product_id=product.id))
-    if not form.validate_on_submit():
-        flash("Please give a reason of at least 5 characters.", "danger")
-        return redirect(url_for("admin.product_review", product_id=product.id))
-    product.approval_status = "rejected"
-    product.rejection_reason = form.reason.data.strip()
-    notify(product.seller_id, "Product rejected",
-           f'Your listing "{product.title}" was rejected: {product.rejection_reason}',
-           url=f"/seller/products/{product.id}", email=True)
-    db.session.commit()
-    flash("Listing rejected.", "info")
-    return redirect(url_for("admin.products", status="pending"))
-
-
 @bp.route("/products/<int:product_id>/remove", methods=["POST"])
 @role_required("admin")
 def remove_product(product_id):
@@ -163,6 +104,9 @@ def remove_product(product_id):
     product = _product_or_404(product_id)
     form = ReasonForm()
     auction = product.auction
+    if product.approval_status == "pending" and product.collectible_verification is not None:
+        flash("A card waiting for verification is approved or rejected on its checklist.", "warning")
+        return redirect(url_for("admin.card_verification_detail", verification_id=product.collectible_verification.id))
     if auction is not None and auction.status == "closed":
         flash("Completed auctions have winner and payment records and cannot be removed.", "warning")
         return redirect(url_for("admin.product_review", product_id=product.id))
@@ -219,58 +163,6 @@ def toggle_user(user_id):
         db.session.commit()
         flash(f"{user.name} is now {'active' if user.is_active_user else 'deactivated'}.", "success")
     return redirect(safe_redirect_target(request.referrer) or url_for("admin.users"))
-
-
-# ---- categories ----------------------------------------------------------
-@bp.route("/categories", methods=["GET", "POST"])
-@role_required("admin")
-def categories():
-    form = CategoryForm()
-    if form.validate_on_submit():
-        name = form.name.data.strip()
-        if Category.query.filter(func.lower(Category.name) == name.lower()).first():
-            form.name.errors.append("That category already exists.")
-        else:
-            db.session.add(Category(name=name))
-            db.session.commit()
-            flash("Category added.", "success")
-            return redirect(url_for("admin.categories"))
-    rows = (db.session.query(Category, func.count(Product.id))
-            .outerjoin(Product, Product.category_id == Category.id)
-            .group_by(Category.id).order_by(Category.name).all())
-    return render_template("admin/categories.html", form=form, rows=rows)
-
-
-@bp.route("/categories/<int:category_id>/rename", methods=["POST"])
-@role_required("admin")
-def rename_category(category_id):
-    cat = db.session.get(Category, category_id) or abort(404)
-    form = CategoryForm()
-    if not form.validate_on_submit():
-        flash("Category name must be 2-80 characters.", "danger")
-    else:
-        name = form.name.data.strip()
-        clash = Category.query.filter(func.lower(Category.name) == name.lower(), Category.id != cat.id).first()
-        if clash:
-            flash("Another category already uses that name.", "danger")
-        else:
-            cat.name = name
-            db.session.commit()
-            flash("Category renamed.", "success")
-    return redirect(url_for("admin.categories"))
-
-
-@bp.route("/categories/<int:category_id>/delete", methods=["POST"])
-@role_required("admin")
-def delete_category(category_id):
-    cat = db.session.get(Category, category_id) or abort(404)
-    if Product.query.filter_by(category_id=cat.id).count():
-        flash("A category with products cannot be deleted.", "warning")
-    else:
-        db.session.delete(cat)
-        db.session.commit()
-        flash("Category deleted.", "info")
-    return redirect(url_for("admin.categories"))
 
 
 # ---- reviews -------------------------------------------------------------

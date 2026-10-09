@@ -260,8 +260,7 @@ def test_assert_listable_raises_with_every_violation(seller, cat, card_type):
 def test_admin_cannot_create_auction_for_unlistable_card(client, users, seller, cat, card_type):
     p = make_card(seller, cat, card_type, verified=False)
     login(client, "admin@t.test")
-    r = client.post(f"/admin/products/{p.id}/approve", follow_redirects=True)
-    assert b"cannot be listed" in r.data
+    assert client.post(f"/admin/products/{p.id}/approve").status_code == 404  # the generic approval path is retired
     assert Auction.query.filter_by(product_id=p.id).count() == 0
     assert db.session.get(Product, p.id).approval_status == "pending"
 

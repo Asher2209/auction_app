@@ -5,9 +5,10 @@ import pytest
 from flask import g
 
 from app.extensions import db
-from app.models import Auction, Bid, Category, Notification, Product, User, Winner, utcnow
+from app.models import Bid, Category, Notification, Product, User, Winner, utcnow
 
 from .conftest import login, make_user
+from .test_listing_validation import card_type, complete_checklist, make_card  # noqa: F401  (card_type is a fixture)
 from .test_seller import make_product
 
 
@@ -30,10 +31,8 @@ def notes(user):
 
 
 # ---- access --------------------------------------------------------------
-ADMIN_GETS = ["/admin/", "/admin/products", "/admin/users", "/admin/categories", "/admin/products/1"]
-ADMIN_POSTS = ["/admin/products/1/approve", "/admin/products/1/reject", "/admin/products/1/remove",
-               "/admin/users/1/toggle-active", "/admin/categories", "/admin/categories/1/rename",
-               "/admin/categories/1/delete"]
+ADMIN_GETS = ["/admin/", "/admin/products", "/admin/users", "/admin/products/1"]
+ADMIN_POSTS = ["/admin/products/1/remove", "/admin/users/1/toggle-active"]
 
 
 def test_admin_area_forbidden_to_other_roles(client, users):
@@ -65,85 +64,49 @@ def test_login_routes_admin_to_dashboard(client, users):
     assert client.get("/dashboard").location.endswith("/admin/")
 
 
-# ---- approve -------------------------------------------------------------
-def test_approve_creates_auction_and_notifies(client, admin, users, cat):
-    p = make_product(users["seller"], cat)  # starts in 1h -> scheduled
-    assert client.post(f"/admin/products/{p.id}/approve").status_code == 302
-    db.session.expire_all()
-    p = db.session.get(Product, p.id)
-    a = p.auction
-    assert p.approval_status == "approved"
-    assert a.status == "scheduled" and a.start_time == p.auction_start
-    assert a.end_time == a.original_end_time == p.auction_end
-    assert a.current_bid == p.starting_price and a.extension_count == 0
-    assert "Product approved" in notes(users["seller"])
-
-
-def test_approve_starts_immediately_when_start_passed(client, admin, users, cat):
+# ---- approval goes through card verification only ------------------------
+def test_the_generic_approve_and_reject_routes_are_retired(client, admin, users, cat):
     p = make_product(users["seller"], cat)
-    p.auction_start = utcnow() - timedelta(minutes=2)
-    p.auction_end = utcnow() + timedelta(hours=1)
-    db.session.commit()
-    client.post(f"/admin/products/{p.id}/approve")
-    assert db.session.get(Product, p.id).auction.status == "active"
-
-
-def test_approve_refused_when_window_passed(client, admin, users, cat):
-    p = make_product(users["seller"], cat)
-    p.auction_start = utcnow() - timedelta(days=2)
-    p.auction_end = utcnow() - timedelta(days=1)
-    db.session.commit()
-    client.post(f"/admin/products/{p.id}/approve")
-    db.session.expire_all()
+    assert client.post(f"/admin/products/{p.id}/approve").status_code == 404
+    assert client.post(f"/admin/products/{p.id}/reject", data={"reason": "Blurry photos"}).status_code == 404
     p = db.session.get(Product, p.id)
     assert p.approval_status == "pending" and p.auction is None
 
 
-def test_approve_twice_creates_one_auction(client, admin, users, cat):
-    p = make_product(users["seller"], cat)
-    client.post(f"/admin/products/{p.id}/approve")
-    client.post(f"/admin/products/{p.id}/approve")
-    assert Auction.query.count() == 1
-
-
-def test_approve_unknown_product_404(client, admin):
-    assert client.post("/admin/products/999/approve").status_code == 404
-
-
-# ---- reject / resubmit ---------------------------------------------------
-def test_reject_needs_reason(client, admin, users, cat):
-    p = make_product(users["seller"], cat)
-    client.post(f"/admin/products/{p.id}/reject", data={"reason": ""})
-    client.post(f"/admin/products/{p.id}/reject", data={"reason": "no"})
+def test_a_pending_card_is_sent_to_its_checklist(client, admin, users, cat, card_type):
+    p = make_card(users["seller"], cat, card_type, verified=False)
+    v = p.collectible_verification
+    html = client.get(f"/admin/products/{p.id}").data.decode()
+    assert f'href="/admin/cards/verify/{v.id}"' in html
+    assert "Approve" not in html and f'action="/admin/products/{p.id}/remove"' not in html
+    r = client.post(f"/admin/products/{p.id}/remove", data={"reason": "Counterfeit goods"})
+    assert r.location.endswith(f"/admin/cards/verify/{v.id}")
     assert db.session.get(Product, p.id).approval_status == "pending"
 
 
-def test_reject_then_seller_resubmits(client, admin, users, cat):
-    p = make_product(users["seller"], cat)
-    client.post(f"/admin/products/{p.id}/reject", data={"reason": "Blurry photos, please retake."})
-    db.session.expire_all()
-    p = db.session.get(Product, p.id)
-    assert p.approval_status == "rejected" and "Blurry" in p.rejection_reason
-    assert "Product rejected" in notes(users["seller"])
-
-    client.post("/auth/logout")
-    login(client, "seller@t.test")
-    assert b"Blurry photos" in client.get(f"/seller/products/{p.id}").data
-    # the edit form is covered in test_seller; here we check the resubmission bookkeeping directly
-    p.approval_status, p.rejection_reason = "pending", None
-    db.session.commit()
-    client.post("/auth/logout")
-    login(client, "admin@t.test")
-    client.post(f"/admin/products/{p.id}/approve")
+def test_card_decisions_notify_the_seller(client, admin, users, cat, card_type):
+    p = make_card(users["seller"], cat, card_type, verified=False, asset=False)
+    v = p.collectible_verification
+    client.post(f"/admin/cards/verify/{v.id}/more-info",
+                data={"info_request": "Better card images", "message": "Please add a photo of the back."})
+    complete_checklist(client, v.id)
+    client.post(f"/admin/cards/verify/{v.id}/approve", data={"approval_notes": "ok"})
     assert db.session.get(Product, p.id).approval_status == "approved"
+    other = make_card(users["seller"], cat, card_type, verified=False, asset=False)
+    client.post(f"/admin/cards/verify/{other.collectible_verification.id}/reject",
+                data={"rejection_reason": "Other reason", "rejection_details": "The photos show a different card."})
+    assert db.session.get(Product, other.id).approval_status == "rejected"
+    assert notes(users["seller"]) == ["More information needed", "Card approved", "Card rejected"]
 
 
-def test_cannot_approve_or_reject_rejected_listing(client, admin, users, cat):
-    p = make_product(users["seller"], cat, approval_status="rejected")
-    client.post(f"/admin/products/{p.id}/approve")
-    assert db.session.get(Product, p.id).auction is None
-    client.post(f"/admin/products/{p.id}/reject", data={"reason": "again again"})
-    assert db.session.get(Product, p.id).rejection_reason is None
+def test_a_plain_pending_listing_can_only_be_removed(client, admin, users, cat):
+    p = make_product(users["seller"], cat)
+    html = client.get(f"/admin/products/{p.id}").data.decode()
+    assert "can no longer be approved" in html and f'action="/admin/products/{p.id}/remove"' in html
+    client.post(f"/admin/products/{p.id}/remove", data={"reason": "Not a trading card"})
+    p = db.session.get(Product, p.id)
+    assert p.approval_status == "rejected" and p.auction is None
+    assert "Listing removed" in notes(users["seller"])
 
 
 # ---- remove live listing --------------------------------------------------
@@ -237,24 +200,20 @@ def test_toggle_redirect_ignores_foreign_referrer(client, admin, users):
 
 
 # ---- categories ----------------------------------------------------------
-def test_category_add_duplicate_rename_delete(client, admin, cat):
-    client.post("/admin/categories", data={"name": "Toys"})
-    assert Category.query.filter_by(name="Toys").count() == 1
-    r = client.post("/admin/categories", data={"name": "toys"})  # case-insensitive duplicate
-    assert b"already exists" in r.data and Category.query.count() == 2
-    assert b"at least" in client.post("/admin/categories", data={"name": "x"}).data or Category.query.count() == 2
-
-    toys = Category.query.filter_by(name="Toys").one()
-    client.post(f"/admin/categories/{toys.id}/rename", data={"name": "Games"})
-    assert db.session.get(Category, toys.id).name == "Games"
-    client.post(f"/admin/categories/{toys.id}/rename", data={"name": "books"})  # clashes with Books
-    assert db.session.get(Category, toys.id).name == "Games"
-
-    client.post(f"/admin/categories/{toys.id}/delete")
-    assert db.session.get(Category, toys.id) is None
+def test_categories_cannot_be_managed(client, admin):
+    assert client.get("/admin/categories").status_code == 404
+    assert client.post("/admin/categories", data={"name": "Electronics"}).status_code == 404
+    assert Category.query.filter_by(name="Electronics").count() == 0
+    assert b"/admin/categories" not in client.get("/admin/").data
 
 
-def test_category_with_products_cannot_be_deleted(client, admin, users, cat):
-    make_product(users["seller"], cat)
-    client.post(f"/admin/categories/{cat.id}/delete")
-    assert db.session.get(Category, cat.id) is not None
+def test_only_categories_holding_cards_are_offered(client, users, cat, card_type):
+    cards = Category(name="Trading Cards")
+    db.session.add_all([cards, Category(name="Electronics")])
+    db.session.commit()
+    make_product(users["seller"], cat)  # a plain listing does not make its category a card category
+    make_card(users["seller"], cards, card_type)
+    for path in ("/", "/auctions/"):
+        html = client.get(path).data.decode()
+        assert "Trading Cards" in html, path
+        assert "Electronics" not in html and "Books" not in html, path

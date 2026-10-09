@@ -5,7 +5,7 @@ from flask import abort
 from sqlalchemy import func, select
 
 from ..extensions import db
-from ..models import Auction, Bid, Category, Product
+from ..models import Auction, Bid, Category, CollectibleCard, Product
 from ..utils import like_pattern
 
 PUBLIC_STATUSES = ("scheduled", "active", "closed")  # cancelled listings are hidden
@@ -19,6 +19,13 @@ def visible_auctions():
     """Auctions of approved products that are not cancelled."""
     return (Auction.query.join(Product)
             .filter(Product.approval_status == "approved", Auction.status.in_(PUBLIC_STATUSES)))
+
+
+def card_categories():
+    """Categories that hold at least one trading card: the only ones the home page and browse filter offer."""
+    has_card = (Product.query.join(CollectibleCard, CollectibleCard.product_id == Product.id)
+                .filter(Product.category_id == Category.id).exists())
+    return Category.query.filter(has_card).order_by(Category.name).all()
 
 
 def visible_auction_or_404(auction_id):

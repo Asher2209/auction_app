@@ -13,6 +13,7 @@ from ...models import (
     CardVerificationHistory, Product, User, utcnow, BlockchainAsset
 )
 from ...services import auction_validation_service, card_identity_service, qrcode_service, verification_checklist_service
+from ...services.notifications import notify
 from ...services.verification_completion_service import complete_verification_and_create_blockchain_asset
 from ...utils import role_required
 from . import bp
@@ -23,6 +24,12 @@ from .forms_verification import (
 
 
 OPEN_STATUSES = ('pending', 'submitted', 'under_review', 'more_info_needed')  # no decision has been made yet
+
+
+def _notify_seller(verification, title, message):
+    """Tell the seller about a verification decision, in-app and by email."""
+    notify(verification.product.seller_id, title, message,
+           url=f"/seller/cards/{verification.collectible_card.id}", email=True)
 
 
 @bp.route("/cards/verify", methods=["GET"])
@@ -220,6 +227,8 @@ def approve_card(verification_id):
 
         # Update product status
         verification.product.approval_status = 'approved'
+        _notify_seller(verification, "Card approved",
+                       f'Your card "{verification.collectible_card.card_name}" is Platform Verified. You can now schedule its auction.')
 
         db.session.commit()
 
@@ -264,6 +273,8 @@ def reject_card(verification_id):
         # Update product status
         verification.product.approval_status = 'rejected'
         verification.product.rejection_reason = form.rejection_details.data
+        _notify_seller(verification, "Card rejected",
+                       f'Your card "{verification.collectible_card.card_name}" was not approved: {form.rejection_details.data}')
 
         db.session.commit()
 
@@ -295,6 +306,8 @@ def request_card_info(verification_id):
         # Update verification
         verification.verification_status = 'more_info_needed'
         verification.admin_notes = f"{form.info_request.data}: {form.message.data}"
+        _notify_seller(verification, "More information needed",
+                       f'An administrator needs more information about "{verification.collectible_card.card_name}": {form.message.data}')
 
         db.session.commit()
 

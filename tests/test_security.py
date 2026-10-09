@@ -715,7 +715,7 @@ def test_stored_text_is_escaped_on_every_page_that_shows_it(app, users, cats, pa
     pages += [(client_for(app, "buyer@t.test"), p) for p in ("/notifications/", "/buyer/", "/buyer/bids", "/auth/profile", "/feedback")]
     pages += [(client_for(app, "seller@t.test"), p) for p in ("/seller/collectibles", f"/seller/products/{a.product_id}", "/seller/reviews")]
     pages += [(client_for(app, "admin@t.test"), p) for p in ("/admin/products?status=all", f"/admin/products/{a.product_id}", "/admin/users",
-                                                          "/admin/categories", "/admin/reviews", "/admin/feedback", "/admin/reports/top-products?from=2000-01-01")]
+                                                          "/admin/reviews", "/admin/feedback", "/admin/reports/top-products?from=2000-01-01")]
     for c, path in pages:
         g.pop("_login_user", None)  # these clients were all created up front; do not let one actor's cached login leak into the next
         r = c.get(path)
