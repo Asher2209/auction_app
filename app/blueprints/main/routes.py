@@ -8,11 +8,11 @@ from wtforms.validators import DataRequired, Length
 
 from ...extensions import db
 from ...legal import MUST_AGREE
-from ...models import Auction, Category, Feedback, utcnow, CollectibleCard, CardType, Product
+from ...models import Auction, Feedback, utcnow, CollectibleCard, CardType, Product
 from ... import sockets
 from ...services import auction_service
 from ...services import review_service as rs
-from ...services.catalog import bid_counts
+from ...services.catalog import bid_counts, card_categories
 from . import bp
 
 
@@ -26,7 +26,7 @@ def index():
         .limit(8)
         .all()
     )
-    categories = Category.query.order_by(Category.name).all()
+    categories = card_categories()
     return render_template("index.html", auctions=live, categories=categories,
                            counts=bid_counts([a.id for a in live]),
                            ratings=rs.stats_for_products([a.product_id for a in live]))

@@ -27,9 +27,9 @@
       <dt class="col-5">Seller</dt><dd class="col-7">{{ product.seller.name }} ({{ product.seller.email }})</dd>
       <dt class="col-5">Category</dt><dd class="col-7">{{ product.category.name }}</dd>
       <dt class="col-5">Starting price</dt><dd class="col-7">{{ product.starting_price|money }}</dd>
-      <dt class="col-5">Requested start</dt><dd class="col-7">{{ product.auction_start|local }}</dd>
-      <dt class="col-5">Requested end</dt><dd class="col-7">{{ product.auction_end|local }}</dd>
       {% if auction %}
+      <dt class="col-5">Auction start</dt><dd class="col-7">{{ auction.start_time|local }}</dd>
+      <dt class="col-5">Auction end</dt><dd class="col-7">{{ auction.end_time|local }}</dd>
       <dt class="col-5">Bids</dt><dd class="col-7">{{ auction.bids|length }}{% if auction.bids %} (highest {{ auction.current_bid|money }}){% endif %}</dd>
       {% endif %}
     </dl>
@@ -37,22 +37,18 @@
 </div>
 
 <hr>
-{% if product.approval_status == 'pending' %}
-<div class="d-flex flex-wrap gap-3 align-items-start">
-  <form method="post" action="{{ url_for('admin.approve_product', product_id=product.id) }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn btn-success" type="submit">Approve &amp; create auction</button>
-  </form>
-  <form method="post" action="{{ url_for('admin.reject_product', product_id=product.id) }}" class="flex-grow-1" style="max-width:480px">
-    {{ form.hidden_tag() }}
-    <textarea class="form-control mb-2" aria-label="Reason for rejection" name="reason" rows="2" placeholder="Reason for rejection (shown to the seller)" required minlength="5" maxlength="500"></textarea>
-    <button class="btn btn-outline-danger" type="submit">Reject</button>
-  </form>
-</div>
+{% set verification = product.collectible_verification %}
+{% if verification %}
+<p><a class="btn btn-outline-primary" href="{{ url_for('admin.card_verification_detail', verification_id=verification.id) }}">Open the verification checklist</a></p>
+{% endif %}
+{% if product.approval_status == 'pending' and verification %}
+<p class="text-muted">This card is waiting for verification. It is approved or rejected on its checklist, and the seller schedules the auction once it is Platform Verified.</p>
+{% elif product.approval_status == 'pending' %}
+<p class="text-muted">This is a plain listing from before ChainBid listed trading cards only. It can no longer be approved, only removed.</p>
 {% endif %}
 
 {% if not auction or auction.status != 'closed' %}
-{% if product.approval_status == 'approved' %}
+{% if product.approval_status == 'approved' or (product.approval_status == 'pending' and not verification) %}
 <form method="post" action="{{ url_for('admin.remove_product', product_id=product.id) }}" style="max-width:480px"
       data-confirm="Remove this listing? A live auction will be cancelled.">
   {{ form.hidden_tag() }}

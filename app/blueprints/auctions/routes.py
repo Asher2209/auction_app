@@ -4,13 +4,13 @@ from sqlalchemy import or_
 from datetime import datetime, timedelta
 
 from ... import sockets
-from ...models import Auction, Category, Product, Watchlist, utcnow, CollectibleCard
+from ...models import Auction, Product, Watchlist, utcnow, CollectibleCard
 from ...ratelimit import limited
 from ...services import auction_service, blockchain_service, ownership_transfer_service
 from ...services import review_service as rs
 from ...services.auction_service import BidError
 from ...services.catalog import (
-    SORTS, STATUS_FILTERS, bid_counts, parse_filters, search_auctions, visible_auction_or_404,
+    SORTS, STATUS_FILTERS, bid_counts, card_categories, parse_filters, search_auctions, visible_auction_or_404,
 )
 from . import bp
 
@@ -75,10 +75,10 @@ def browse():
         fake_items = [FakeAuction(card) for card in paginated.items]
         fake_page = FakePage(fake_items, paginated.total, paginated.page, paginated.pages, paginated.has_prev, paginated.has_next, paginated.prev_num, paginated.next_num)
         
-        return render_template("auctions/browse.html", page=fake_page, f=f, counts={}, ratings={}, categories=Category.query.order_by(Category.name).all(), statuses=list(STATUS_FILTERS), sorts=SORTS, qs={k: v for k, v in {"q": f["q"], "category": f["category"], "status": f["status"], "sort": f["sort"], "min_price": request.args.get("min_price") if f["min_price"] is not None else None, "max_price": request.args.get("max_price") if f["max_price"] is not None else None}.items() if v not in (None, "")})
+        return render_template("auctions/browse.html", page=fake_page, f=f, counts={}, ratings={}, categories=card_categories(), statuses=list(STATUS_FILTERS), sorts=SORTS, qs={k: v for k, v in {"q": f["q"], "category": f["category"], "status": f["status"], "sort": f["sort"], "min_price": request.args.get("min_price") if f["min_price"] is not None else None, "max_price": request.args.get("max_price") if f["max_price"] is not None else None}.items() if v not in (None, "")})
     
     page = search_auctions(f).paginate(page=request.args.get("page", 1, type=int), per_page=PER_PAGE, error_out=False)
-    return render_template("auctions/browse.html", page=page, f=f, counts=bid_counts([a.id for a in page.items]), ratings=rs.stats_for_products([a.product_id for a in page.items]), categories=Category.query.order_by(Category.name).all(), statuses=list(STATUS_FILTERS), sorts=SORTS, qs={k: v for k, v in {"q": f["q"], "category": f["category"], "status": f["status"], "sort": f["sort"], "min_price": request.args.get("min_price") if f["min_price"] is not None else None, "max_price": request.args.get("max_price") if f["max_price"] is not None else None}.items() if v not in (None, "")})
+    return render_template("auctions/browse.html", page=page, f=f, counts=bid_counts([a.id for a in page.items]), ratings=rs.stats_for_products([a.product_id for a in page.items]), categories=card_categories(), statuses=list(STATUS_FILTERS), sorts=SORTS, qs={k: v for k, v in {"q": f["q"], "category": f["category"], "status": f["status"], "sort": f["sort"], "min_price": request.args.get("min_price") if f["min_price"] is not None else None, "max_price": request.args.get("max_price") if f["max_price"] is not None else None}.items() if v not in (None, "")})
 
 @bp.route("/<int:auction_id>")
 def detail(auction_id):

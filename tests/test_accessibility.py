@@ -106,7 +106,7 @@ def pages(site):
                           "/seller/reviews", "/auth/profile"],
         "admin@t.test": ["/admin/", "/admin/analytics", "/admin/reports", "/admin/reports/payments?from=2000-01-01&to=2030-01-01",
                          "/admin/reports/daily-auctions", "/admin/reports/crypto-transactions", "/admin/products?status=all", f"/admin/products/{paid.product_id}",
-                         f"/admin/products/{live.product_id}", "/admin/users", "/admin/categories", "/admin/reviews", "/admin/feedback", "/notifications/"],
+                         f"/admin/products/{live.product_id}", f"/admin/products/{site['pending'].id}", "/admin/users", "/admin/reviews", "/admin/feedback", "/notifications/"],
     }
 
 

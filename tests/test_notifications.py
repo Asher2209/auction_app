@@ -15,6 +15,7 @@ from app.services.mailer import send_email
 
 from .conftest import login, make_user
 from .test_buyer import cats, make_auction  # noqa: F401  (cats is a fixture)
+from .test_listing_validation import card_type, complete_checklist, make_card  # noqa: F401  (card_type is a fixture)
 
 
 def client_for(app, email):
@@ -110,17 +111,15 @@ def test_winner_and_seller_emails_on_close(app, auction, users):
     assert len(outbox) == 2  # "Payment pending" and "Auction completed" are in-app only
 
 
-def test_admin_decisions_email_the_seller(app, users, cats):  # noqa: F811
-    p = Product(seller_id=users["seller"].id, category_id=cats["Books"].id, title="Vase", description="d" * 12,
-                starting_price=Decimal("10"), auction_start=utcnow() + timedelta(hours=1),
-                auction_end=utcnow() + timedelta(hours=5))
-    db.session.add(p)
-    db.session.commit()
+def test_admin_decisions_email_the_seller(app, users, cats, card_type):  # noqa: F811
+    p = make_card(users["seller"], cats["Books"], card_type, verified=False, asset=False)
+    v = p.collectible_verification
     admin = client_for(app, "admin@t.test")
+    complete_checklist(admin, v.id)
     with mail.record_messages() as outbox:
-        admin.post(f"/admin/products/{p.id}/approve")
-    assert [m.subject for m in outbox] == ["[ChainBid] Product approved"]
-    assert f"/seller/products/{p.id}" in outbox[0].body
+        admin.post(f"/admin/cards/verify/{v.id}/approve", data={"approval_notes": "ok"})
+    assert [m.subject for m in outbox] == ["[ChainBid] Card approved"]
+    assert f"/seller/cards/{p.collectible_card.id}" in outbox[0].body
 
 
 def test_inactive_user_gets_no_email(app, users):
