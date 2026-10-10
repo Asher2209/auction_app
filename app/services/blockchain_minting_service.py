@@ -175,7 +175,9 @@ def verify_mint(asset):
             return _failed("The token was minted to a different wallet than the recorded owner.")
         if Web3.to_hex(args["verificationHash"]).lower() != (asset.metadata_hash or "").lower():
             return _failed("The on-chain verification hash does not match the card record.")
-        if contract.functions.tokenIdOfPlatformId(platform_id).call() != args["tokenId"]:
+        # Read the registry at the mint's own block: a load-balanced RPC node can answer "latest" from a block
+        # before the mint (reporting 0) just after the receipt arrives. A node without that block raises -> "error".
+        if contract.functions.tokenIdOfPlatformId(platform_id).call(block_identifier=receipt["blockNumber"]) != args["tokenId"]:
             return _failed("The contract's registry disagrees with the mint event.")
 
         confirmations = w3.eth.block_number - receipt["blockNumber"] + 1

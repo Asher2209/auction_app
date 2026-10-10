@@ -160,6 +160,28 @@ def test_confirm_waits_for_the_required_confirmations(app, seller, cat, card_typ
     assert bm.confirm_mint(asset)["status"] == "confirmed" and asset.status == "minted"
 
 
+def test_a_node_lagging_behind_the_receipt_does_not_fail_a_genuine_mint(seller, cat, card_type, chain, monkeypatch):
+    """Seen on Sepolia: the receipt arrived, but the registry read hit an RPC node whose "latest" was before the mint."""
+    asset = verified_asset(seller, cat, card_type, chain)
+    real = bm._contract
+
+    def lagging(w3, address):
+        contract = real(w3, address)
+        registry = contract.functions.tokenIdOfPlatformId
+
+        def stale(platform_id):
+            fn = registry(platform_id)
+            call = fn.call
+            fn.call = lambda block_identifier="latest", **kw: 0 if block_identifier == "latest" else call(block_identifier=block_identifier, **kw)
+            return fn
+        contract.functions.tokenIdOfPlatformId = stale
+        return contract
+    prep = bm.initiate_mint(asset, chain.admin)
+    bm.submit_mint(asset, chain.send(prep["tx"]))
+    monkeypatch.setattr(bm, "_contract", lagging)
+    assert bm.confirm_mint(asset)["status"] == "confirmed" and asset.status == "minted" and asset.token_id == 1
+
+
 def test_confirming_twice_changes_nothing(seller, cat, card_type, chain):
     asset = verified_asset(seller, cat, card_type, chain)
     mint_through_flow(asset, chain)
