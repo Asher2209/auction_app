@@ -4,7 +4,8 @@
   {{ f.label(class="form-label") }}
   {% set cls = "form-select" if f.type == "SelectField" else "form-control" %}
   {% set attrs = dict(kwargs) %}{% if hint %}{% set _ = attrs.update({"aria-describedby": f.id ~ "-hint"}) %}{% endif %}
-  {{ f(class=cls ~ (" is-invalid" if f.errors else ""), **attrs) }}
+  {% set extra = attrs.pop("class", "") %}
+  {{ f(class=cls ~ (" " ~ extra if extra else "") ~ (" is-invalid" if f.errors else ""), **attrs) }}
   {% if hint %}<div class="form-text" id="{{ f.id }}-hint">{{ hint }}</div>{% endif %}
   {% for e in f.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
 </div>

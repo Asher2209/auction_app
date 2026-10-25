@@ -161,8 +161,10 @@ def test_product_list_filters_and_search(client, admin, users, cat):
 
 # ---- users ---------------------------------------------------------------
 def test_user_list_filter_and_search(client, admin, users):
-    d = client.get("/admin/users?role=seller").data
-    assert b"seller@t.test" in d and b"buyer@t.test" not in d
+    d = client.get("/admin/users?role=admin").data
+    assert b"admin@t.test" in d and b"seller@t.test" not in d and b"buyer@t.test" not in d
+    d = client.get("/admin/users?role=member").data
+    assert b"seller@t.test" in d and b"buyer@t.test" in d and b"admin@t.test" not in d
     d = client.get("/admin/users?q=BUYER").data
     assert b"buyer@t.test" in d and b"seller@t.test" not in d
     assert client.get("/admin/users?role=bogus").status_code == 200

@@ -16,14 +16,17 @@
     <div class="settings-avatar" aria-hidden="true">{{ current_user.name[0]|upper }}</div>
     <div class="settings-name">{{ current_user.name }}</div>
     <div class="settings-email">{{ current_user.email }}</div>
-    <span class="chip {{ 'chip-live' if current_user.role == 'seller' else 'chip-verified' if current_user.role == 'buyer' else 'chip-upcoming' }}">{{ current_user.role|capitalize }} account</span>
+    <span class="chip {{ 'chip-upcoming' if current_user.role == 'admin' else 'chip-verified' }}">{{ 'Admin account' if current_user.role == 'admin' else 'Buys and sells' }}</span>
     <dl class="settings-facts">
       <div><dt>Member since</dt><dd>{{ current_user.created_at|datetimeformat("%b %Y") }}</dd></div>
       <div><dt>Wallet</dt><dd>{{ 'Verified' if current_user.has_verified_wallet else 'Not verified' if current_user.wallet_address else 'None' }}</dd></div>
+      <div><dt>Google</dt><dd>{{ 'Linked' if current_user.google_sub else 'Not linked' }}</dd></div>
+      <div><dt>Two-step</dt><dd>{{ 'On' if current_user.two_factor_enabled else 'Off' }}</dd></div>
     </dl>
     <div class="d-grid gap-2">
       <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-sm">{{ icon('layout-dashboard', 16) }}Dashboard</a>
       <a href="{{ url_for('auth.change_password') }}" class="btn btn-secondary btn-sm">{{ icon('key-round', 16) }}Change password</a>
+      <a href="{{ url_for('auth.sessions_page') }}" class="btn btn-secondary btn-sm">{{ icon('log-out', 16) }}Signed-in devices</a>
     </div>
   </aside>
 
@@ -41,7 +44,7 @@
         {{ field(form.phone, autocomplete="tel", inputmode="tel") }}
         <div class="mb-3">
           <label class="form-label" for="profile-role">Account type</label>
-          <input id="profile-role" type="text" class="form-control" value="{{ current_user.role|capitalize }}" disabled aria-describedby="profile-role-hint">
+          <input id="profile-role" type="text" class="form-control" value="{{ 'Admin' if current_user.role == 'admin' else 'Member: buys and sells' }}" disabled aria-describedby="profile-role-hint">
           <div class="form-text" id="profile-role-hint">Your account type can't be changed.</div>
         </div>
       </div>
@@ -50,6 +53,17 @@
         <button class="btn btn-primary" type="submit">Save changes</button>
       </div>
     </form>
+
+    <section class="panel" id="two-factor">
+      <h2 class="panel-title">{{ icon('shield-check', 18) }}Two-step sign-in</h2>
+      {% if current_user.two_factor_enabled %}
+      <p class="mb-3"><span class="chip chip-verified">On</span> Signing in needs your password and a code from your authenticator app.</p>
+      <a class="btn btn-secondary" href="{{ url_for('auth.two_factor_manage') }}">Manage</a>
+      {% else %}
+      <p class="mb-3"><span class="chip chip-muted">Off</span> Add a code from an app on your phone, so a stolen password alone cannot open your account.{% if current_user.role == 'admin' %} <strong>Strongly recommended for admin accounts.</strong>{% endif %}</p>
+      <a class="btn btn-primary" href="{{ url_for('auth.two_factor_setup') }}">Set up two-step sign-in</a>
+      {% endif %}
+    </section>
 
     <section class="panel" id="wallet-root"
              data-challenge-url="{{ url_for("auth.wallet_challenge") }}" data-verify-url="{{ url_for("auth.wallet_verify") }}">
@@ -64,7 +78,7 @@
         <p class="small mb-3" id="wallet-state">No wallet linked yet.</p>
       {% endif %}
       <p class="small text-muted">
-        {% if current_user.role == "seller" %}Your verified cards are registered to this wallet and buyers pay it.{% else %}Cards you win are transferred to this wallet when you pay.{% endif %}
+        Cards you win are transferred to this wallet when you pay; cards you sell are registered to it, and buyers pay it.
         Linking asks your wallet (for example MetaMask) to sign a short message. Signing proves you hold the wallet; it does not send a transaction or cost gas.
       </p>
       <div class="d-flex flex-wrap gap-2">

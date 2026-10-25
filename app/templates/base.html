@@ -73,6 +73,17 @@
   </nav>
 
   <main id="main" tabindex="-1" class="container flex-grow-1">
+    {% if current_user.is_authenticated and not current_user.email_verified %}
+    <div class="verify-banner" role="status">
+      {{ icon('mail', 18) }}
+      <p>Confirm your email address to bid, sell and pay. We sent a link to <strong>{{ current_user.email }}</strong>.</p>
+      <form method="post" action="{{ url_for('auth.resend_verification') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ request.full_path }}">
+        <button class="btn btn-secondary btn-sm" type="submit">Send a new link</button>
+      </form>
+    </div>
+    {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">

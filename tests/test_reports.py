@@ -286,7 +286,7 @@ def test_user_activity_counts_per_period_and_hides_idle_users(full):
     b1 = rows["buyer@t.test"]
     assert (cell(report, b1, "bids"), cell(report, b1, "won"), cell(report, b1, "buys"), cell(report, b1, "reviews")) == (3, 1, 1, 1)
     seller = rows["seller@t.test"]
-    assert cell(report, seller, "role") == "Seller" and cell(report, seller, "bids") == 0
+    assert cell(report, seller, "role") == "Member" and cell(report, seller, "bids") == 0
     totals = [cell(report, r, "total") for r in data.rows]
     assert totals == sorted(totals, reverse=True)
     assert col_values("user-activity", "email", {"from": "2025-01-01", "to": "2025-01-31"}) == []  # no activity then
@@ -295,7 +295,7 @@ def test_user_activity_counts_per_period_and_hides_idle_users(full):
 # ---- 8. seller performance ------------------------------------------------------------------------------------------------------
 def test_seller_performance(full):
     w = full
-    make_user("quiet@t.test", "seller")
+    make_user("quiet@t.test")
     db.session.add(Review(product_id=Product.query.filter_by(title="Atlas").one().id, buyer_id=w.b1.id, rating=4))
     db.session.add(Review(product_id=Product.query.filter_by(title="Phone").one().id, buyer_id=w.b3.id, rating=2))
     db.session.add(Review(product_id=Product.query.filter_by(title="Atlas").one().id, buyer_id=w.b2.id, rating=1, is_hidden=True))
@@ -308,8 +308,7 @@ def test_seller_performance(full):
     assert cell(report, s1, "rating") == 3.0 and cell(report, s1, "reviews") == 2  # hidden review excluded
     s2 = rows["seller2@t.test"]
     assert cell(report, s2, "done") == 2 and cell(report, s2, "paid") == 1 and cell(report, s2, "rate") == 50.0  # Bat paid, Failed one not
-    quiet = rows["quiet@t.test"]
-    assert cell(report, quiet, "done") == 0 and cell(report, quiet, "rate") is None and cell(report, quiet, "avg") is None and cell(report, quiet, "rating") is None
+    assert "quiet@t.test" not in rows  # a member who never listed anything is not a seller
     assert all(0 <= (cell(report, r, "rate") or 0) <= 100 for r in data.rows)
     assert [cell(report, r, "rev") for r in data.rows][0] == 8000.0  # best seller first
 

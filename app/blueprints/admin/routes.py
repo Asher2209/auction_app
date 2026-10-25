@@ -17,7 +17,7 @@ from .forms import ReasonForm
 
 PER_PAGE = 15
 PRODUCT_FILTERS = ("pending", "approved", "rejected", "all")
-USER_ROLES = ("all", "buyer", "seller", "admin")
+USER_ROLES = ("all", "member", "admin")
 
 
 def _product_or_404(product_id):
@@ -53,8 +53,8 @@ def dashboard():
     role_counts = dict(db.session.query(User.role, func.count(User.id)).group_by(User.role).all())
     stats = {
         "users": sum(role_counts.values()),
-        "buyers": role_counts.get("buyer", 0),
-        "sellers": role_counts.get("seller", 0),
+        "members": role_counts.get("member", 0),
+        "sellers": User.query.filter(User.products.any()).count(),  # members who have listed something
         "pending": Product.query.filter_by(approval_status="pending").count(),
         "products": Product.query.count(),
         "active_auctions": Auction.query.filter(Auction.status.in_(("scheduled", "active"))).count(),

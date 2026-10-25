@@ -33,7 +33,7 @@ def card_types(app):
 
 
 def test_seeding_makes_ten_pending_cards_with_platform_ids_and_images(app, users, card_types, seed_script, tmp_path):
-    seller, created = seed_script.seed(app, rng=random.Random(1), image_dir=tmp_path / "no-scans")  # placeholders
+    seller, created = seed_script.seed(app, "seller@t.test", rng=random.Random(1), image_dir=tmp_path / "no-scans")  # placeholders
     assert seller.email == "seller@t.test" and len(created) == 10
     for card in created:
         assert card.platform_card_id == f"CARD-{card.id:06d}"
@@ -53,12 +53,12 @@ def test_seeding_twice_adds_nothing(app, users, card_types, seed_script):
 def test_seeding_explains_what_is_missing(app, users, seed_script):
     with pytest.raises(SystemExit, match="seed_card_types"):
         seed_script.seed(app)
-    with pytest.raises(SystemExit, match="No seller"):
+    with pytest.raises(SystemExit, match="No member"):
         seed_script.seed(app, seller_email="nobody@t.test")
 
 
 def test_seeded_cards_show_on_the_seller_and_admin_pages(app, users, card_types, seed_script):
-    seed_script.seed(app, rng=random.Random(1))
+    seed_script.seed(app, "seller@t.test", rng=random.Random(1))  # every account is a member, so name the one that sells
     seller_page = client_for(app, "seller@t.test").get("/seller/collectibles")
     assert seller_page.status_code == 200 and "Charizard Base Set" in seller_page.get_data(as_text=True)
     admin = client_for(app, "admin@t.test")

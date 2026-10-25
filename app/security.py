@@ -66,8 +66,12 @@ def init_security(app):
         permanent sessions) and the login ends when the browser closes.
         """
         if current_user.is_authenticated:
+            from .services import sessions as user_sessions  # here, not at import time: services import the models
             started = session.get("login_at")
             if not isinstance(started, int) or time.time() - started > app.config["LOGIN_MAX_AGE"].total_seconds():
+                logout_user()
+                session.clear()
+            elif user_sessions.current(current_user) is None:  # signed out from another device, or no device record
                 logout_user()
                 session.clear()
 

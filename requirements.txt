@@ -15,4 +15,9 @@ PyMySQL>=1.1
 reportlab>=4.0
 openpyxl>=3.1
 qrcode[pil]>=7.4
+# one-time codes for two-step sign-in (TOTP, RFC 6238)
+pyotp>=2.9
+# "Sign in with Google" (OpenID Connect); off unless GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set
+Authlib>=1.3
+requests>=2.31
 web3>=7

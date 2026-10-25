@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Your recovery codes · MintLot{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <span class="eyebrow">Security</span>
+    <h1 class="page-title">Your recovery codes</h1>
+    <p class="page-lead">Each code works once, in place of a code from your app. This is the only time they are shown.</p>
+  </div>
+</header>
+<div class="panel recovery">
+  <ol class="recovery-codes" aria-label="Recovery codes">
+    {% for c in codes %}<li><code>{{ c }}</code></li>{% endfor %}
+  </ol>
+  <p class="settings-warning">{{ icon('shield-check', 16) }}<span><strong>Save them now:</strong> print them or keep them in a password manager. MintLot stores only a scrambled copy and cannot show them again.</span></p>
+  <div class="panel-actions">
+    <a class="btn btn-primary" href="{{ url_for('auth.profile') }}">I have saved them</a>
+  </div>
+</div>
+{% endblock %}

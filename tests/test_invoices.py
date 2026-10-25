@@ -258,7 +258,7 @@ def test_buyer_seller_and_admin_can_download(app, users, cats):  # noqa: F811
 def test_nobody_else_can_download_or_probe(app, users, cats):  # noqa: F811
     a, c = paid_card(app, users, cats)
     make_user("other@t.test")
-    make_user("otherseller@t.test", "seller")
+    make_user("otherseller@t.test")
     for email in ("other@t.test", "otherseller@t.test"):
         assert download(client_for(app, email), a).status_code == 404
     g.pop("_login_user", None)

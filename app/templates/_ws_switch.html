@@ -1,0 +1,5 @@
+{# Buying and selling are two halves of one account: a switch above both areas' headers. `side` is "buy" or "sell". #}
+<nav class="ws-switch" aria-label="Buying or selling">
+  <a href="{{ url_for('buyer.dashboard') }}"{% if side == 'buy' %} class="is-active" aria-current="true"{% endif %}>Buying</a>
+  <a href="{{ url_for('seller.collectibles_dashboard') }}"{% if side == 'sell' %} class="is-active" aria-current="true"{% endif %}>Selling</a>
+</nav>

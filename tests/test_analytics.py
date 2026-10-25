@@ -18,7 +18,7 @@ NOW = datetime(2026, 10, 15, 12, 0, 0)
 @pytest.fixture
 def world(app, users):
     """Two sellers, three buyers, three categories. Helpers build auctions and payments with exact dates."""
-    s1, s2 = users["seller"], make_user("seller2@t.test", "seller")
+    s1, s2 = users["seller"], make_user("seller2@t.test")
     b1, b2, b3 = users["buyer"], make_user("b2@t.test"), make_user("b3@t.test")
     cats = {n: Category(name=n) for n in ("Books", "Electronics", "Sports")}
     db.session.add_all(cats.values())

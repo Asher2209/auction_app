@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Signed-in devices · MintLot{% endblock %}
+{% block content %}
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('auth.profile') }}">Your account</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Signed-in devices</li>
+  </ol>
+</nav>
+<header class="page-head">
+  <div>
+    <span class="eyebrow">Security</span>
+    <h1 class="page-title">Signed-in devices</h1>
+    <p class="page-lead">Every browser signed in to your account. Don't recognise one? Sign it out and change your password.</p>
+  </div>
+  {% if rows|length > 1 %}
+  <form method="post" action="{{ url_for('auth.end_other_sessions') }}" data-confirm="Sign out every other device?">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-secondary" type="submit">{{ icon('log-out', 16) }}Sign out all other devices</button>
+  </form>
+  {% endif %}
+</header>
+
+<ul class="feed" id="device-list">
+  {% for s in rows %}
+  <li class="feed-item">
+    {{ icon('user', 18) }}
+    <div class="feed-body">
+      <div class="feed-title">{{ label(s.user_agent) }}{% if s.id == here %} <span class="chip chip-verified">This device</span>{% endif %}</div>
+      <p class="feed-text">Signed in {{ s.created_at|local }}{% if s.ip %} &middot; IP <span class="cd-mono">{{ s.ip }}</span>{% endif %}</p>
+      <time class="feed-time">Last active {{ s.last_seen_at|local }}</time>
+    </div>
+    {% if s.id != here %}
+    <form method="post" action="{{ url_for('auth.end_session', sid=s.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-link btn-sm text-nowrap" type="submit">Sign out</button>
+    </form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+<p class="small text-muted mt-3">Changing your password, or turning two-step sign-in on or off, signs out every other device automatically.</p>
+{% endblock %}

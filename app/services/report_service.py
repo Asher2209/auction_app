@@ -313,7 +313,7 @@ def seller_performance(p):
     ratings = {sid: (float(avg), n) for sid, avg, n in db.session.query(Product.seller_id, func.avg(Review.rating), func.count(Review.id))
                .join(Review, Review.product_id == Product.id).filter(Review.is_hidden.is_(False)).group_by(Product.seller_id).all()}
     rows = []
-    for sid, name, email in db.session.query(User.id, User.name, User.email).filter(User.role == "seller").all():
+    for sid, name, email in db.session.query(User.id, User.name, User.email).filter(User.products.any()).all():
         done, with_winner, paid, rev = ended.get(sid, (0, 0, 0, Decimal(0)))
         avg_rating, n_reviews = ratings.get(sid, (None, 0))
         rows.append((name, email, listings.get(sid, 0), done, with_winner, paid, _f(rev),

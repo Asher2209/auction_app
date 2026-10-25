@@ -272,8 +272,11 @@ def test_forgot_password_is_limited_per_client_and_per_address(app, users):
 def test_registration_is_limited_per_client(app):
     c = app.test_client()
     base = {"name": "N", "phone": "9876543210", "address": "A", "role": "buyer", "password": "Passw0rdX", "confirm": "Passw0rdX", "accept_terms": "y"}
-    codes = [c.post("/auth/register", data={**base, "email": f"n{i}@t.test"}).status_code for i in range(11)]
-    assert codes[:10] == [302] * 10 and codes[10] == 429
+    codes = []
+    for i in range(11):  # registering signs the new account in, so sign out before the next one
+        codes.append(c.post("/auth/register", data={**base, "email": f"n{i}@t.test"}).status_code)
+        c.post("/auth/logout")
+    assert codes[:10] == [302] * 10 and codes[10] == 429 and User.query.count() == 10
     assert c.get("/auth/register").status_code == 200  # only submissions are counted, not page views
 
 
@@ -568,12 +571,12 @@ def test_public_routes_never_return_server_errors_for_garbage(app):
                 assert c.open(url_for_rule(rule), method=method).status_code < 500, (rule.endpoint, method)
 
 
-ROLE_PREFIXES = {"admin.": "admin", "seller.": "seller", "buyer.": "buyer", "payments.": "buyer", "reviews.": "buyer"}
+ROLE_PREFIXES = {"admin.": "admin", "seller.": "member", "buyer.": "member", "payments.": "member", "reviews.": "member"}
 
 
 @pytest.mark.parametrize("prefix,owner", ROLE_PREFIXES.items())
 def test_each_area_refuses_every_other_role(app, users, prefix, owner):
-    others = [r for r in ("buyer", "seller", "admin") if r != owner]
+    others = ["admin"] if owner == "member" else ["buyer", "seller"]  # the fixture's buyer and seller are both members
     for role in others:
         c = client_for(app, f"{role}@t.test")
         for rule in rules(app, prefix):
@@ -607,7 +610,7 @@ def two_sides(app, users, cats):  # noqa: F811
     pay(client_for(app, "buyer@t.test"), a, "card", card())
     n = Notification.query.filter_by(user_id=users["buyer"].id).first()
     db.session.add(Review(product_id=a.product_id, buyer_id=users["buyer"].id, rating=4, comment="mine"))
-    make_user("sellerb@t.test", "seller")
+    make_user("sellerb@t.test")
     make_user("buyerb@t.test")
     hidden = make_auction(users["seller"], cats["Sports"], "Hidden", 10, status="cancelled")
     db.session.commit()
@@ -811,10 +814,10 @@ def test_registration_cannot_grant_privileges(app):
     anon(app).post("/auth/register", data={**base, "is_active_user": "0", "wallet_address": "0x" + "1" * 40, "id": "77", "created_at": "2000-01-01", "role": "buyer",
                                          "consent_version": "1999-01-01", "consented_at": "2000-01-01", "wallet_verified_at": "2000-01-01"})
     u = User.query.filter_by(email="n@t.test").one()
-    assert u.role == "buyer" and u.is_active_user and u.wallet_address is None and u.id != 77 and u.created_at.year > 2000
+    assert u.role == "member" and u.is_active_user and u.wallet_address is None and u.id != 77 and u.created_at.year > 2000
     assert u.consent_version == legal.POLICY_VERSION and u.consented_at.year > 2000 and u.wallet_verified_at is None  # set by the server only
-    r = anon(app).post("/auth/register", data={**base, "email": "adm@t.test", "role": "admin"})
-    assert r.status_code == 200 and User.query.filter_by(email="adm@t.test").count() == 0
+    anon(app).post("/auth/register", data={**base, "email": "adm@t.test", "role": "admin"})
+    assert User.query.filter_by(email="adm@t.test").one().role == "member"  # no role can be asked for
 
 
 UNSAFE_TARGETS = ["https://evil.example/", "//evil.example", "///evil.example", "http:evil.example", "https:evil.example", "javascript:alert(1)",

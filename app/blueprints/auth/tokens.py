@@ -27,3 +27,24 @@ def user_from_reset_token(token):
     if user is None or user.password_hash[-12:] != data.get("h"):
         return None
     return user
+
+
+# ---- email verification -----------------------------------------------------------------------------------------------
+VERIFY_SALT = "email-verify"
+VERIFY_MAX_AGE = 3 * 24 * 3600  # seconds
+
+
+def make_email_token(user):
+    # Carries the address it was sent to, so a link stops working if the account's email ever changes.
+    return URLSafeTimedSerializer(current_app.config["SECRET_KEY"], salt=VERIFY_SALT).dumps({"id": user.id, "e": user.email})
+
+
+def user_from_email_token(token):
+    try:
+        data = URLSafeTimedSerializer(current_app.config["SECRET_KEY"], salt=VERIFY_SALT).loads(token, max_age=VERIFY_MAX_AGE)
+    except (BadSignature, SignatureExpired):
+        return None
+    user = db.session.get(User, data.get("id"))
+    if user is None or user.email != data.get("e"):
+        return None
+    return user

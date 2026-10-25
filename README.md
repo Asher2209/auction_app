@@ -59,6 +59,8 @@ Settings come from environment variables, read from `.env` (see `.env.example`).
 | `ENABLE_SCHEDULER` | `1` | Background loop that starts and closes auctions |
 | `ALLOW_TEST_EMAILS` | `1` | Accept reserved domains such as `.test`. Set to `0` in production |
 | `APP_BASE_URL` | `http://127.0.0.1:5000` | Public address of the site, used in email links |
+| `GOOGLE_CLIENT_ID` | empty | With `GOOGLE_CLIENT_SECRET`, turns on "Continue with Google" (an OAuth client from Google Cloud Console; redirect URI `<APP_BASE_URL>/auth/google/callback`) |
+| `GOOGLE_CLIENT_SECRET` | empty | The secret of that OAuth client. Keep it out of version control |
 | `MAIL_SERVER` | empty | SMTP server. Empty: emails are printed to the server log |
 | `MAIL_PORT` | `587` | SMTP port |
 | `MAIL_USE_TLS` | `1` | Use STARTTLS |

@@ -99,16 +99,17 @@ def test_invalid_amounts_rejected(auction, users, raw):
     assert Bid.query.count() == 0
 
 
-def test_sellers_and_admins_cannot_bid(auction, users):
-    assert rejected(auction, users["seller"], "500").status == 403
-    assert rejected(auction, users["admin"], "500").status == 403
-    assert Bid.query.count() == 0
+def test_admins_cannot_bid_but_a_member_who_sells_can_bid_elsewhere(auction, users):
+    e = rejected(auction, users["admin"], "500")
+    assert e.status == 403 and "Admin" in e.message and Bid.query.count() == 0
+    other = make_user("other-seller@t.test")
+    make_auction(other, auction.product.category, "Their own lot", 50)  # selling something does not stop them buying
+    svc.place_bid(auction.id, other, "500")
+    assert Bid.query.one().buyer_id == other.id
 
 
-def test_seller_cannot_bid_on_own_product_even_with_buyer_role(auction, users):
-    users["seller"].role = "buyer"  # defence in depth: the ownership check must hold on its own
-    db.session.commit()
-    e = rejected(auction, users["seller"], "500")
+def test_seller_cannot_bid_on_own_product(auction, users):
+    e = rejected(auction, users["seller"], "500")  # every member may bid, so ownership alone must stop this
     assert "own product" in e.message and e.status == 403
 
 
@@ -410,7 +411,7 @@ def file_app(tmp_path):
     app = create_app(FileConfig)
     with app.app_context():
         db.create_all()
-        seller = make_user("seller@t.test", "seller")
+        seller = make_user("seller@t.test")
         cat = Category(name="Books")
         db.session.add(cat)
         db.session.commit()

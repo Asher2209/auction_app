@@ -164,19 +164,21 @@ def test_xss_in_title_is_escaped(client, seller, card_type):
 
 
 # ---- access control -----------------------------------------------------
-def test_only_sellers_can_use_seller_pages(client, users, cat):
-    for role in ("buyer", "admin"):
-        client.post("/auth/logout")
-        login(client, f"{role}@t.test")
-        assert client.get("/seller/").status_code == 403
-        assert client.get("/seller/products/new").status_code == 403
-        assert client.post("/seller/products/1/delete").status_code == 403
+def test_only_members_can_use_seller_pages(client, users, cat):
+    client.post("/auth/logout")
+    login(client, "admin@t.test")
+    assert client.get("/seller/").status_code == 403
+    assert client.get("/seller/products/new").status_code == 403
+    assert client.post("/seller/products/1/delete").status_code == 403
+    client.post("/auth/logout")
+    login(client, "buyer@t.test")  # a member can open selling; someone else's product is not found
+    assert client.get("/seller/").status_code == 302 and client.post("/seller/products/1/delete").status_code == 404
     client.post("/auth/logout")
     assert client.get("/seller/products/new").status_code == 302
 
 
 def test_cannot_touch_another_sellers_product(client, seller, cat):
-    other = make_user("other@t.test", "seller")
+    other = make_user("other@t.test")
     p = make_product(other, cat)
     assert client.get(f"/seller/products/{p.id}").status_code == 404
     assert client.get(f"/seller/products/{p.id}/edit").status_code == 404

@@ -28,6 +28,9 @@ def create_app(config_class=Config):
     mail.init_app(app)
     socketio.init_app(app, async_mode="threading")
 
+    from .services import google_login
+    google_login.init_app(app)  # registered always; the routes stay closed unless it is configured
+
     from . import models  # noqa: F401  (register models for migrations)
     from .models import utcnow
     from .blueprints.admin import bp as admin_bp

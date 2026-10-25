@@ -53,13 +53,14 @@ def seed(rng=None):
     rng = rng or random.Random(7)
     if User.query.filter_by(email="buyer3@demo.test").first():
         return None
-    sellers = User.query.filter_by(role="seller").all()
+    # every account buys and sells; the demo accounts are named for the side they play
+    sellers = User.query.filter(User.email.like("seller%@demo.test")).all()
     category = Category.query.filter_by(name=CARD_CATEGORY_NAME).first()
     if not sellers or category is None:
         sys.exit("Run scripts/seed.py first.")
-    buyers = User.query.filter_by(role="buyer").all()
+    buyers = User.query.filter(User.email.like("buyer%@demo.test")).all()
     for i in range(3, 7):
-        u = User(name=f"Demo Buyer {i}", email=f"buyer{i}@demo.test", role="buyer", phone="9000000000", address="Demo Street")
+        u = User(name=f"Demo Buyer {i}", email=f"buyer{i}@demo.test", role="member", phone="9000000000", address="Demo Street", email_verified_at=utcnow())
         u.set_password(PASSWORD)
         db.session.add(u)
         buyers.append(u)

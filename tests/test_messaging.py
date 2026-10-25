@@ -10,9 +10,9 @@ def test_send_message_to_seller(app):
     """Buyer can send message to seller about a product."""
     with app.app_context():
         # Create users
-        seller = User(name="seller", email="seller@test.com", role="seller")
+        seller = User(name="seller", email="seller@test.com", role="member")
         seller.set_password("password")
-        buyer = User(name="buyer", email="buyer@test.com", role="buyer")
+        buyer = User(name="buyer", email="buyer@test.com", role="member")
         buyer.set_password("password")
         db.session.add_all([seller, buyer])
         db.session.flush()
@@ -69,9 +69,9 @@ def test_send_message_to_seller(app):
 def test_mark_message_as_read(app):
     """Recipient can mark message as read."""
     with app.app_context():
-        seller = User(name="seller", email="seller@test.com", role="seller")
+        seller = User(name="seller", email="seller@test.com", role="member")
         seller.set_password("password")
-        buyer = User(name="buyer", email="buyer@test.com", role="buyer")
+        buyer = User(name="buyer", email="buyer@test.com", role="member")
         buyer.set_password("password")
         db.session.add_all([seller, buyer])
         db.session.flush()
@@ -123,7 +123,7 @@ def test_mark_message_as_read(app):
 def test_seller_cannot_message_themselves(app):
     """Seller cannot send message to themselves."""
     with app.app_context():
-        seller = User(name="seller", email="seller@test.com", role="seller")
+        seller = User(name="seller", email="seller@test.com", role="member")
         seller.set_password("password")
         db.session.add(seller)
         db.session.flush()
@@ -152,9 +152,9 @@ def test_seller_cannot_message_themselves(app):
 def test_conversation_between_buyer_and_seller(app):
     """Buyer and seller can have multi-message conversation."""
     with app.app_context():
-        seller = User(name="seller", email="seller@test.com", role="seller")
+        seller = User(name="seller", email="seller@test.com", role="member")
         seller.set_password("password")
-        buyer = User(name="buyer", email="buyer@test.com", role="buyer")
+        buyer = User(name="buyer", email="buyer@test.com", role="member")
         buyer.set_password("password")
         db.session.add_all([seller, buyer])
         db.session.flush()

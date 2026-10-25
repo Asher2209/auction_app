@@ -22,8 +22,9 @@ def _chain():
 
 
 def _own_index():
-    """The demo account this user acts as: sellers get the demo seller wallet, everyone else the demo buyer wallet."""
-    return SELLER_INDEX if current_user.has_role("seller") else BUYER_INDEX
+    """The demo account this user acts as: a member who has listed cards gets the demo seller wallet, anyone else the
+    demo buyer wallet (so the two sides of a demo sale sign with different wallets)."""
+    return SELLER_INDEX if current_user.products else BUYER_INDEX
 
 
 @bp.route("/")

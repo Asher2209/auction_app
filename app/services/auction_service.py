@@ -111,8 +111,10 @@ def place_bid(auction_id, user, raw_amount, now=None):
     """Validate and record a bid. Raises BidError with a user-safe message on any rule failure."""
     now = now or utcnow()
     amount = parse_amount(raw_amount)
-    if user.role != "buyer":
-        raise BidError("Only buyer accounts can place bids.", 403)
+    if user.role != "member":
+        raise BidError("Admin accounts cannot place bids.", 403)
+    if not user.email_verified:
+        raise BidError("Confirm your email address before you bid: open the link we emailed you, or send a new one from the banner.", 403)
 
     cfg = current_app.config
     with _lock:

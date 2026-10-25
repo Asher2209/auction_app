@@ -8,15 +8,19 @@
   {{ form.hidden_tag() }}
   {{ field(form.email, autocomplete="email", inputmode="email") }}
   {{ field(form.password, autocomplete="current-password") }}
-  <div class="auth-row">
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" id="remember" name="remember" value="1">
-      <label class="form-check-label" for="remember">Remember me</label>
-    </div>
+  <div class="auth-row auth-row-end">
     <a href="{{ url_for('auth.forgot_password') }}">Forgot password?</a>
   </div>
   <button class="btn btn-primary btn-lg w-100" type="submit">{{ icon('log-in', 18) }}Log in</button>
 </form>
+<div class="auth-divider" role="presentation"><span>or</span></div>
+{% include "auth/_google_button.html" %}
+<button type="button" class="btn btn-secondary btn-lg w-100" id="wallet-login"
+        data-challenge-url="{{ url_for('auth.wallet_login_challenge') }}" data-verify-url="{{ url_for('auth.wallet_login_verify') }}"
+        data-next="{{ request.args.get('next', '') }}">{{ icon('wallet', 18) }}Sign in with your wallet</button>
+<p class="small text-muted mt-2 mb-0" id="wallet-login-status" role="status" aria-live="polite">For accounts that have linked a wallet. Signing in sends no transaction.</p>
+<script src="{{ url_for('static', filename='js/wallet-login.js') }}"></script>
+{% if config.LOCAL_CHAIN %}<script src="{{ url_for('static', filename='js/dev-wallet.js') }}"></script>{% endif %}
 {% endblock %}
 {% block auth_links %}
 <p class="auth-switch">New to MintLot? <a href="{{ url_for('auth.register') }}">Create an account</a></p>

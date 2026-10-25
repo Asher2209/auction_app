@@ -30,7 +30,7 @@ def paid_payment(user, auction_id):
 
 
 def can_review(user, auction_id):
-    return user.is_authenticated and user.role == "buyer" and paid_payment(user, auction_id) is not None
+    return user.is_authenticated and user.role == "member" and paid_payment(user, auction_id) is not None
 
 
 def parse_rating(raw):
@@ -59,7 +59,7 @@ def save_review(user, auction_id, raw_rating, raw_comment, now=None):
     """Create the buyer's review for an item they paid for, or update it. Returns (review, created)."""
     now = now or utcnow()
     rating, comment = parse_rating(raw_rating), parse_comment(raw_comment)
-    payment = paid_payment(user, auction_id) if user.role == "buyer" else None
+    payment = paid_payment(user, auction_id) if user.role == "member" else None
     if payment is None:
         raise ReviewError("You can review an item once you have paid for it.", 403)
     product = payment.auction.product

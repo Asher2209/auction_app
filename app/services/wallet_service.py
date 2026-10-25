@@ -43,6 +43,16 @@ def _address(raw):
     return address
 
 
+def _recover(message, signature):
+    """The address that made `signature` over `message` (personal_sign)."""
+    if not isinstance(signature, str) or not SIGNATURE_RE.match(signature):
+        raise WalletError("That is not a valid signature.")
+    try:
+        return Account.recover_message(encode_defunct(text=message), signature=signature)
+    except Exception:
+        raise WalletError("The signature could not be checked.")
+
+
 def _other_holder(user, address):
     return User.query.filter(func.lower(User.wallet_address) == address.lower(), User.id != user.id).first()
 
@@ -84,12 +94,7 @@ def finish(user, raw_address, signature, now=None):
     address = _address(raw_address)
     if address != pending["address"]:
         raise WalletError("This is not the wallet the message was made for.")
-    if not isinstance(signature, str) or not SIGNATURE_RE.match(signature):
-        raise WalletError("That is not a valid signature.")
-    try:
-        signer = Account.recover_message(encode_defunct(text=pending["message"]), signature=signature)
-    except Exception:
-        raise WalletError("The signature could not be checked.")
+    signer = _recover(pending["message"], signature)
     if signer.lower() != address.lower():
         raise WalletError("The signature was not made by this wallet.", 403)
 
@@ -114,7 +119,7 @@ def unlink(user):
 def follow_wallet(user):
     """After a seller proves a wallet: give their verified cards that have no blockchain identity one, owned by it,
     and point identities that are not minted yet at it. A minted token belongs to whoever holds it on the chain."""
-    if user.role != "seller" or not user.has_verified_wallet:
+    if user.role != "member" or not user.has_verified_wallet:
         return {"registered": 0, "moved": 0}
     contract = current_app.config.get("COLLECTIBLE_CONTRACT_ADDRESS")
     registered = moved = 0
@@ -132,3 +137,57 @@ def follow_wallet(user):
             asset.owner_wallet = user.wallet_address
             moved += 1
     return {"registered": registered, "moved": moved}
+
+
+# ---- signing in with a wallet (EIP-4361, "Sign-In with Ethereum") ----------------------------------------------------
+# Only a wallet an account has already proven (see start/finish above) can sign in, so this never creates accounts and
+# never trusts an address someone merely typed. The challenge is issued to anyone, whether or not the wallet has an
+# account, so asking for one reveals nothing; only a valid signature by a proven wallet signs in.
+LOGIN_KEY = "wallet_login"
+
+
+def login_message(address, domain, uri, chain_id, nonce, issued):
+    """The EIP-4361 text a wallet shows as a sign-in request (MetaMask recognises the format and checks the domain)."""
+    stamp = lambda t: datetime.fromtimestamp(t, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")  # noqa: E731
+    return (
+        f"{domain} wants you to sign in with your Ethereum account:\n"
+        f"{address}\n"
+        "\n"
+        "Sign in to MintLot. This does not send a transaction, cost gas or give anyone access to your funds.\n"
+        "\n"
+        f"URI: {uri}\n"
+        "Version: 1\n"
+        f"Chain ID: {chain_id}\n"
+        f"Nonce: {nonce}\n"
+        f"Issued At: {stamp(issued)}\n"
+        f"Expiration Time: {stamp(issued + CHALLENGE_TTL)}"
+    )
+
+
+def start_login(raw_address, domain, uri, now=None):
+    """Step 1: a fresh sign-in message for this wallet, valid for CHALLENGE_TTL seconds and usable once."""
+    address = _address(raw_address)
+    issued = int(now if now is not None else time.time())
+    message = login_message(address, domain, uri, current_app.config["CHAIN_ID"], secrets.token_hex(16), issued)
+    session[LOGIN_KEY] = {"address": address, "message": message, "issued": issued}
+    return message
+
+
+def finish_login(raw_address, signature, now=None):
+    """Step 2: the account whose proven wallet signed the issued message. Raises WalletError otherwise."""
+    pending = session.pop(LOGIN_KEY, None)  # one attempt per message, whatever the outcome
+    if not isinstance(pending, dict):
+        raise WalletError("Ask for a new message to sign, then try again.")
+    if (now if now is not None else time.time()) - pending["issued"] > CHALLENGE_TTL:
+        raise WalletError("That message has expired. Try again.")
+    address = _address(raw_address)
+    if address != pending["address"]:
+        raise WalletError("This is not the wallet the message was made for.")
+    signer = _recover(pending["message"], signature)
+    if signer.lower() != address.lower():
+        raise WalletError("The signature was not made by this wallet.", 403)
+    user = User.query.filter(func.lower(User.wallet_address) == address.lower()).first()
+    if user is None or not user.has_verified_wallet or not user.is_active:
+        raise WalletError("No MintLot account has linked this wallet yet. Log in with your email, then link the wallet "
+                          "from your account page to use it for signing in.", 404)
+    return user

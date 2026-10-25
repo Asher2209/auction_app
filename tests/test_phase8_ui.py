@@ -235,12 +235,12 @@ def test_my_cards_is_private_to_the_buyer(client, users, chain, s):
     authorize_on_chain(client, chain, s)
     pay(client, chain, s)
     client.post("/auth/logout")
-    make_user("rival@t.test", "buyer")
+    make_user("rival@t.test")
     login(client, "rival@t.test")
     assert s.card.card_name not in page(client, "/buyer/cards")
     client.post("/auth/logout")
-    login(client, "seller@t.test")
-    assert client.get("/buyer/cards").status_code == 403
+    login(client, "seller@t.test")  # the seller's own collection, which this sold card is not in
+    assert s.card.card_name not in page(client, "/buyer/cards")
     client.post("/auth/logout")
     assert client.get("/buyer/cards").status_code == 302
 
@@ -264,7 +264,7 @@ def inventory(users, cat, card_type):
     cards["sold"] = make_card(seller, cat, card_type, status="minted", token_id=504, auction_status="closed", winner=buyer)
     for key, outcome in (("unpaid", "pending"), ("sold", "successful")):
         db.session.add(Payment(auction_id=cards[key].auction.id, buyer_id=buyer.id, amount=Decimal("100"), payment_status=outcome))
-    other = make_user("other@t.test", "seller")
+    other = make_user("other@t.test")
     make_card(other, cat, card_type, verified=False, asset=False)
     db.session.commit()
     return cards
@@ -325,11 +325,13 @@ def test_sorting_by_name_orders_the_rows(client, users, seller, cat, card_type):
     assert names == sorted(names, key=str.lower)
 
 
-def test_an_empty_dashboard_invites_the_first_card_and_is_for_sellers_only(client, users):
-    login(client, "seller@t.test")
-    assert "Add your first card" in page(client, "/seller/collectibles")
+def test_an_empty_dashboard_invites_the_first_card_and_is_for_members_only(client, users):
+    for who in ("seller", "buyer"):  # any member can start selling
+        client.post("/auth/logout")
+        login(client, f"{who}@t.test")
+        assert "Add your first card" in page(client, "/seller/collectibles"), who
     client.post("/auth/logout")
-    login(client, "buyer@t.test")
+    login(client, "admin@t.test")
     assert client.get("/seller/collectibles").status_code == 403
 
 

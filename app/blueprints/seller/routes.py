@@ -20,20 +20,20 @@ def _own_product_or_404(product_id):
 
 
 @bp.route("/")
-@role_required("seller")
+@role_required("member")
 def dashboard():
     # Redirect to collectibles dashboard (dedicated cards interface)
     return redirect(url_for("seller.collectibles_dashboard"))
 
 @bp.route("/products/new")
-@role_required("seller")
+@role_required("member")
 def create_product():
     # MintLot lists trading cards only; the old generic product form is gone.
     return redirect(url_for("seller.create_card"))
 
 
 @bp.route("/products/<int:product_id>")
-@role_required("seller")
+@role_required("member")
 def product_detail(product_id):
     product = _own_product_or_404(product_id)
     auction = product.auction
@@ -44,7 +44,7 @@ def product_detail(product_id):
 
 
 @bp.route("/products/<int:product_id>/edit", methods=["GET", "POST"])
-@role_required("seller")
+@role_required("member")
 def edit_product(product_id):
     product = _own_product_or_404(product_id)
     if product.collectible_card is not None:
@@ -57,7 +57,7 @@ def edit_product(product_id):
 
 
 @bp.route("/products/<int:product_id>/delete", methods=["POST"])
-@role_required("seller")
+@role_required("member")
 def delete_product(product_id):
     product = _own_product_or_404(product_id)
     if product.collectible_card is not None:
@@ -77,7 +77,7 @@ def delete_product(product_id):
 
 
 @bp.route("/reviews")
-@role_required("seller")
+@role_required("member")
 def reviews():
     """Visible reviews on this seller's products (moderator-hidden ones are not shown)."""
     rows = (Review.query.join(Product, Review.product_id == Product.id)

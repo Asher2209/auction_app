@@ -1,0 +1,22 @@
+{% extends "auth/_card.html" %}
+{% from "_form.html" import field, checkbox %}
+{% block title %}Finish creating your account · MintLot{% endblock %}
+{% block heading %}Almost there{% endblock %}
+{% block lead %}<p class="auth-lead">Google confirmed <strong>{{ email }}</strong>. A few details to finish your MintLot account.</p>{% endblock %}
+{% block form %}
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+  {{ field(form.name, autocomplete="name") }}
+  {{ field(form.phone, autocomplete="tel", inputmode="tel", placeholder="+91 98765 43210") }}
+  {{ field(form.address, hint="Where won cards are shipped.", autocomplete="street-address", rows=2) }}
+  {% call checkbox(form.accept_terms) %}
+    I am 18 or older and agree to the <a href="{{ url_for('legal.terms') }}" target="_blank" rel="noopener">Terms of Service</a> and the
+    <a href="{{ url_for('legal.privacy') }}" target="_blank" rel="noopener">Privacy Policy</a>, including the
+    <a href="{{ url_for('legal.cookies') }}" target="_blank" rel="noopener">Cookie Policy</a>
+  {% endcall %}
+  <button class="btn btn-primary btn-lg w-100" type="submit">{{ icon('user-plus', 18) }}Create account</button>
+</form>
+{% endblock %}
+{% block auth_links %}
+<p class="auth-switch"><a href="{{ url_for('auth.login') }}">Cancel</a></p>
+{% endblock %}

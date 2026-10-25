@@ -17,16 +17,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app import create_app  # noqa: E402
 from app.extensions import db  # noqa: E402
-from app.models import User  # noqa: E402
+from app.models import User, utcnow  # noqa: E402
 
 DEMO_PASSWORD = "Demo@1234"
 
 USERS = [
     ("Admin User", "admin@demo.test", "admin"),
-    ("Sarah Seller", "seller1@demo.test", "seller"),
-    ("Sam Seller", "seller2@demo.test", "seller"),
-    ("Bella Buyer", "buyer1@demo.test", "buyer"),
-    ("Ben Buyer", "buyer2@demo.test", "buyer"),
+    ("Sarah Seller", "seller1@demo.test", "member"),  # every non-admin account buys and sells; the names say who plays which side in the demo
+    ("Sam Seller", "seller2@demo.test", "member"),
+    ("Bella Buyer", "buyer1@demo.test", "member"),
+    ("Ben Buyer", "buyer2@demo.test", "member"),
 ]
 CARD_SELLER = "seller1@demo.test"
 
@@ -45,7 +45,7 @@ def seed(app, rng=None):
     if User.query.first():
         return None
     for name, email, role in USERS:
-        u = User(name=name, email=email, role=role, phone="9000000000", address="Demo Street, Demo City")
+        u = User(name=name, email=email, role=role, phone="9000000000", address="Demo Street, Demo City", email_verified_at=utcnow())
         u.set_password(DEMO_PASSWORD)
         db.session.add(u)
     db.session.commit()

@@ -19,7 +19,7 @@ from ...services import (auction_validation_service, blockchain_minting_service,
 from ...services.notifications import notify
 from ...services.card_identity_service import assign_platform_card_id
 from ...services.qrcode_service import save_qr_code_to_file
-from ...utils import role_required
+from ...utils import role_required, verified_email_required
 from . import bp
 from .forms_card_auction import CardAuctionForm
 from .forms_cards import CollectibleCardForm
@@ -37,7 +37,7 @@ def _card_category():
 
 
 @bp.route("/collectibles", methods=["GET"])
-@role_required("seller")
+@role_required("member")
 def collectibles_dashboard():
     """My cards: every card with its verification, blockchain and auction state, grouped by lifecycle."""
     data = seller_cards_service.seller_cards(current_user, request.args.get("status", "all"), request.args.get("sort", "newest"))
@@ -45,7 +45,8 @@ def collectibles_dashboard():
 
 
 @bp.route("/cards/new", methods=["GET", "POST"])
-@role_required("seller")
+@role_required("member")
+@verified_email_required
 def create_card():
     """Create a new collectible trading card listing"""
     form = CollectibleCardForm()
@@ -194,7 +195,7 @@ def create_card():
 
 
 @bp.route("/cards/<int:card_id>", methods=["GET"])
-@role_required("seller")
+@role_required("member")
 def view_card(card_id):
     """View collectible card details"""
     from ...models import CollectibleCard
@@ -239,7 +240,7 @@ def _sold_card_or_404(card_id):
 
 
 @bp.route("/cards/<int:card_id>/sale")
-@role_required("seller")
+@role_required("member")
 def card_sale(card_id):
     """The seller authorizes the on-chain transfer of the token to the auction winner."""
     card, auction, payment = _sold_card_or_404(card_id)
@@ -252,7 +253,7 @@ def card_sale(card_id):
 
 
 @bp.route("/cards/<int:card_id>/sale/prepare", methods=["POST"])
-@role_required("seller")
+@role_required("member")
 @limited("sale", 20, 60, by="user")
 def card_sale_prepare(card_id):
     card, auction, payment = _sold_card_or_404(card_id)
@@ -264,7 +265,7 @@ def card_sale_prepare(card_id):
 
 
 @bp.route("/cards/<int:card_id>/sale/check", methods=["POST"])
-@role_required("seller")
+@role_required("member")
 @limited("sale", 40, 60, by="user")
 def card_sale_check(card_id):
     """Read the authorization back from the chain; once it is there, tell the winner they can pay."""
@@ -281,7 +282,7 @@ def card_sale_check(card_id):
 
 
 @bp.route("/cards/<int:card_id>/auction", methods=["GET", "POST"])
-@role_required("seller")
+@role_required("member")
 def create_card_auction(card_id):
     """Put a verified, token-backed card up for auction. Every rule is enforced by the service, not by this page."""
     card = db.session.get(CollectibleCard, card_id)
@@ -309,7 +310,7 @@ def create_card_auction(card_id):
 
 
 @bp.route("/cards/<int:card_id>/edit", methods=["GET", "POST"])
-@role_required("seller")
+@role_required("member")
 def edit_card(card_id):
     """Edit collectible card details (only before verification)"""
     from ...models import CollectibleCard
