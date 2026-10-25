@@ -1,11 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Review {{ product.title }} - Admin{% endblock %}
+{% block title %}Review {{ product.title }} · Admin · MintLot{% endblock %}
 {% block content %}
-<a class="small" href="{{ url_for('admin.products') }}">&larr; Products</a>
-<h1 class="h3 mt-2">{{ product.title }}
-  <span class="badge text-bg-secondary fs-6">{{ product.approval_status|capitalize }}</span>
-  {% if auction %}<span class="badge text-bg-primary fs-6">Auction: {{ auction.status }}</span>{% endif %}
-</h1>
+{% set ws_title = product.title %}
+{% include "admin/_nav.html" %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+  <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.products') }}">{{ icon('arrow-left', 16) }}Products</a>
+  <span class="chip chip-muted">{{ product.approval_status|capitalize }}</span>
+  {% if auction %}<span class="chip chip-live">Auction: {{ auction.status }}</span>{% endif %}
+</div>
 
 {% if product.rejection_reason %}
 <div class="alert alert-danger"><strong>Reason on record:</strong> {{ product.rejection_reason }}</div>

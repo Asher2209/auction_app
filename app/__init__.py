@@ -88,7 +88,9 @@ def create_app(config_class=Config):
             from .models import Notification
             return Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
 
-        return {"currency": app.config["CURRENCY_SYMBOL"], "unread_count": unread_count}
+        from .icons import icon
+
+        return {"currency": app.config["CURRENCY_SYMBOL"], "unread_count": unread_count, "icon": icon}
 
     @app.template_filter("money")
     def money(value):

@@ -157,7 +157,7 @@ def test_only_a_verified_card_gets_the_verified_badge(client, users, seller, cat
 
 
 # ---- guards for the visual direction and the layout bugs ---------------------------------------------------------------------------
-LIVE_CSS = ("design-tokens", "theme", "components", "layouts", "style", "modern-ui", "cookies")
+LIVE_CSS = ("design-tokens", "theme", "components", "layouts", "cookies")
 PURPLE = re.compile(r"8b5cf6|a78bfa|7c3aed|6d28d9|139,\s*92,\s*246|109,\s*40,\s*217", re.I)
 
 
@@ -342,7 +342,7 @@ def test_the_admin_dashboard_counts_cards_and_blockchain_records(client, users, 
     db.session.commit()
     login(client, "admin@t.test")
     html = page(client, "/admin/").split('id="card-stats"')[1].split("Waiting for review")[0]
-    tiles = dict(re.findall(r'text-muted small">([^<]+)</div>\s*<div class="fs-3 fw-semibold">(?:<a[^>]*>)?(\d+)', html))
+    tiles = dict(re.findall(r'stat-label">([^<]+)</span><span class="stat-value">(\d+)', html))
     assert tiles["Collectible cards"] == "3" and tiles["Pending verification"] == "1" and tiles["Verified"] == "1"
     assert tiles["Rejected"] == "1" and tiles["More information required"] == "0"
     assert tiles["Card auctions live or scheduled"] == "1" and tiles["Card auctions completed"] == "0" and tiles["Cards sold and paid"] == "0"

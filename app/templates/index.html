@@ -1,126 +1,51 @@
 {% extends "base.html" %}
 {% from "_auction_card.html" import card %}
-{% block title %}MintLot - Premium Auction Marketplace{% endblock %}
+{% block title %}MintLot · Live auctions for platform-verified trading cards{% endblock %}
 {% block content %}
 
-<!-- ========== EDITORIAL HERO ========== -->
-<section class="section-spacious">
-  <div class="hero-editorial">
-    <span class="hero-eyebrow">Verified Marketplace</span>
-    
-    <h1 class="hero-title">
-      Trading cards, reviewed by the platform and auctioned live
-    </h1>
-    
-    <p class="hero-subtitle">
-      Real-time auctions for platform-verified trading cards, with transparent pricing and card ownership recorded on the blockchain.
-    </p>
-    
-    <div class="hero-actions">
-      <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary btn-lg">
-        Browse Auctions
-      </a>
-      <a href="{{ url_for('auth.register') }}" class="btn btn-secondary btn-lg">
-        Create Account
-      </a>
+<section class="home-hero">
+  <div class="home-hero-copy">
+    <span class="eyebrow">Trading card auctions</span>
+    <h1 class="home-hero-title">Rare cards, auctioned live.</h1>
+    <p class="home-hero-lead">Every card is checked by MintLot against an eight-point review before it can be listed. Bids reach everyone the moment they are placed, and the winner's payment and the card's token change hands in one step.</p>
+    <div class="home-hero-actions">
+      <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary btn-lg">Browse live auctions</a>
+      {% if not current_user.is_authenticated %}
+      <a href="{{ url_for('auth.register') }}" class="btn btn-secondary btn-lg">Create an account</a>
+      {% else %}
+      <a href="{{ url_for('seller.create_card') }}" class="btn btn-secondary btn-lg">Sell a card</a>
+      {% endif %}
     </div>
-    
-    <!-- Trust indicators -->
-    <div class="hero-trust">
-      <div class="hero-trust-item">
-        <div class="hero-trust-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </div>
-        <div class="hero-trust-content">
-          <h4>Verified Items</h4>
-          <p>Card details and images reviewed by the platform against a checklist</p>
-        </div>
-      </div>
-      
-      <div class="hero-trust-item">
-        <div class="hero-trust-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-        </div>
-        <div class="hero-trust-content">
-          <h4>Live Bidding</h4>
-          <p>Real-time bids; crypto payments checked on the blockchain</p>
-        </div>
-      </div>
-      
-      <div class="hero-trust-item">
-        <div class="hero-trust-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </div>
-        <div class="hero-trust-content">
-          <h4>Seller Ratings</h4>
-          <p>Reviews only from buyers who paid</p>
-        </div>
-      </div>
-    </div>
+    <dl class="home-facts">
+      <div><dt>Review</dt><dd>8-point checklist</dd></div>
+      <div><dt>Fair finish</dt><dd>Late bids add 2 minutes</dd></div>
+      <div><dt>Settlement</dt><dd>Payment and token together</dd></div>
+    </dl>
+  </div>
+  <div class="home-hero-art" aria-hidden="true">
+    {% if showcase %}
+      {% for s in showcase %}<img class="home-fan home-fan-{{ loop.index }}" src="{{ s.src }}" alt="">{% endfor %}
+    {% else %}
+      <div class="home-fan home-fan-1 home-fan-empty"></div>
+    {% endif %}
   </div>
 </section>
 
-<!-- ========== SEARCH & BROWSE ========== -->
-<section class="section">
-  <div style="text-align: center; margin-bottom: var(--dt-space-3xl);">
-    <h2 class="section-title">Find Your Next Treasure</h2>
-  </div>
-  
-  <div class="row justify-content-center mb-5">
-    <div class="col-lg-8">
-      <form action="{{ url_for('auctions.browse') }}" method="get" class="input-group input-group-lg">
-        <input
-          class="form-control"
-          name="q"
-          aria-label="Search auctions"
-          maxlength="100"
-          placeholder="Search by name, set, or player..."
-        >
-        <button class="btn btn-primary" type="submit">
-          Search
-        </button>
-      </form>
-    </div>
-  </div>
-  
-  <!-- Category buttons -->
-  {% if categories %}
-  <div style="text-align: center;">
-    <p style="font-size: 0.9rem; color: var(--dt-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--dt-space-lg);">Browse by type</p>
-    <div class="d-flex flex-wrap justify-content-center gap-2">
-      {% for c in categories %}
-        <a href="{{ url_for('auctions.browse', category=c.id) }}" class="btn btn-secondary btn-sm">
-          {{ c.name }}
-        </a>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-</section>
+{% if categories %}
+<nav class="home-categories chip-row" aria-label="Browse by category">
+  {% for c in categories %}<a href="{{ url_for('auctions.browse', category=c.id) }}" class="chip chip-link">{{ c.name }}</a>{% endfor %}
+</nav>
+{% endif %}
 
-<!-- ========== LIVE AUCTIONS ========== -->
 {% if auctions %}
-<section class="section">
-  <div class="section-header">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--dt-space-2xl);">
-      <div>
-        <span class="section-eyebrow">Active Right Now</span>
-        <h2 class="section-title">Live Auctions</h2>
-        <p class="section-subtitle">{{ auctions|length }} item{{ '' if auctions|length == 1 else 's' }} ending soon</p>
-      </div>
-      <a href="{{ url_for('auctions.browse') }}" class="btn btn-outline-primary" style="white-space: nowrap;">
-        View All →
-      </a>
+<section class="home-section" aria-labelledby="ending-soon">
+  <div class="home-section-head">
+    <div>
+      <span class="eyebrow">Live now</span>
+      <h2 id="ending-soon">Ending soon</h2>
     </div>
+    <a href="{{ url_for('auctions.browse') }}" class="btn btn-link">See all live auctions</a>
   </div>
-  
   <div class="product-grid">
     {% for a in auctions %}
       {{ card(a, counts.get(a.id), ratings.get(a.product_id)) }}
@@ -128,131 +53,52 @@
   </div>
 </section>
 {% else %}
-<section class="section">
+<section class="home-section">
   <div class="empty-state">
-    <div class="empty-state-icon">⏰</div>
-    <h3 class="empty-state-title">No Active Auctions</h3>
-    <p class="empty-state-description">
-      A card goes up for auction once it is Platform Verified and its seller lists it. Check back soon.
-    </p>
+    {{ icon('gavel', 32) }}
+    <h2 class="empty-state-title">No live auctions right now</h2>
+    <p class="empty-state-description">A card goes up for auction once it is Platform Verified and its seller lists it. New lots appear here as soon as they start.</p>
     {% if current_user.is_authenticated and current_user.role == 'admin' %}
     <a href="{{ url_for('admin.cards_verify_dashboard') }}" class="btn btn-primary">Review pending cards</a>
     {% else %}
-    <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary">Browse Auctions</a>
+    <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary">Browse auctions</a>
     {% endif %}
   </div>
 </section>
 {% endif %}
 
-<!-- ========== HOW IT WORKS ========== -->
-<section class="section-spacious" style="border-top: 1px solid var(--dt-border); padding-top: var(--dt-space-4xl);">
-  <div class="section-header">
-    <h2 class="section-title">How It Works</h2>
-    <p class="section-subtitle">Simple, transparent, and secure</p>
-  </div>
-  
-  <div class="row g-4" style="max-width: 1000px;">
-    <div class="col-md-6 col-lg-4">
-      <div style="text-align: center;">
-        <div style="
-          width: 4rem;
-          height: 4rem;
-          background-color: var(--dt-bg-2);
-          border: 2px solid var(--dt-accent);
-          border-radius: var(--dt-radius-md);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto var(--dt-space-2xl);
-          font-size: 1.5rem;
-          font-weight: var(--dt-font-weight-bold);
-          color: var(--dt-accent);
-        ">1</div>
-        <h3 class="h5" style="color: var(--dt-text-primary); margin-bottom: var(--dt-space-md);">
-          Browse Listings
-        </h3>
-        <p style="color: var(--dt-text-secondary); margin-bottom: 0;">
-          Explore platform-verified trading cards
-        </p>
-      </div>
-    </div>
-    
-    <div class="col-md-6 col-lg-4">
-      <div style="text-align: center;">
-        <div style="
-          width: 4rem;
-          height: 4rem;
-          background-color: var(--dt-bg-2);
-          border: 2px solid var(--dt-accent);
-          border-radius: var(--dt-radius-md);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto var(--dt-space-2xl);
-          font-size: 1.5rem;
-          font-weight: var(--dt-font-weight-bold);
-          color: var(--dt-accent);
-        ">2</div>
-        <h3 class="h5" style="color: var(--dt-text-primary); margin-bottom: var(--dt-space-md);">
-          Place Your Bid
-        </h3>
-        <p style="color: var(--dt-text-secondary); margin-bottom: 0;">
-          Compete with other collectors in real-time auctions
-        </p>
-      </div>
-    </div>
-    
-    <div class="col-md-6 col-lg-4">
-      <div style="text-align: center;">
-        <div style="
-          width: 4rem;
-          height: 4rem;
-          background-color: var(--dt-bg-2);
-          border: 2px solid var(--dt-accent);
-          border-radius: var(--dt-radius-md);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto var(--dt-space-2xl);
-          font-size: 1.5rem;
-          font-weight: var(--dt-font-weight-bold);
-          color: var(--dt-accent);
-        ">3</div>
-        <h3 class="h5" style="color: var(--dt-text-primary); margin-bottom: var(--dt-space-md);">
-          Win & Receive
-        </h3>
-        <p style="color: var(--dt-text-secondary); margin-bottom: 0;">
-          Pay, and the seller sends the card once your payment is confirmed
-        </p>
-      </div>
+<section class="home-section" aria-labelledby="how-it-works">
+  <div class="home-section-head">
+    <div>
+      <span class="eyebrow">How it works</span>
+      <h2 id="how-it-works">From the seller's binder to your collection</h2>
     </div>
   </div>
+  <ol class="home-steps">
+    <li>
+      <span class="home-step-num">01</span>
+      <h3>The card is reviewed</h3>
+      <p>The seller submits photos and details. A MintLot admin checks identity, set, number, condition and counterfeit risk, then marks it Platform Verified and records it as a token in the seller's wallet.</p>
+    </li>
+    <li>
+      <span class="home-step-num">02</span>
+      <h3>You bid live</h3>
+      <p>New bids appear for everyone instantly. A bid in the final minute adds two minutes, so the auction always ends on a fair last word.</p>
+    </li>
+    <li>
+      <span class="home-step-num">03</span>
+      <h3>Pay and own it</h3>
+      <p>The winner pays through MetaMask; the payment and the card's token move in the same transaction, and the seller ships the card.</p>
+    </li>
+  </ol>
 </section>
 
-<!-- ========== CTA FOOTER ========== -->
-<section class="section-spacious">
-  <div style="
-    background-color: var(--dt-bg-1);
-    border: 1px solid var(--dt-border);
-    border-radius: var(--dt-radius-lg);
-    padding: clamp(3rem, 6vw, 4rem);
-    text-align: center;
-  ">
-    <h2 class="h2" style="color: var(--dt-text-primary); margin-bottom: var(--dt-space-lg);">
-      Ready to start collecting?
-    </h2>
-    <p class="lead" style="margin-bottom: var(--dt-space-2xl);">
-      Create an account to bid on and sell platform-verified trading cards
-    </p>
-    <div style="display: flex; gap: var(--dt-space-lg); justify-content: center; flex-wrap: wrap;">
-      <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary btn-lg">
-        Browse Now
-      </a>
-      <a href="{{ url_for('auth.register') }}" class="btn btn-secondary btn-lg">
-        Create Free Account
-      </a>
-    </div>
+<section class="home-cta">
+  <div>
+    <h2>Have a card worth showing?</h2>
+    <p>List it for review. Once it is verified, you set a starting bid and the auction runs itself.</p>
   </div>
+  <a href="{{ url_for('seller.create_card') }}" class="btn btn-primary btn-lg">Sell a card</a>
 </section>
 
 {% endblock %}

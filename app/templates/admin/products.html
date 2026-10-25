@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% from "_pagination.html" import pager %}
-{% block title %}Products - Admin{% endblock %}
+{% block title %}Products · Admin · MintLot{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">Admin</h1>
 {% include "admin/_nav.html" %}
 
 <form class="row g-2 mb-3" method="get">
@@ -17,7 +16,7 @@
 
 {% set badge = {'pending': 'warning', 'rejected': 'danger', 'approved': 'success'} %}
 <div class="table-responsive">
-<table class="table table-hover align-middle bg-white">
+<table class="table table-hover align-middle">
   <thead><tr><th>Product</th><th>Seller</th><th>Category</th><th>Start price</th><th>Approval</th><th>Auction</th><th></th></tr></thead>
   <tbody>
   {% for p in page.items %}

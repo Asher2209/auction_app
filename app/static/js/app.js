@@ -11,3 +11,9 @@ document.addEventListener("change", (e) => {
   const el = e.target;
   if (el instanceof HTMLSelectElement && el.hasAttribute("data-autosubmit") && el.form) el.form.submit();
 });
+
+// On a narrow screen the section tabs scroll sideways: start with the current one in view.
+{
+  const tab = document.querySelector(".ws-tabs .is-active");
+  if (tab) tab.parentElement.scrollLeft = tab.offsetLeft - tab.parentElement.offsetLeft - 16;
+}

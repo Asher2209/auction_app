@@ -34,10 +34,10 @@
   // ---- badge / form visibility ------------------------------------------
   function renderStatus() {
     const badge = $("status-badge");
-    const map = { active: ["Live", "text-bg-success"], scheduled: ["Upcoming", "text-bg-info"], closed: ["Ended", "text-bg-dark"] };
-    const [label, cls] = map[status] || ["", "text-bg-secondary"];
+    const map = { active: ["Live", "chip-live"], scheduled: ["Upcoming", "chip-upcoming"], closed: ["Ended", "chip-muted"] };
+    const [label, cls] = map[status] || ["", "chip-muted"];
     badge.textContent = label;
-    badge.className = "badge " + cls;
+    badge.className = "chip " + cls;
     const form = $("bid-form");
     if (form) form.classList.toggle("d-none", status !== "active");
     $("end-label").textContent = status === "closed" ? "Ended" : "Ends";
@@ -142,8 +142,8 @@
   // ---- Socket.IO ---------------------------------------------------------
   const indicator = $("live-indicator");
   function setLive(on) {
-    indicator.textContent = on ? "live" : "reconnecting…";
-    indicator.className = "badge border " + (on ? "text-bg-success" : "text-bg-light text-muted");
+    indicator.textContent = on ? "updating live" : "reconnecting…";
+    indicator.className = "live-indicator" + (on ? " is-on" : "");
   }
 
   if (typeof io === "function") {

@@ -1,13 +1,19 @@
 {% extends "base.html" %}
 {% from "_form.html" import field %}
-{% block title %}Create auction - {{ card.card_name }} - MintLot{% endblock %}
+{% block title %}Create auction · {{ card.card_name }} · MintLot{% endblock %}
 {% block content %}
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('seller.collectibles_dashboard') }}">My cards</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('seller.view_card', card_id=card.id) }}">{{ card.card_name[:40] }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Create auction</li>
+  </ol>
+</nav>
 <div class="row justify-content-center">
   <div class="col-12 col-lg-8">
-    <a class="small" href="{{ url_for('seller.view_card', card_id=card.id) }}">&larr; {{ card.card_name }}</a>
-    <div class="card shadow-sm mt-2"><div class="card-body p-4">
-      <h1 class="h4 mb-1">Create an auction</h1>
-      <p class="text-muted small mb-3">{{ card.card_name }} <code>{{ card.platform_card_id }}</code></p>
+    <header class="ws-head"><span class="eyebrow">Selling</span><h1 class="ws-title">Create an auction</h1>
+      <p class="page-lead">{{ card.card_name }} <span class="cd-mono">{{ card.platform_card_id }}</span></p></header>
+    <div class="card"><div class="card-body p-4">
 
       {% if listing.violations %}
       <div class="alert alert-danger" role="alert">

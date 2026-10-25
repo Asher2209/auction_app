@@ -37,3 +37,28 @@
   </a>
 </div>
 {% endmacro %}
+
+{# A card that is listed but not (yet) at auction: same tile, with the seller's estimate in place of the bid. #}
+{% macro card_tile(c) %}
+{% set v = c.product.collectible_verification %}
+{% set img = c.images[0].get_image_src() if c.images else none %}
+<div class="cc-cell">
+  <a href="{{ url_for('main.view_card', card_id=c.id) }}" class="cc text-decoration-none">
+    <div class="cc-media">
+      <img src="{{ img or url_for('static', filename='img/no-image.svg') }}" alt="{{ c.card_name }}{% if c.set_name %}, {{ c.set_name }}{% endif %}" loading="lazy">
+      {% if v and v.verification_status == 'verified' %}<span class="cc-badge" title="Platform verified: a MintLot admin reviewed the submitted details and images. This is not a guarantee of authenticity.">&#10003; Verified</span>{% endif %}
+    </div>
+    <div class="cc-body">
+      <h3 class="cc-name">{{ c.card_name }}</h3>
+      <div class="cc-meta">{{ [c.set_name, c.release_year, ('#' ~ c.card_number) if c.card_number else none]|select|join(' &middot; '|safe) }}</div>
+      <div class="cc-grade">{{ [c.grade if c.is_graded and c.grade else none, c.condition]|select|join(' &middot; '|safe) }}</div>
+      <div class="cc-label">Seller's estimate</div>
+      <div class="cc-price{{ ' cc-price-none' if not c.estimated_value }}">{{ c.estimated_value|money if c.estimated_value else 'Not given' }}</div>
+    </div>
+    <div class="cc-foot">
+      <span>{{ c.card_type.name }}</span>
+      <span class="cc-time">View card</span>
+    </div>
+  </a>
+</div>
+{% endmacro %}

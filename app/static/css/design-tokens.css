@@ -1,83 +1,80 @@
-/* MintLot Design Tokens - Premium Dark Matte Marketplace
-   Foundation for redesigned UI/UX system
-   All colors, spacing, typography, and layout variables */
+/* MintLot design tokens: "Vault" (dark matte with a brass accent, plus a light variant).
+   Every colour, font, size and radius on the site comes from here. Text colours meet WCAG AA (4.5:1) on every
+   background in both themes; tests/test_theme.py recomputes the ratios from these values. */
 
 :root, [data-bs-theme="light"] {
-  /* ========== COLOR PALETTE: Dark Matte ========== */
-  /* Background layers - create depth without glass */
-  --dt-bg-0: #0D0D0C;           /* Page background (darkest) */
-  --dt-bg-1: #141413;           /* Secondary background */
-  --dt-bg-2: #1A1917;           /* Surface/cards */
-  --dt-bg-3: #211F1C;           /* Elevated surfaces/hover */
+  /* ---- colour: dark is the default ---------------------------------------------------------------------- */
+  --dt-bg-0: #0D0C0B;            /* page */
+  --dt-bg-1: #131211;            /* header, table heads, wells */
+  --dt-bg-2: #181614;            /* cards and panels */
+  --dt-bg-3: #201D1A;            /* raised surfaces, hover */
 
-  /* Text hierarchy */
-  --dt-text-primary: #F2EFE8;   /* Main text, high contrast */
-  --dt-text-secondary: #A7A39A; /* Supporting text */
-  --dt-text-muted: #8C877F;     /* Captions, metadata (4.6:1 on --dt-bg-3: WCAG AA) */
+  --dt-text-primary: #EEE8DF;
+  --dt-text-secondary: #B9B0A4;
+  --dt-text-muted: #A0978B;      /* 5.8:1 on --dt-bg-3 */
 
-  /* Borders - minimal, sophisticated */
-  --dt-border: #302D29;         /* Subtle separator lines */
-  --dt-border-light: #262319;   /* Even more subtle */
+  --dt-border: #2B2723;
+  --dt-border-light: #24211E;
+  --dt-border-strong: #3A352F;   /* inputs, dashed provenance boxes */
 
-  /* Accent - warm amber/gold for important elements */
-  --dt-accent: #C79A52;         /* Primary warm accent */
-  --dt-accent-hover: #D4A866;   /* Accent hover state */
-  --dt-accent-dark: #B88A45;    /* Accent active state */
+  --dt-accent: #D2A04E;          /* brass */
+  --dt-accent-hover: #E0B467;
+  --dt-accent-dark: #C08F40;     /* pressed */
+  --dt-accent-strong: #F3D9A6;   /* large figures: the current bid */
+  --dt-accent-soft: #2A2116;     /* tinted backgrounds for accent chips */
 
-  /* Status colors - reserved for specific meanings */
-  --dt-success: #10B981;        /* Verified, confirmed */
-  --dt-warning: #F59E0B;        /* Pending, needs attention */
-  --dt-danger: #EF4444;         /* Rejected, error */
-  --dt-info: #3B82F6;           /* Information */
+  --dt-success: #6CC597;         /* Platform Verified, confirmed */
+  --dt-success-soft: #18261D;
+  --dt-warning: #E5A93A;
+  --dt-warning-soft: #2A2113;
+  --dt-danger: #EC7C6E;
+  --dt-danger-soft: #2C1715;
+  --dt-info: #7FB2E5;
+  --dt-info-soft: #151F2B;
 
-  /* ========== TYPOGRAPHY ========== */
-  --dt-font-primary: "Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --dt-font-display: "Space Grotesk Variable", "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --dt-font-accent: "Instrument Serif", Georgia, "Times New Roman", serif;
+  /* ---- type ---------------------------------------------------------------------------------------------- */
+  --dt-font-primary: "Figtree Variable", Figtree, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dt-font-display: "Bricolage Grotesque Variable", "Figtree Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dt-font-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --dt-font-accent: "Bricolage Grotesque Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  /* Font weights */
   --dt-font-weight-regular: 400;
   --dt-font-weight-medium: 500;
   --dt-font-weight-semibold: 600;
   --dt-font-weight-bold: 700;
   --dt-font-weight-extrabold: 800;
 
-  /* ========== SPACING SCALE ========== */
-  /* 4px base unit */
-  --dt-space-xs: 0.25rem;   /* 4px */
-  --dt-space-sm: 0.5rem;    /* 8px */
-  --dt-space-md: 0.75rem;   /* 12px */
-  --dt-space-lg: 1rem;      /* 16px */
-  --dt-space-xl: 1.5rem;    /* 24px */
-  --dt-space-2xl: 2rem;     /* 32px */
-  --dt-space-3xl: 3rem;     /* 48px */
-  --dt-space-4xl: 4rem;     /* 64px */
+  /* ---- spacing (4px base) -------------------------------------------------------------------------------- */
+  --dt-space-xs: 0.25rem;
+  --dt-space-sm: 0.5rem;
+  --dt-space-md: 0.75rem;
+  --dt-space-lg: 1rem;
+  --dt-space-xl: 1.5rem;
+  --dt-space-2xl: 2rem;
+  --dt-space-3xl: 3rem;
+  --dt-space-4xl: 4rem;
 
-  /* ========== BORDER RADIUS ========== */
-  --dt-radius-sm: 6px;      /* Buttons, inputs */
-  --dt-radius-md: 8px;      /* Cards, containers */
-  --dt-radius-lg: 12px;     /* Large containers */
-  --dt-radius-pill: 999px;  /* Badges, pills (semantic only) */
+  /* ---- shape ---------------------------------------------------------------------------------------------- */
+  --dt-radius-sm: 8px;           /* inputs, small buttons */
+  --dt-radius-md: 12px;          /* buttons, cards */
+  --dt-radius-lg: 20px;          /* panels, the card stage */
+  --dt-radius-pill: 999px;
 
-  /* ========== SHADOWS ========== */
-  /* Minimal, elevation-only shadows - no decorative glows */
+  /* Elevation only: no glows */
   --dt-shadow-none: none;
   --dt-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --dt-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --dt-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.45);
-  --dt-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.5);
-  --dt-shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.55);
+  --dt-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --dt-shadow-md: 0 8px 20px rgba(0, 0, 0, 0.4);
+  --dt-shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.45);
+  --dt-shadow-xl: 0 30px 60px rgba(0, 0, 0, 0.55);   /* the card image on its stage */
 
-  /* ========== BORDERS ========== */
   --dt-border-width: 1px;
   --dt-border-color: var(--dt-border);
 
-  /* ========== TRANSITIONS ========== */
   --dt-transition-fast: 0.15s ease;
   --dt-transition-base: 0.2s ease;
   --dt-transition-slow: 0.3s ease;
 
-  /* ========== Z-INDEX SCALE ========== */
   --dt-z-dropdown: 1000;
   --dt-z-fixed: 1020;
   --dt-z-modal-backdrop: 1040;
@@ -85,90 +82,91 @@
   --dt-z-popover: 1060;
   --dt-z-tooltip: 1070;
 
-  /* ========== LINE HEIGHTS ========== */
-  --dt-line-height-tight: 1.2;
+  --dt-line-height-tight: 1.15;
   --dt-line-height-normal: 1.5;
-  --dt-line-height-relaxed: 1.75;
+  --dt-line-height-relaxed: 1.65;
 
-  /* ========== LETTER SPACING ========== */
   --dt-letter-spacing-tight: -0.02em;
   --dt-letter-spacing-normal: 0;
-  --dt-letter-spacing-wide: 0.05em;
+  --dt-letter-spacing-wide: 0.08em;   /* small uppercase labels */
 
-  /* ========== OPACITY ========== */
   --dt-opacity-disabled: 0.5;
   --dt-opacity-hover: 0.9;
+
+  --dt-container: 1320px;
 }
 
-/* ========== DARK MODE (override defaults) ========== */
+/* ---- dark: the same values, so an explicit choice and the default agree ------------------------------------------ */
 [data-bs-theme="dark"] {
-  /* Dark mode uses same palette (already dark) */
-  --dt-bg-0: #0D0D0C;
-  --dt-bg-1: #141413;
-  --dt-bg-2: #1A1917;
-  --dt-bg-3: #211F1C;
+  --dt-bg-0: #0D0C0B;
+  --dt-bg-1: #131211;
+  --dt-bg-2: #181614;
+  --dt-bg-3: #201D1A;
 
-  --dt-text-primary: #F2EFE8;
-  --dt-text-secondary: #A7A39A;
-  --dt-text-muted: #8C877F;
+  --dt-text-primary: #EEE8DF;
+  --dt-text-secondary: #B9B0A4;
+  --dt-text-muted: #A0978B;
 
-  --dt-border: #302D29;
-  --dt-border-light: #262319;
+  --dt-border: #2B2723;
+  --dt-border-light: #24211E;
 
-  --dt-accent: #C79A52;
+  --dt-accent: #D2A04E;
 }
 
-/* ========== LIGHT MODE ========== */
+/* ---- light: its own material, not an inversion ------------------------------------------------------------------ */
 [data-bs-theme="light"] {
-  /* Separate material system for light mode - not inverted */
-  --dt-bg-0: #FEFCF8;           /* Off-white background */
-  --dt-bg-1: #F9F7F3;           /* Secondary background */
-  --dt-bg-2: #F5F2ED;           /* Surface/cards */
-  --dt-bg-3: #EDE8E0;           /* Elevated surfaces/hover */
+  --dt-bg-0: #F6F4F0;
+  --dt-bg-1: #EFECE6;
+  --dt-bg-2: #FFFFFF;
+  --dt-bg-3: #E6E1D8;
 
-  --dt-text-primary: #2A2824;   /* Dark charcoal text */
-  --dt-text-secondary: #6B6560; /* Medium gray text */
-  --dt-text-muted: #6D655D;     /* Gray text (4.7:1 on --dt-bg-3: WCAG AA) */
+  --dt-text-primary: #1B1916;
+  --dt-text-secondary: #4F4840;
+  --dt-text-muted: #625A50;      /* 5.3:1 on --dt-bg-3 */
 
-  --dt-border: #D4CDBF;         /* Warm beige borders */
-  --dt-border-light: #E5DFCE;   /* Lighter borders */
+  --dt-border: #D9D3C8;
+  --dt-border-light: #E6E1D8;
+  --dt-border-strong: #C2BAAC;
 
-  /* The same amber, darkened: #C79A52 is only 2.5:1 on off-white, too faint for links and button text */
-  --dt-accent: #83612B;         /* 4.6:1 on --dt-bg-3 */
-  --dt-accent-hover: #765726;
-  --dt-accent-dark: #664C21;
+  /* brass darkened for light grounds: #D2A04E is only 2:1 on #F6F4F0 */
+  --dt-accent: #835A18;          /* 4.7:1 on --dt-bg-3 */
+  --dt-accent-hover: #714D14;
+  --dt-accent-dark: #5F4110;
+  --dt-accent-strong: #6B4A12;
+  --dt-accent-soft: #F3E9D7;
 
-  /* Shadows are stronger on light background */
-  --dt-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.08);
-  --dt-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --dt-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
-  --dt-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
-  --dt-shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.18);
+  --dt-success: #1F7A4A;
+  --dt-success-soft: #E3F1E8;
+  --dt-warning: #8A5A00;
+  --dt-warning-soft: #F7EDD8;
+  --dt-danger: #B3261E;
+  --dt-danger-soft: #F8E4E1;
+  --dt-info: #1F5FA8;
+  --dt-info-soft: #E3EDF8;
+
+  --dt-shadow-xs: 0 1px 2px rgba(27, 25, 22, 0.06);
+  --dt-shadow-sm: 0 2px 6px rgba(27, 25, 22, 0.07);
+  --dt-shadow-md: 0 8px 20px rgba(27, 25, 22, 0.08);
+  --dt-shadow-lg: 0 18px 40px rgba(27, 25, 22, 0.12);
+  --dt-shadow-xl: 0 24px 50px rgba(27, 25, 22, 0.18);
 }
 
-/* ========== UTILITY MAPS FOR COMPONENTS ========== */
-/* These are referenced in component styles */
-
-/* Surface elevations (bg-0 → bg-3 creates depth) */
+/* ---- small utilities used by templates ---------------------------------------------------------------------------- */
 .surface-0 { background: var(--dt-bg-0); }
 .surface-1 { background: var(--dt-bg-1); }
 .surface-2 { background: var(--dt-bg-2); }
 .surface-3 { background: var(--dt-bg-3); }
 
-/* Text colors */
 .text-primary { color: var(--dt-text-primary); }
 .text-secondary { color: var(--dt-text-secondary); }
 .text-muted { color: var(--dt-text-muted); }
 
-/* Accent color utilities */
 .accent { color: var(--dt-accent); }
 .bg-accent { background: var(--dt-accent); color: var(--dt-bg-0); }
 
-/* Border utilities */
 .border { border-color: var(--dt-border); }
 .border-light { border-color: var(--dt-border-light); }
 
-/* Shadow utilities */
 .shadow-none { box-shadow: var(--dt-shadow-none); }
 .shadow-xs { box-shadow: var(--dt-shadow-xs); }
 .shadow-sm { box-shadow: var(--dt-shadow-sm); }

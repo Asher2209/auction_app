@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% from "_pagination.html" import pager %}
-{% block title %}Feedback - Admin{% endblock %}
+{% block title %}Feedback · Admin · MintLot{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">Admin</h1>
 {% include "admin/_nav.html" %}
 
 <form class="row g-2 mb-3" method="get">
@@ -10,7 +9,7 @@
   <div class="col-auto"><button class="btn btn-outline-primary">Search</button></div>
 </form>
 
-<div class="list-group bg-white mb-3">
+<div class="list-group mb-3">
   {% for f in page.items %}
   <div class="list-group-item d-flex justify-content-between align-items-start gap-3">
     <div>

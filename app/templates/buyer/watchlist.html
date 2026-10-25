@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% from "_auction_card.html" import card %}
-{% block title %}Watchlist - MintLot{% endblock %}
+{% block title %}Watchlist · MintLot{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">Watchlist</h1>
 {% include "buyer/_nav.html" %}
 <div class="product-grid">
   {% for a in auctions %}{{ card(a, counts.get(a.id), ratings.get(a.product_id)) }}

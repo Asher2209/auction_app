@@ -1,82 +1,65 @@
 {% extends "base.html" %}
 {% from "_auction_card.html" import card %}
 {% from "_pagination.html" import pager %}
-{% block title %}Browse Auctions - MintLot{% endblock %}
+{% block title %}Live auctions · MintLot{% endblock %}
 {% block content %}
 
-<!-- ========== PAGE HEADER ========== -->
-<div style="margin-bottom: var(--dt-space-3xl);">
-  <h1 class="h1 mb-2">Browse Auctions</h1>
-  <p class="lead">Explore {{ page.total }} active and upcoming auction{{ '' if page.total == 1 else 's' }}</p>
-</div>
-
-<!-- ========== FILTERS PANEL ========== -->
-<div class="card mb-5">
-  <div class="card-body p-4">
-    <form method="get">
-      <div class="row g-3 mb-4">
-        <div class="col-12 col-lg-4">
-          <label class="form-label" for="browse-q">Search</label>
-          <input id="browse-q" class="form-control" name="q" placeholder="Name, description..." value="{{ f.q }}" maxlength="100">
-        </div>
-        
-        <div class="col-6 col-lg-2">
-          <label class="form-label" for="browse-category">Category</label>
-          <select id="browse-category" class="form-select" name="category">
-            <option value="">All</option>
-            {% for c in categories %}
-            <option value="{{ c.id }}" {{ 'selected' if f.category == c.id }}>{{ c.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        
-        <div class="col-6 col-lg-2">
-          <label class="form-label" for="browse-status">Status</label>
-          <select id="browse-status" class="form-select" name="status">
-            <option value="">All</option>
-            {% for s in statuses %}
-            <option value="{{ s }}" {{ 'selected' if f.status == s }}>{{ s|capitalize }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        
-        <div class="col-12 col-lg-2">
-          <label class="form-label" for="browse-sort">Sort By</label>
-          <select id="browse-sort" class="form-select" name="sort">
-            {% for s in sorts %}
-            <option value="{{ s }}" {{ 'selected' if f.sort == s }}>
-              {{ {'ending': 'Ending soon', 'newest': 'Newest', 'price_low': 'Low price', 'price_high': 'High price', 'most_bids': 'Most bids'}[s] }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-      
-      <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-2">
-          <label class="form-label" for="browse-min-price">Min Price</label>
-          <input id="browse-min-price" class="form-control" type="number" min="0" step="0.01" name="min_price" value="{{ f.min_price if f.min_price is not none }}">
-        </div>
-        
-        <div class="col-6 col-lg-2">
-          <label class="form-label" for="browse-max-price">Max Price</label>
-          <input id="browse-max-price" class="form-control" type="number" min="0" step="0.01" name="max_price" value="{{ f.max_price if f.max_price is not none }}">
-        </div>
-        
-        <div class="col-12 col-lg-8" style="display: flex; align-items: flex-end; gap: var(--dt-space-md);">
-          <button type="submit" class="btn btn-primary">Filter</button>
-          <a href="{{ url_for('auctions.browse') }}" class="btn btn-secondary">Reset</a>
-        </div>
-      </div>
-    </form>
+<header class="page-head">
+  <div>
+    <span class="eyebrow">Marketplace</span>
+    <h1 class="page-title">Live auctions</h1>
+    <p class="page-lead">{{ page.total }} active and upcoming auction{{ '' if page.total == 1 else 's' }} of Platform Verified cards.</p>
   </div>
-</div>
+</header>
+
+<form method="get" class="filter-bar" aria-label="Filter auctions">
+  <div class="filter-field filter-field-grow">
+    <label class="form-label" for="browse-q">Search</label>
+    <input id="browse-q" class="form-control" name="q" placeholder="Card name, set or number" value="{{ f.q }}" maxlength="100">
+  </div>
+  <div class="filter-field">
+    <label class="form-label" for="browse-category">Category</label>
+    <select id="browse-category" class="form-select" name="category">
+      <option value="">All</option>
+      {% for c in categories %}
+      <option value="{{ c.id }}" {{ 'selected' if f.category == c.id }}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-field">
+    <label class="form-label" for="browse-status">Status</label>
+    <select id="browse-status" class="form-select" name="status">
+      <option value="">All</option>
+      {% for s in statuses %}
+      <option value="{{ s }}" {{ 'selected' if f.status == s }}>{{ s|capitalize }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-field">
+    <label class="form-label" for="browse-sort">Sort by</label>
+    <select id="browse-sort" class="form-select" name="sort">
+      {% for s in sorts %}
+      <option value="{{ s }}" {{ 'selected' if f.sort == s }}>{{ {'ending': 'Ending soon', 'newest': 'Newest', 'price_low': 'Price: low to high', 'price_high': 'Price: high to low', 'most_bids': 'Most bids'}[s] }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="filter-field filter-field-price">
+    <label class="form-label" for="browse-min-price">Price ({{ currency }})</label>
+    <div class="filter-price">
+      <input id="browse-min-price" class="form-control" type="number" min="0" step="0.01" name="min_price" placeholder="Min" value="{{ f.min_price if f.min_price is not none }}">
+      <span aria-hidden="true">to</span>
+      <input id="browse-max-price" class="form-control" type="number" min="0" step="0.01" name="max_price" placeholder="Max" aria-label="Maximum price" value="{{ f.max_price if f.max_price is not none }}">
+    </div>
+  </div>
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-primary">Apply</button>
+    <a href="{{ url_for('auctions.browse') }}" class="btn btn-secondary">Reset</a>
+  </div>
+</form>
 
 <!-- ========== RESULTS ========== -->
 {% if page.items %}
-<div class="mb-4">
-  <p style="color: var(--dt-text-secondary);">Found <strong>{{ page.total }}</strong> item{{ '' if page.total == 1 else 's' }}</p>
-</div>
+<p class="results-count">Found <strong>{{ page.total }}</strong> item{{ '' if page.total == 1 else 's' }}</p>
 
 <div class="product-grid">
   {% for auction in page.items %}
@@ -86,8 +69,8 @@
 
 <!-- ========== PAGINATION ========== -->
 {% if page.pages > 1 %}
-<nav style="text-align: center; margin-top: var(--dt-space-3xl);">
-  <ul class="pagination" style="justify-content: center;">
+<nav class="results-pager" aria-label="Pages">
+  <ul class="pagination justify-content-center">
     {% if page.has_prev %}
     <li class="page-item">
       <a class="page-link" href="{{ url_for('auctions.browse', page=page.prev_num, q=f.q, category=f.category, status=f.status, sort=f.sort, min_price=f.min_price, max_price=f.max_price) }}">← Previous</a>
@@ -119,12 +102,10 @@
 
 {% else %}
 <div class="empty-state">
-  <div class="empty-state-icon">🔍</div>
-  <h3 class="empty-state-title">No Auctions Found</h3>
-  <p class="empty-state-description">
-    Try adjusting your filters or browse by category to find items.
-  </p>
-  <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary">Clear Filters</a>
+  {{ icon('search', 32) }}
+  <h2 class="empty-state-title">No auctions match these filters</h2>
+  <p class="empty-state-description">Try a different name or a wider price range.</p>
+  <a href="{{ url_for('auctions.browse') }}" class="btn btn-primary">Clear filters</a>
 </div>
 {% endif %}
 

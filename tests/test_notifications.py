@@ -327,8 +327,8 @@ def test_pagination(app, users):
         notes_svc.notify(users["buyer"].id, f"Note {i:02d}", "m")
     db.session.commit()
     c = client_for(app, "buyer@t.test")
-    assert c.get("/notifications/").data.decode().count("list-group-item d-flex") == 20
-    assert c.get("/notifications/?page=2").data.decode().count("list-group-item d-flex") == 5
+    assert c.get("/notifications/").data.decode().count("class=\"feed-item") == 20
+    assert c.get("/notifications/?page=2").data.decode().count("class=\"feed-item") == 5
     assert c.get("/notifications/?page=99").status_code == 200
 
 

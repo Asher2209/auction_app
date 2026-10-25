@@ -1,5 +1,14 @@
-<ul class="nav nav-tabs mb-4">
-  {% for label, ep in [('Overview', 'buyer.dashboard'), ('My bids', 'buyer.bids'), ('Watchlist', 'buyer.watchlist'), ('Won auctions', 'buyer.won'), ('My cards', 'buyer.cards')] %}
-  <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == ep }}" href="{{ url_for(ep) }}">{{ label }}</a></li>
+{# Buyer section header and tabs. The active tab names the page; a page may set ws_title / ws_lead before including this. #}
+{% set tabs = [('Overview', 'buyer.dashboard'), ('My bids', 'buyer.bids'), ('Watchlist', 'buyer.watchlist'), ('Won auctions', 'buyer.won'), ('My cards', 'buyer.cards')] %}
+{% set ns = namespace(title='Buying') %}
+{% for label, ep in tabs if request.endpoint == ep %}{% set ns.title = label %}{% endfor %}
+<header class="ws-head">
+  <span class="eyebrow">Buying</span>
+  <h1 class="ws-title">{{ ws_title or ns.title }}</h1>
+  {% if ws_lead %}<p class="page-lead">{{ ws_lead }}</p>{% endif %}
+</header>
+<nav class="ws-tabs" aria-label="Buyer sections">
+  {% for label, ep in tabs %}
+  <a class="ws-tab{{ ' is-active' if request.endpoint == ep }}" href="{{ url_for(ep) }}"{% if request.endpoint == ep %} aria-current="page"{% endif %}>{{ label }}</a>
   {% endfor %}
-</ul>
+</nav>

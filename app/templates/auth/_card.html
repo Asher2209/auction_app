@@ -1,99 +1,22 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="auth">
+  <aside class="auth-aside" aria-label="About MintLot">
+    <span class="eyebrow">MintLot</span>
+    <p class="auth-aside-title">Rare cards, auctioned live.</p>
+    <ul class="auth-points">
+      <li>{{ icon('badge-check', 20) }}<div><strong>Reviewed before listing</strong><span>A MintLot admin checks every card against an eight-point review.</span></div></li>
+      <li>{{ icon('zap', 20) }}<div><strong>Live bidding</strong><span>Bids reach everyone the moment they are placed.</span></div></li>
+      <li>{{ icon('star', 20) }}<div><strong>Honest seller ratings</strong><span>Only buyers who paid can leave a review.</span></div></li>
+    </ul>
+    <p class="auth-aside-note">Sepolia test network only. No real money changes hands.</p>
+  </aside>
 
-<!-- ========== PREMIUM AUTH PAGE ========== -->
-<div style="min-height: 100vh; display: flex; align-items: center; padding: 2rem 0;">
-  <div class="container">
-    <div class="row g-5 align-items-center">
-      <!-- Left Column: Branding & Benefits -->
-      <div class="col-lg-6 mb-5 mb-lg-0">
-        <div style="max-width: 450px;">
-          <!-- Logo/Branding -->
-          <div class="mb-5">
-            <h1 class="h1 mb-3" style="color: var(--dt-accent);">
-              <span style="color: var(--dt-text-primary);">Mint</span>Lot
-            </h1>
-            <p class="lead text-muted">Live auctions for platform-verified trading cards</p>
-          </div>
-
-          <!-- Benefits List -->
-          <div style="display: grid; gap: 1.5rem;">
-            <div class="d-flex gap-3">
-              <div style="width: 48px; height: 48px; background: rgba(199, 154, 82, 0.15); border-radius: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--dt-accent);">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-              </div>
-              <div>
-                <h5 class="h6 mb-1" style="color: var(--dt-text-primary);">Verified Collectibles</h5>
-                <p class="text-muted small mb-0">Platform-verified trading cards</p>
-              </div>
-            </div>
-
-            <div class="d-flex gap-3">
-              <div style="width: 48px; height: 48px; background: rgba(199, 154, 82, 0.15); border-radius: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--dt-accent);">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                </svg>
-              </div>
-              <div>
-                <h5 class="h6 mb-1" style="color: var(--dt-text-primary);">Live Bidding</h5>
-                <p class="text-muted small mb-0">Bids update in real time; crypto payments are checked on the blockchain</p>
-              </div>
-            </div>
-
-            <div class="d-flex gap-3">
-              <div style="width: 48px; height: 48px; background: rgba(199, 154, 82, 0.15); border-radius: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--dt-accent);">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-              <div>
-                <h5 class="h6 mb-1" style="color: var(--dt-text-primary);">Seller Ratings</h5>
-                <p class="text-muted small mb-0">Reviews come only from buyers who paid</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom CTA -->
-          <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--dt-border);">
-            <p class="text-muted small mb-2">Test network only: no real money changes hands</p>
-            <p class="text-muted small mb-0">Card ownership is recorded on the blockchain</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Column: Auth Form -->
-      <div class="col-lg-6">
-        <div class="p-5" style="border-radius: 2rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-          <!-- Heading -->
-          <h2 class="h3 mb-1" style="color: var(--dt-text-primary);">{% block heading %}{% endblock %}</h2>
-          <p class="text-muted mb-5">Your MintLot account</p>
-
-          <!-- Form -->
-          {% block form %}{% endblock %}
-
-          <!-- Divider -->
-          <div style="display: flex; align-items: center; gap: 1rem; margin: 2rem 0; color: var(--dt-text-muted);">
-            <div style="flex: 1; height: 1px; background: var(--dt-border);"></div>
-            <span style="font-size: 0.85rem;">or</span>
-            <div style="flex: 1; height: 1px; background: var(--dt-border);"></div>
-          </div>
-
-          <!-- Auth Links -->
-          <div style="display: grid; gap: 0.75rem; text-align: center; font-size: 0.9rem;">
-            {% block auth_links %}{% endblock %}
-          </div>
-        </div>
-
-        <!-- Footer Note -->
-        <p class="text-muted small mt-4 text-center mb-0">
-          By using MintLot, you agree to our <a href="{{ url_for('legal.terms') }}" class="text-decoration-none">Terms</a> and <a href="{{ url_for('legal.privacy') }}" class="text-decoration-none">Privacy</a>
-        </p>
-      </div>
-    </div>
-  </div>
+  <section class="auth-panel">
+    <h1 class="auth-title">{% block heading %}{% endblock %}</h1>
+    {% block lead %}{% endblock %}
+    {% block form %}{% endblock %}
+    {% block auth_links %}{% endblock %}
+  </section>
 </div>
-
 {% endblock %}

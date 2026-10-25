@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}Demo wallet - MintLot{% endblock %}
+{% block title %}Demo wallet · MintLot{% endblock %}
 {% block content %}
-<h1 class="h3">Demo wallet <span class="badge text-bg-warning align-middle fs-6">development only</span></h1>
+<header class="ws-head"><span class="eyebrow">Development only</span><h1 class="ws-title">Demo wallet</h1></header>
 <p class="text-muted">An in-memory test chain (chain id {{ chain_id }}, block {{ block }}) with fake ETH. It replaces MetaMask for local demos.
   Contract: <code class="text-break">{{ contract }}</code></p>
 <ol class="small">
@@ -9,7 +9,7 @@
   <li>As the winning buyer, open the pay page and use the Cryptocurrency tab: the demo wallet signs for you.</li>
   <li>Each payment is mined at once; the server adds a block every few seconds while a payment waits (the confirmations), or use the button here.</li>
 </ol>
-<table class="table table-sm bg-white">
+<table class="table table-sm">
   <thead><tr><th>Account</th><th>Address</th><th>Balance (ETH)</th></tr></thead>
   <tbody>
   {% for r in rows %}

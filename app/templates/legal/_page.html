@@ -1,24 +1,29 @@
 {% extends "base.html" %}
-{% block title %}{% block page_title %}{% endblock %} - MintLot{% endblock %}
+{% block title %}{% block page_title %}{% endblock %} · MintLot{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-12 col-lg-9 legal-page">
-    <h1 class="h3"><span aria-hidden="true">{% block page_emoji %}📄{% endblock %}</span> {{ self.page_title() }}</h1>
-    <p class="text-muted small mb-3">Version {{ policy_version }} &middot; last updated {{ policy_updated }}</p>
-    <div class="alert alert-secondary small" role="note">
-      MintLot is an <strong>academic project</strong>. No real money is involved: card, UPI and wallet payments are simulated, and
-      cryptocurrency payments use valueless test ETH on a test network. This page describes what the software actually does. It is not legal
-      advice and has not been reviewed by a lawyer; anyone running MintLot for real customers must have it checked for their country first.
+<div class="legal">
+  <header class="page-head">
+    <div>
+      <span class="eyebrow">Legal</span>
+      <h1 class="page-title">{{ self.page_title() }}</h1>
+      <p class="page-lead">Version {{ policy_version }} &middot; last updated {{ policy_updated }}</p>
     </div>
-    {% block body %}{% endblock %}
-    <hr class="my-4">
-    <p class="small text-muted">
-      Questions? Write to <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>. Other policies:
-      <a href="{{ url_for('legal.terms') }}">Terms of Service</a> &middot;
-      <a href="{{ url_for('legal.privacy') }}">Privacy Policy</a> &middot;
-      <a href="{{ url_for('legal.refunds') }}">Refund Policy</a> &middot;
-      <a href="{{ url_for('legal.cookies') }}">Cookie Policy</a>
-    </p>
+  </header>
+  <div class="legal-layout">
+    <nav class="legal-nav" aria-label="Policies">
+      {% for endpoint, label in [('legal.terms', 'Terms of Service'), ('legal.privacy', 'Privacy Policy'), ('legal.refunds', 'Refund Policy'), ('legal.cookies', 'Cookie Policy')] %}
+      <a href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint %} aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+    <article class="legal-page">
+      <div class="alert alert-secondary small" role="note">
+        MintLot is an <strong>academic project</strong>. No real money is involved: card, UPI and wallet payments are simulated, and
+        cryptocurrency payments use valueless test ETH on a test network. This page describes what the software actually does. It is not legal
+        advice and has not been reviewed by a lawyer; anyone running MintLot for real customers must have it checked for their country first.
+      </div>
+      {% block body %}{% endblock %}
+      <p class="legal-contact">Questions? Write to <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+    </article>
   </div>
 </div>
 {% endblock %}

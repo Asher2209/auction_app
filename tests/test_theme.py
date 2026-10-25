@@ -1,4 +1,4 @@
-"""The visual theme: dark matte with an amber accent, a light variant, local fonts and icons. These tests keep it readable.
+"""The visual theme "Vault": dark matte with a brass accent, a light variant, local fonts and icons. These tests keep it readable.
 
 (The palette rules themselves, no purple, glass or glow, are guarded in test_phase8_ui.py.)
 """
@@ -75,8 +75,11 @@ def test_bootstrap_links_follow_the_accent_of_each_theme():
 
 
 # ---- fonts and icons ---------------------------------------------------------------------------------------------------
-@pytest.mark.parametrize("name", ["inter-latin-wght-normal.woff2", "space-grotesk-latin-wght-normal.woff2",
-                                  "instrument-serif-latin-400-italic.woff2"])
+FONT_FILES = [f"{family}-{subset}-wght-normal.woff2" for family in ("figtree", "bricolage-grotesque", "jetbrains-mono")
+              for subset in ("latin", "latin-ext")]
+
+
+@pytest.mark.parametrize("name", FONT_FILES)
 def test_every_font_is_served_from_this_site(app, name):
     r = app.test_client().get(f"/static/fonts/{name}")
     assert r.status_code == 200 and r.data[:4] == b"wOF2"
@@ -86,8 +89,10 @@ def test_every_font_is_served_from_this_site(app, name):
 
 def test_fonts_are_licensed_and_have_system_fallbacks():
     licences = (STATIC / "fonts" / "LICENSES.txt").read_text()
-    assert all(n in licences for n in ("Inter", "Space Grotesk", "Instrument Serif", "Lucide"))
-    assert CSS.count("font-display: swap") == 3  # text shows at once in the fallback while a font file loads
+    assert all(n in licences for n in ("Figtree", "Bricolage Grotesque", "JetBrains Mono", "Lucide"))
+    assert all(f in licences for f in FONT_FILES)
+    assert CSS.count("font-display: swap") == len(FONT_FILES)  # text shows at once in the fallback while a font file loads
+    assert CSS.count("unicode-range:") == len(FONT_FILES)  # latin-ext (which carries the rupee sign) loads only when needed
     assert "--bs-body-font-family: var(--dt-font-primary)" in CSS
     for token in ("--dt-font-primary", "--dt-font-display", "--dt-font-accent"):
         assert re.search(r"system-ui|Georgia", BASE[token]), token
@@ -141,7 +146,7 @@ def test_the_theme_choice_never_leaves_the_browser_and_is_documented(app):
     js = (STATIC / "js" / "theme-init.js").read_text() + (STATIC / "js" / "effects.js").read_text()
     assert "localStorage" in js and "fetch(" not in js and "document.cookie" not in js
     assert "try {" in js  # storage can be blocked
-    assert "prefers-color-scheme: dark" in js  # with no saved choice, the system setting decides
+    assert 'theme === "light" ? "light" : "dark"' in js  # with no saved choice the site opens dark (the Vault look)
     policy = anon(app).get("/legal/cookies").data.decode()
     assert "mintlot-theme" in policy and "local storage" in policy
 

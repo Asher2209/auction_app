@@ -1,0 +1,14 @@
+{# Seller section header and tabs. The active tab names the page; a page may set ws_title / ws_lead before including this. #}
+{% set tabs = [('My cards', 'seller.collectibles_dashboard'), ('Add a card', 'seller.create_card'), ('Reviews', 'seller.reviews')] %}
+{% set ns = namespace(title='Selling') %}
+{% for label, ep in tabs if request.endpoint == ep %}{% set ns.title = label %}{% endfor %}
+<header class="ws-head">
+  <span class="eyebrow">Selling</span>
+  <h1 class="ws-title">{{ ws_title or ns.title }}</h1>
+  {% if ws_lead %}<p class="page-lead">{{ ws_lead }}</p>{% endif %}
+</header>
+<nav class="ws-tabs" aria-label="Seller sections">
+  {% for label, ep in tabs %}
+  <a class="ws-tab{{ ' is-active' if request.endpoint == ep }}" href="{{ url_for(ep) }}"{% if request.endpoint == ep %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>

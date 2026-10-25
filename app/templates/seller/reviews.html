@@ -1,20 +1,31 @@
 {% extends "base.html" %}
-{% block title %}My reviews - MintLot{% endblock %}
+{% block title %}Reviews · MintLot{% endblock %}
 {% block content %}
-<a class="small" href="{{ url_for('seller.dashboard') }}">&larr; My products</a>
-<div class="d-flex flex-wrap align-items-baseline gap-3 mt-2 mb-3">
-  <h1 class="h3 mb-0">Reviews on my products</h1>
-  {% if overall %}<span class="fs-5 text-warning">{{ overall[0]|stars }}</span><span class="fw-semibold">{{ overall[0] }} / 5</span>
-    <span class="text-muted small">{{ overall[1] }} review{{ '' if overall[1] == 1 else 's' }}</span>{% endif %}
+{% set ws_lead = 'What buyers who paid for your cards said about them.' %}
+{% include "seller/_nav.html" %}
+{% if overall %}
+<div class="stat-grid">
+  <div class="stat"><span class="stat-label">Average rating</span><span class="stat-value">{{ overall[0] }} / 5</span><span class="text-warning" aria-hidden="true">{{ overall[0]|stars }}</span></div>
+  <div class="stat"><span class="stat-label">Reviews</span><span class="stat-value">{{ overall[1] }}</span></div>
 </div>
-{% for r in reviews %}
-<div class="border-bottom py-3">
-  <div><span class="text-warning">{{ r.rating|stars }}</span>
-    <a class="fw-semibold ms-2" href="{{ url_for('seller.product_detail', product_id=r.product_id) }}">{{ r.product.title }}</a></div>
-  {% if r.comment %}<p class="mb-1" style="white-space:pre-wrap">{{ r.comment }}</p>{% endif %}
-  <div class="small text-muted">{{ r.buyer.name }} &middot; {{ r.created_at|local }}</div>
-</div>
+{% endif %}
+{% if reviews %}
+<ul class="feed">
+  {% for r in reviews %}
+  <li class="feed-item">
+    <div class="feed-body">
+      <div class="feed-title"><span class="text-warning me-2" aria-label="{{ r.rating }} out of 5">{{ r.rating|stars }}</span><a href="{{ url_for('seller.product_detail', product_id=r.product_id) }}">{{ r.product.title }}</a></div>
+      {% if r.comment %}<p class="feed-text text-pre-wrap">{{ r.comment }}</p>{% endif %}
+      <span class="feed-time">{{ r.buyer.name }} &middot; {{ r.created_at|local }}</span>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
 {% else %}
-<p class="text-muted">No reviews yet. Buyers can review an item once they have paid for it.</p>
-{% endfor %}
+<div class="empty-state">
+  {{ icon('star', 32) }}
+  <h2 class="empty-state-title">No reviews yet</h2>
+  <p class="empty-state-description">Buyers can review a card once they have paid for it.</p>
+</div>
+{% endif %}
 {% endblock %}
