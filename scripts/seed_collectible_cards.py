@@ -116,11 +116,11 @@ def seed(app, seller_email=None, rng=None, image_dir=IMAGE_DIR):
     """Seed the demo cards inside an app context. Returns the list of created cards; raises SystemExit on a setup problem."""
     rng = rng or random.Random()
     if seller_email:
-        seller = User.query.filter_by(email=seller_email, role="seller").first()
+        seller = User.query.filter_by(email=seller_email, role="member").first()
     else:
-        seller = User.query.filter_by(role="seller", is_active_user=True).order_by(User.id).first()
+        seller = User.query.filter_by(role="member", is_active_user=True).order_by(User.id).first()  # every member can sell
     if seller is None:
-        raise SystemExit("No seller account found. Run scripts/seed.py first, or pass a seller's email.")
+        raise SystemExit("No member account found. Run scripts/seed.py first, or pass a member's email.")
     pokemon = CardType.query.filter_by(slug="pokemon").first()
     if pokemon is None:
         raise SystemExit("Card types are missing. Run scripts/seed_card_types.py first.")

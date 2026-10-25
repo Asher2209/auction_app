@@ -233,8 +233,8 @@ def test_crypto_endpoints_access_control(app, setup, users):
     for path in (f"/payments/{a.id}/crypto/prepare", f"/payments/{a.id}/crypto/submit"):
         g.pop("_login_user", None)
         assert app.test_client().post(path, json={}).status_code == 302
-        for role in ("seller", "admin"):
-            assert client_for(app, f"{role}@t.test").post(path, json={}).status_code == 403
+        assert client_for(app, "admin@t.test").post(path, json={}).status_code == 403
+        assert client_for(app, "seller@t.test").post(path, json={}).status_code == 404  # a member, but not this payment's buyer
         assert client_for(app, "other@t.test").post(path, json={"wallet_address": chain.other}).status_code == 404
         assert client_for(app, "buyer@t.test").get(path).status_code == 405
 
@@ -679,7 +679,7 @@ def test_local_chain_end_to_end_through_the_demo_wallet(local_app):
     cat = Category(name="Books")  # (not the shared `cats` fixture: that builds a different app and database)
     db.session.add(cat)
     db.session.commit()
-    seller = make_user("seller@t.test", "seller")
+    seller = make_user("seller@t.test")
     make_user("buyer@t.test")
     accounts = app.extensions["local_chain_accounts"]
     seller.link_wallet(accounts[2])
@@ -775,7 +775,7 @@ def test_local_chain_advances_by_itself_while_a_payment_waits(local_app):
     cat = Category(name="Books")
     db.session.add(cat)
     db.session.commit()
-    seller, buyer = make_user("seller@t.test", "seller"), make_user("buyer@t.test")
+    seller, buyer = make_user("seller@t.test"), make_user("buyer@t.test")
     accounts = app.extensions["local_chain_accounts"]
     seller.link_wallet(accounts[2])
     db.session.commit()

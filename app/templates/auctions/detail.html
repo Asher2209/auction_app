@@ -94,9 +94,11 @@
         <button class="btn btn-secondary w-100" type="submit">{{ icon('heart', 16) }}{{ 'Remove from watchlist' if watching else 'Add to watchlist' }}</button>
       </form>
       {% elif not current_user.is_authenticated %}
-      <p class="bid-note"><span><a href="{{ url_for('auth.login', next=request.path) }}">Log in</a> as a buyer to bid or watch this auction.</span></p>
+      <p class="bid-note"><span><a href="{{ url_for('auth.login', next=request.path) }}">Log in</a> to bid or watch this auction.</span></p>
+      {% elif own %}
+      <p class="bid-note"><span>This is your listing, so you cannot bid on it. <a href="{{ url_for('seller.view_card', card_id=c.id) if c else url_for('seller.product_detail', product_id=product.id) }}">Manage it</a>.</span></p>
       {% else %}
-      <p class="bid-note"><span>Only buyer accounts can bid.</span></p>
+      <p class="bid-note"><span>Admin accounts cannot bid.</span></p>
       {% endif %}
       <div class="auction-panel-foot"><span>Starting price {{ product.starting_price|money }}</span><span id="live-indicator" class="live-indicator">connecting&hellip;</span></div>
     </div>

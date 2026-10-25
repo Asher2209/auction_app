@@ -257,10 +257,10 @@ def test_payment_pages_need_a_buyer_login(app, setup):
     for path in (f"/payments/{a.id}", f"/payments/{a.id}/status"):
         assert anon.get(path).status_code == 302
     assert anon.post(f"/payments/{a.id}/pay/card", data=card()).status_code == 302
-    for role in ("seller", "admin"):
+    for role, status in (("seller", 404), ("admin", 403)):  # the seller is a member, but not this payment's buyer
         cx = client_for(app, f"{role}@t.test")
-        assert cx.get(f"/payments/{a.id}").status_code == 403
-        assert pay(cx, a, "card", card()).status_code == 403
+        assert cx.get(f"/payments/{a.id}").status_code == status, role
+        assert pay(cx, a, "card", card()).status_code == status, role
     assert fresh(a).attempts == 0
 
 
@@ -345,7 +345,7 @@ def test_simultaneous_submissions_pay_exactly_once(tmp_path):
     app = create_app(FileConfig)
     with app.app_context():
         db.create_all()
-        seller, buyer = make_user("seller@t.test", "seller"), make_user("buyer@t.test")
+        seller, buyer = make_user("seller@t.test"), make_user("buyer@t.test")
         cat = Category(name="Books")
         db.session.add(cat)
         db.session.commit()

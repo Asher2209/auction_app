@@ -10,11 +10,11 @@ def test_bid_notifies_watchers(app):
     """When a bid is placed, watchers of that auction are notified by email."""
     with app.app_context():
         # Create users
-        seller = User(name="seller", email="seller@test.com", role="seller")
+        seller = User(name="seller", email="seller@test.com", role="member")
         seller.set_password("password")
-        bidder = User(name="bidder", email="bidder@test.com", role="buyer")
+        bidder = User(name="bidder", email="bidder@test.com", role="member")
         bidder.set_password("password")
-        watcher = User(name="watcher", email="watcher@test.com", role="buyer")
+        watcher = User(name="watcher", email="watcher@test.com", role="member")
         watcher.set_password("password")
 
         db.session.add_all([seller, bidder, watcher])
@@ -72,7 +72,7 @@ def test_watcher_notification_respects_preferences(app):
     """New bid notifications for watchers respect email preferences."""
     with app.app_context():
         # Create watcher with notifications disabled
-        watcher = User(name="watcher", email="watcher@test.com", role="buyer")
+        watcher = User(name="watcher", email="watcher@test.com", role="member")
         watcher.set_password("password")
         db.session.add(watcher)
         db.session.flush()
@@ -89,9 +89,9 @@ def test_watcher_notification_respects_preferences(app):
 def test_watchers_notified_when_auction_ending_soon(app):
     """Watchers are notified when an auction they're watching is ending soon."""
     with app.app_context():
-        seller = User(name="seller", email="seller@test.com", role="seller")
+        seller = User(name="seller", email="seller@test.com", role="member")
         seller.set_password("password")
-        watcher = User(name="watcher", email="watcher@test.com", role="buyer")
+        watcher = User(name="watcher", email="watcher@test.com", role="member")
         watcher.set_password("password")
 
         db.session.add_all([seller, watcher])

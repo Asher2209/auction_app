@@ -8,8 +8,8 @@
   {% for label, value, href in [
       ('Pending approvals', stats.pending, url_for('admin.products', status='pending')),
       ('Users', stats.users, url_for('admin.users')),
-      ('Buyers', stats.buyers, url_for('admin.users', role='buyer')),
-      ('Sellers', stats.sellers, url_for('admin.users', role='seller')),
+      ('Members', stats.members, url_for('admin.users', role='member')),
+      ('Members selling', stats.sellers, none),
       ('Products', stats.products, url_for('admin.products', status='all')),
       ('Live / scheduled auctions', stats.active_auctions, none),
       ('Completed auctions', stats.completed_auctions, none),

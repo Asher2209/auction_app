@@ -36,6 +36,9 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER", "MintLot <noreply@mintlot.local>")
     MAIL_ASYNC = True  # send from a background thread so requests never wait on SMTP
     APP_BASE_URL = os.environ.get("APP_BASE_URL", "http://127.0.0.1:5000").rstrip("/")  # for links in emails
+    # "Sign in with Google" (OpenID Connect). Off unless both are set; create them free in Google Cloud Console.
+    GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
     # Cryptocurrency payments (an Ethereum TEST network only). Leave RPC_URL empty to disable them.
     RPC_URL = os.environ.get("RPC_URL")
     CONTRACT_ADDRESS = os.environ.get("CONTRACT_ADDRESS")

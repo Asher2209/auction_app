@@ -72,8 +72,8 @@ def test_only_the_paying_buyer_can_review_not_other_buyers_sellers_or_admins(app
     assert 'name="rating"' not in detail(other, a)
     review(other, a)
     assert Review.query.count() == 0
-    for role in ("seller", "admin"):
-        assert review(client_for(app, f"{role}@t.test"), a).status_code == 403
+    assert review(client_for(app, "admin@t.test"), a).status_code == 403
+    review(client_for(app, "seller@t.test"), a)  # a member, but it did not pay for this: refused like any other member
     g.pop("_login_user", None)
     assert review(app.test_client(), a).status_code == 302  # anonymous: sent to log in
     assert Review.query.count() == 0
@@ -249,7 +249,7 @@ def test_ratings_appear_on_cards(app, users, cats):  # noqa: F811
 def test_seller_sees_reviews_with_names_and_only_their_own(app, users, cats):  # noqa: F811
     a, c = paid(app, users, cats)
     review(c, a, "4", "Nice")
-    other_seller = make_user("seller2@t.test", "seller")
+    other_seller = make_user("seller2@t.test")
     x = make_auction(other_seller, cats["Books"], "Foreign", 50)
     db.session.add(Review(product_id=x.product_id, buyer_id=users["buyer"].id, rating=1, comment="not yours to see"))
     db.session.commit()
@@ -259,8 +259,8 @@ def test_seller_sees_reviews_with_names_and_only_their_own(app, users, cats):  #
     detail_page = s.get(f"/seller/products/{a.product_id}").data.decode()
     assert "Nice" in detail_page and "4.0 / 5 (1)" in detail_page
     assert s.get("/seller/reviews").status_code == 200
-    for role in ("buyer", "admin"):
-        assert client_for(app, f"{role}@t.test").get("/seller/reviews").status_code == 403
+    assert "Nice" not in client_for(app, "buyer@t.test").get("/seller/reviews").data.decode()  # their own (empty) list
+    assert client_for(app, "admin@t.test").get("/seller/reviews").status_code == 403
 
 
 def test_review_button_on_the_won_page(app, users, cats):  # noqa: F811
@@ -370,7 +370,7 @@ def test_simultaneous_submissions_make_exactly_one_review(tmp_path):
     app = create_app(FileConfig)
     with app.app_context():
         db.create_all()
-        seller, buyer = make_user("seller@t.test", "seller"), make_user("buyer@t.test")
+        seller, buyer = make_user("seller@t.test"), make_user("buyer@t.test")
         cat = Category(name="Books")
         db.session.add(cat)
         db.session.commit()

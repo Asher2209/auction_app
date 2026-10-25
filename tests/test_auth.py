@@ -19,20 +19,21 @@ def test_register_success_hashes_password(client):
     r = client.post("/auth/register", data=REG)
     assert r.status_code == 302
     u = User.query.filter_by(email="new@t.test").one()
-    assert u.role == "buyer" and u.password_hash != REG["password"]
+    assert u.role == "member" and u.password_hash != REG["password"]
 
 
 def test_register_email_normalised_and_duplicate_rejected(client):
     client.post("/auth/register", data={**REG, "email": "Dup@T.test"})
+    client.post("/auth/logout")  # registering signs the new account in
     r = client.post("/auth/register", data={**REG, "email": "dup@t.test"})
     assert r.status_code == 200 and b"already exists" in r.data
     assert User.query.count() == 1
 
 
 def test_register_cannot_choose_admin_role(client):
-    r = client.post("/auth/register", data={**REG, "role": "admin"})
-    assert r.status_code == 200
-    assert User.query.count() == 0
+    r = client.post("/auth/register", data={**REG, "role": "admin"})  # there is no role field: the extra value is ignored
+    assert r.status_code == 302
+    assert User.query.one().role == "member"
 
 
 def test_register_weak_password_and_mismatch(client):
@@ -89,18 +90,21 @@ def test_anonymous_redirected_from_portals(client):
 
 
 def test_roles_are_isolated(client, users):
-    allowed = {"buyer": "/buyer/", "seller": "/seller/collectibles", "admin": "/admin/"}  # /seller/ itself redirects there
-    for role, own in allowed.items():
+    member_areas = ("/buyer/", "/seller/collectibles")  # /seller/ itself redirects there
+    for who in ("buyer", "seller", "admin"):
         client.post("/auth/logout")
-        login(client, f"{role}@t.test")
-        for other_role, path in allowed.items():
-            expected = 200 if other_role == role else 403
-            assert client.get(path).status_code == expected, (role, path)
+        login(client, f"{who}@t.test")
+        for path in member_areas:  # every member both buys and sells; an admin does neither
+            assert client.get(path).status_code == (403 if who == "admin" else 200), (who, path)
+        assert client.get("/admin/").status_code == (200 if who == "admin" else 403), who
 
 
 def test_dashboard_routes_by_role(client, users):
     login(client, "seller@t.test")
-    assert client.get("/dashboard").location.endswith("/seller/")
+    assert client.get("/dashboard").location.endswith("/buyer/")  # a member lands on buying, one switch from selling
+    client.post("/auth/logout")
+    login(client, "admin@t.test")
+    assert client.get("/dashboard").location.endswith("/admin/")
 
 
 # ---- change password / profile -----------------------------------------
@@ -118,7 +122,7 @@ def test_profile_update_does_not_touch_role_or_email(client, users):
     client.post("/auth/profile", data={"name": "Renamed", "phone": "1234567890", "address": "New Addr",
                                        "role": "admin", "email": "x@t.test"})
     u = User.query.filter_by(email="buyer@t.test").one()
-    assert u.name == "Renamed" and u.role == "buyer"
+    assert u.name == "Renamed" and u.role == "member"
 
 
 # ---- password reset -----------------------------------------------------

@@ -47,7 +47,7 @@ def _showcase(live, size=3):
 @bp.route("/dashboard")
 @login_required
 def dashboard():
-    endpoint = {"admin": "admin.dashboard", "seller": "seller.dashboard", "buyer": "buyer.dashboard"}
+    endpoint = {"admin": "admin.dashboard", "member": "buyer.dashboard"}
     return redirect(url_for(endpoint[current_user.role]))
 
 

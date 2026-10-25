@@ -43,7 +43,7 @@ against an in-memory database; blockchain tests use a real EVM (eth-tester) with
 | Valid bid | `tests/test_auction.py::test_first_bid_may_equal_starting_price`, `tests/test_auction.py::test_bid_updates_state_and_notifies` |
 | Invalid bid | `tests/test_auction.py::test_invalid_amounts_rejected`, `tests/test_auction.py::test_bids_refused_unless_active`, `tests/test_auction.py::test_bid_after_end_time_rejected_even_if_not_yet_closed` |
 | Lower bid | `tests/test_auction.py::test_later_bids_must_beat_current_bid`, `tests/test_auction.py::test_first_bid_below_starting_price_rejected` |
-| Seller bidding | `tests/test_auction.py::test_sellers_and_admins_cannot_bid`, `tests/test_auction.py::test_seller_cannot_bid_on_own_product_even_with_buyer_role` |
+| Seller bidding | `tests/test_auction.py::test_admins_cannot_bid_but_a_member_who_sells_can_bid_elsewhere`, `tests/test_auction.py::test_seller_cannot_bid_on_own_product` |
 | Auction closing | `tests/test_auction.py::test_close_is_idempotent_and_refuses_early_or_inactive`, `tests/test_auction.py::test_maintenance_starts_and_closes`, `tests/test_auction.py::test_no_bids_after_close` |
 | Winner selection | `tests/test_auction.py::test_close_selects_highest_bidder_and_creates_records`, `tests/test_auction.py::test_close_without_bids` |
 | Auction extension | `tests/test_auction.py::test_bid_in_final_minute_extends_by_two_minutes`, `tests/test_auction.py::test_extension_boundary_is_inclusive_at_60s`, `tests/test_auction.py::test_extensions_stack_and_only_for_accepted_bids` |

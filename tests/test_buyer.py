@@ -205,16 +205,16 @@ def test_watchlist_is_per_user_and_buyers_only(client, market, users, app):
     a = market["lamp"]
     login(client, "buyer@t.test")
     client.post(f"/buyer/watchlist/{a.id}/toggle")
-    other = make_user("b2@t.test", "buyer")
+    other = make_user("b2@t.test")
     c2 = app.test_client()
     g.pop("_login_user", None)
     login(c2, "b2@t.test")
     assert "Red Lamp" not in c2.get("/buyer/watchlist").data.decode()
-    for role in ("seller", "admin"):
+    for role in ("seller", "admin"):  # the seller cannot watch their own listing; an admin does not buy
         g.pop("_login_user", None)
         cx = app.test_client()
         login(cx, f"{role}@t.test")
-        assert cx.post(f"/buyer/watchlist/{a.id}/toggle").status_code == 403
+        assert cx.post(f"/buyer/watchlist/{a.id}/toggle").status_code == 403, role
 
 
 def test_watchlist_cannot_add_hidden_auction(client, users, cats):
@@ -250,11 +250,11 @@ def test_buyer_pages_require_buyer_role(client, users):
     paths = ["/buyer/", "/buyer/bids", "/buyer/watchlist", "/buyer/won"]
     for p in paths:
         assert client.get(p).status_code == 302
-    for role in ("seller", "admin"):
+    for role, status in (("seller", 200), ("admin", 403)):  # a seller is a member, so it buys too
         client.post("/auth/logout")
         login(client, f"{role}@t.test")
         for p in paths:
-            assert client.get(p).status_code == 403
+            assert client.get(p).status_code == status, (role, p)
 
 
 def test_my_bids_statuses(client, market, users):

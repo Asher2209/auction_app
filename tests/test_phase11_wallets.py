@@ -22,7 +22,7 @@ from sqlalchemy.exc import IntegrityError
 from web3 import Web3
 
 from app.extensions import db
-from app.models import User
+from app.models import Category, User
 from app.services import auction_validation_service as avs
 from app.services import blockchain_minting_service as bm
 from app.services import card_settlement_service as css
@@ -36,6 +36,7 @@ from .test_listing_validation import CONTRACT, WALLET_A, cat, card_type, complet
 from .test_minting import chain, verified_asset  # noqa: F401 (fixture)
 from .test_phase1_card_identity import static_dir  # noqa: F401 (fixture)
 from .test_phase9_scenarios import submitted_card, switch
+from .test_seller import make_product
 
 ROOT = Path(__file__).resolve().parent.parent
 KEY, OTHER_KEY = "0x" + "4c" * 32, "0x" + "5d" * 32  # throwaway test keys
@@ -293,11 +294,16 @@ def test_follow_a_new_proven_wallet_moves_unminted_records_but_never_minted_toke
 # =================================== the local demo wallet ===================================================================
 def test_devwallet_signs_the_link_message_as_the_demo_seller_wallet(local_app):
     app = local_app
-    make_user("seller@t.test", "seller")
+    seller = make_user("seller@t.test")
     accounts = app.extensions["local_chain_accounts"]
     c = client_for(app, "seller@t.test")
+    assert c.get("/dev-wallet/account").get_json()["address"] == accounts[1]  # no listings yet: the demo buyer wallet
+    category = Category(name="Trading Cards")
+    db.session.add(category)
+    db.session.commit()
+    make_product(seller, category)
     address = c.get("/dev-wallet/account").get_json()["address"]
-    assert address == accounts[2]  # sellers act as the demo seller wallet, buyers as the demo buyer wallet
+    assert address == accounts[2]  # a member with listings acts as the demo seller wallet
     message = challenge(c, address).get_json()["message"]
     signature = c.post("/dev-wallet/sign", json={"message": "0x" + message.encode().hex(), "address": address}).get_json()["signature"]
     assert verify(c, address, signature).get_json()["ok"]

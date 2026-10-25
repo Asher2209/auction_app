@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_form.html" import field %}
+{% block title %}Manage two-step sign-in · MintLot{% endblock %}
+{% block content %}
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('auth.profile') }}">Your account</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Two-step sign-in</li>
+  </ol>
+</nav>
+<header class="page-head">
+  <div>
+    <span class="eyebrow">Security</span>
+    <h1 class="page-title">Two-step sign-in</h1>
+    <p class="page-lead">On since {{ current_user.totp_enabled_at|local }}. {{ left }} recovery code{{ '' if left == 1 else 's' }} left.</p>
+  </div>
+</header>
+<form method="post" novalidate class="panel manage-2fa">
+  {{ form.hidden_tag() }}
+  <p>To change anything here, confirm it is you with your password and a code.</p>
+  <div class="auth-grid">
+    {{ field(form.password, autocomplete="current-password") }}
+    {{ field(form.code, autocomplete="one-time-code") }}
+  </div>
+  <div class="panel-actions">
+    <button class="btn btn-secondary" type="submit" name="action" value="regenerate">{{ icon('key-round', 16) }}Make new recovery codes</button>
+    <button class="btn btn-outline-danger" type="submit" name="action" value="disable">Turn off two-step sign-in</button>
+  </div>
+</form>
+{% endblock %}

@@ -203,3 +203,9 @@ button.product-detail-gallery-thumb[aria-current="true"] { border-color: var(--d
 .live-indicator.is-on::before { background: var(--dt-success); }
 .chip-danger { background: var(--dt-danger-soft); border-color: transparent; color: var(--dt-danger); }
 .chip-count { font-family: var(--dt-font-mono); font-size: 0.75rem; opacity: 0.8; }
+
+/* ========== Email confirmation reminder (base.html, until the address is confirmed) ========== */
+.verify-banner { display: flex; align-items: center; gap: var(--dt-space-md); flex-wrap: wrap; margin: var(--dt-space-lg) 0 0; padding: var(--dt-space-md) var(--dt-space-lg); border: 1px solid color-mix(in srgb, var(--dt-warning) 45%, transparent); border-radius: var(--dt-radius-md); background: var(--dt-warning-soft); color: var(--dt-text-primary); font-size: 0.9375rem; }
+.verify-banner .icon { flex-shrink: 0; color: var(--dt-warning); }
+.verify-banner p { flex: 1 1 260px; margin: 0; }
+.verify-banner form { margin: 0; }

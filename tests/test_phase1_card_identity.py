@@ -112,8 +112,8 @@ def test_form_without_image_creates_nothing(client, users, card_type, static_dir
     assert CollectibleCard.query.count() == 0
 
 
-def test_buyer_cannot_create_a_card(client, users, card_type, static_dir):
-    login(client, "buyer@t.test")
+def test_an_admin_cannot_create_a_card(client, users, card_type, static_dir):
+    login(client, "admin@t.test")
     assert create_card_via_form(client, card_type).status_code == 403
     assert CollectibleCard.query.count() == 0
 
@@ -195,7 +195,7 @@ def test_seller_card_page_shows_id_qr_and_public_link(client, users, card_type, 
 
 def test_another_seller_cannot_open_the_card_page(client, users, card_type):
     c = db_card(users["seller"], card_type)
-    make_user("other@t.test", "seller")
+    make_user("other@t.test")
     login(client, "other@t.test")
     assert client.get(f"/seller/cards/{c.id}").status_code == 403
 

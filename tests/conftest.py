@@ -6,7 +6,7 @@ from web3 import Web3
 from app import create_app
 from app.config import TestConfig
 from app.extensions import db
-from app.models import User
+from app.models import User, utcnow
 
 PASSWORD = "Test@1234"
 
@@ -27,9 +27,9 @@ def client(app):
     return app.test_client()
 
 
-def make_user(email, role="buyer", password=PASSWORD, active=True):
+def make_user(email, role="member", password=PASSWORD, active=True):
     u = User(name=email.split("@")[0], email=email, role=role, phone="9000000000",
-             address="Somewhere", is_active_user=active)
+             address="Somewhere", is_active_user=active, email_verified_at=utcnow())
     u.set_password(password)
     db.session.add(u)
     db.session.commit()
@@ -38,7 +38,8 @@ def make_user(email, role="buyer", password=PASSWORD, active=True):
 
 @pytest.fixture
 def users(app):
-    return {r: make_user(f"{r}@t.test", r) for r in ("buyer", "seller", "admin")}
+    """Two members, named for the side each plays in most tests, and an admin."""
+    return {r: make_user(f"{r}@t.test", "admin" if r == "admin" else "member") for r in ("buyer", "seller", "admin")}
 
 
 def login(client, email, password=PASSWORD):

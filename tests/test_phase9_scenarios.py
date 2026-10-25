@@ -62,7 +62,7 @@ def test_the_whole_journey(app, client, users, cat, card_type, chain, static_dir
     """Submit, verify, mint, auction, bids, win, pay in crypto, ownership moves, MySQL agrees."""
     app.config["LISTING_REQUIRES_MINTED_TOKEN"] = True
     seller_user, buyer = users["seller"], users["buyer"]
-    rival = make_user("rival@t.test", "buyer")
+    rival = make_user("rival@t.test")
 
     # 0. everyone proves they control their wallet by signing the site one-time message (keys of the test chain)
     keys = chain.w3.provider.ethereum_tester.backend.account_keys
@@ -159,7 +159,7 @@ def test_the_whole_journey(app, client, users, cat, card_type, chain, static_dir
 # =================================== duplicates across sellers ===============================================================
 def test_duplicate_card_across_sellers(client, users, seller, cat, card_type):
     """Two sellers register the same graded card: the second cannot list it while the first listing is live."""
-    other = make_user("seller2@t.test", "seller")
+    other = make_user("seller2@t.test")
     other.link_wallet(WALLET_B)
     db.session.commit()
     first = ready_card(users["seller"], cat, card_type, cert="55512345")
@@ -175,7 +175,7 @@ def test_duplicate_card_across_sellers(client, users, seller, cat, card_type):
 
 
 def test_duplicate_card_is_free_once_the_first_listing_is_gone_but_flagged(client, users, seller, cat, card_type):
-    other = make_user("seller2@t.test", "seller")
+    other = make_user("seller2@t.test")
     other.link_wallet(WALLET_B)
     db.session.commit()
     first = ready_card(users["seller"], cat, card_type, cert="66612345")
@@ -229,7 +229,7 @@ def test_wrong_wallet_after_the_auction_the_payout_must_still_go_to_the_register
 def test_wrong_owner_a_buyer_cannot_list_a_card_that_is_not_theirs(client, users, seller, cat, card_type):
     p = ready_card(users["seller"], cat, card_type)
     switch(client, "buyer@t.test")
-    assert create_auction_post(client, p).status_code == 403  # buyers have no listing rights at all
+    assert create_auction_post(client, p).status_code == 404  # another member's card: not theirs to find
     assert Auction.query.count() == 0
 
 
@@ -252,7 +252,7 @@ def test_invalid_bids_on_a_card_auction(client, users, seller, cat, card_type, a
 
 def test_a_bid_must_beat_the_current_bid_by_the_minimum_increment(client, users, seller, cat, card_type):
     a = live_card_auction(client, users, cat, card_type)
-    make_user("rival@t.test", "buyer")
+    make_user("rival@t.test")
     switch(client, "rival@t.test")
     assert bid(client, a.id, "600").get_json()["ok"]
     switch(client, "buyer@t.test")
@@ -274,7 +274,7 @@ def test_only_buyers_may_bid_and_not_anonymous_visitors(client, users, seller, c
 
 def test_a_bid_cannot_forge_the_bidder_or_the_winner(client, users, seller, cat, card_type):
     a = live_card_auction(client, users, cat, card_type)
-    rival = make_user("rival@t.test", "buyer")
+    rival = make_user("rival@t.test")
     switch(client, "buyer@t.test")
     r = client.post(f"/auctions/{a.id}/bid", headers={"Accept": "application/json"},
                     data={"amount": "600", "buyer_id": rival.id, "highest_bidder_id": rival.id, "current_bid": "1", "status": "closed"})
@@ -658,7 +658,7 @@ def test_seller_modifying_verified_details_is_refused_on_every_route(client, use
 
 def test_seller_modifying_someone_elses_card_is_forbidden(client, users, cat, card_type, static_dir):
     card = submitted_card(client, card_type)
-    make_user("seller2@t.test", "seller")
+    make_user("seller2@t.test")
     for who in ("seller2@t.test", "admin@t.test", "buyer@t.test"):
         switch(client, who)
         r = client.post(f"/seller/cards/{card.id}/edit", content_type="multipart/form-data", data=card_form(card_type, card_name="Stolen"))
@@ -781,7 +781,7 @@ def test_csrf_a_token_in_the_header_works_for_json_and_one_from_another_session_
     app = strict_app()
     with app.app_context():
         db.create_all()
-        make_user("buyer@t.test", "buyer")
+        make_user("buyer@t.test")
     token = lambda c: re.search(r'name="csrf-token" content="([^"]+)"', c.get("/").get_data(as_text=True)).group(1)  # noqa: E731
     client, stranger = app.test_client(), app.test_client()
     assert client.post("/auth/login", data={"email": "buyer@t.test", "password": PASSWORD, "csrf_token": token(client)}).status_code == 302

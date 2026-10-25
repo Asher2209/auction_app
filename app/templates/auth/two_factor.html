@@ -1,0 +1,15 @@
+{% extends "auth/_card.html" %}
+{% from "_form.html" import field %}
+{% block title %}Two-step sign-in · MintLot{% endblock %}
+{% block heading %}Enter your code{% endblock %}
+{% block lead %}<p class="auth-lead">Open your authenticator app and type the 6-digit code for MintLot.</p>{% endblock %}
+{% block form %}
+<form method="post" novalidate>
+  {{ form.hidden_tag() }}
+  {{ field(form.code, hint="Lost your phone? Type one of your recovery codes instead.", autocomplete="one-time-code", inputmode="numeric", autofocus=true, class="code-input") }}
+  <button class="btn btn-primary btn-lg w-100" type="submit">{{ icon('shield-check', 18) }}Verify and log in</button>
+</form>
+{% endblock %}
+{% block auth_links %}
+<p class="auth-switch"><a href="{{ url_for('auth.login') }}">Start again</a></p>
+{% endblock %}

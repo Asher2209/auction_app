@@ -1,4 +1,4 @@
-from flask import flash, redirect, render_template, request, url_for
+from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
 from sqlalchemy import func
 
@@ -14,7 +14,7 @@ PER_PAGE = 15
 
 
 @bp.route("/")
-@role_required("buyer")
+@role_required("member")
 def dashboard():
     uid = current_user.id
     bidding_on = (db.session.query(func.count(func.distinct(Bid.auction_id)))
@@ -31,7 +31,7 @@ def dashboard():
 
 
 @bp.route("/bids")
-@role_required("buyer")
+@role_required("member")
 def bids():
     page = (Bid.query.filter_by(buyer_id=current_user.id)
             .order_by(Bid.bid_time.desc(), Bid.id.desc())
@@ -40,7 +40,7 @@ def bids():
 
 
 @bp.route("/watchlist")
-@role_required("buyer")
+@role_required("member")
 def watchlist():
     auctions = (Auction.query.join(Product)
                 .join(Watchlist, Watchlist.product_id == Product.id)
@@ -53,9 +53,11 @@ def watchlist():
 
 
 @bp.route("/watchlist/<int:auction_id>/toggle", methods=["POST"])
-@role_required("buyer")
+@role_required("member")
 def toggle_watch(auction_id):
     auction = visible_auction_or_404(auction_id)
+    if auction.product.seller_id == current_user.id:
+        abort(403)  # watching your own listing means nothing: you get its notices as the seller anyway
     entry = Watchlist.query.filter_by(user_id=current_user.id, product_id=auction.product_id).first()
     if entry:
         db.session.delete(entry)
@@ -69,7 +71,7 @@ def toggle_watch(auction_id):
 
 
 @bp.route("/won")
-@role_required("buyer")
+@role_required("member")
 def won():
     wins = (Winner.query.filter_by(buyer_id=current_user.id)
             .order_by(Winner.winning_time.desc()).all())
@@ -77,7 +79,7 @@ def won():
 
 
 @bp.route("/cards")
-@role_required("buyer")
+@role_required("member")
 def cards():
     """My cards: what the buyer owns on the blockchain and what is still being paid for."""
     rows = buyer_cards_service.buyer_cards(current_user)

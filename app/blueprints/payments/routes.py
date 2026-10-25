@@ -9,7 +9,7 @@ from ...services import card_settlement_service as css
 from ...services import ownership_transfer_service as ots
 from ...services import payment_service as ps
 from ...services.payment_service import PaymentError
-from ...utils import role_required
+from ...utils import role_required, verified_email_required
 from . import bp
 from .forms import FORMS
 
@@ -60,7 +60,7 @@ def _render(payment, active="card", forms=None):
 
 
 @bp.route("/<int:auction_id>")
-@role_required("buyer")
+@role_required("member")
 def pay_page(auction_id):
     payment = _own_payment_or_404(auction_id)
     ps.settle_due()  # a pending payment may be due to settle
@@ -69,7 +69,7 @@ def pay_page(auction_id):
 
 
 @bp.route("/<int:auction_id>/status")
-@role_required("buyer")
+@role_required("member")
 def status(auction_id):
     payment = _own_payment_or_404(auction_id)
     ps.settle_due()
@@ -98,8 +98,9 @@ def _json_body():
 
 
 @bp.route("/<int:auction_id>/crypto/prepare", methods=["POST"])
-@role_required("buyer")
+@role_required("member")
 @limited("crypto", 20, 60, by="user")
+@verified_email_required
 def crypto_prepare(auction_id):
     payment = _own_payment_or_404(auction_id)
     body = _json_body()
@@ -113,8 +114,9 @@ def crypto_prepare(auction_id):
 
 
 @bp.route("/<int:auction_id>/crypto/submit", methods=["POST"])
-@role_required("buyer")
+@role_required("member")
 @limited("crypto", 20, 60, by="user")
+@verified_email_required
 def crypto_submit(auction_id):
     payment = _own_payment_or_404(auction_id)
     try:
@@ -130,7 +132,8 @@ def crypto_submit(auction_id):
 
 
 @bp.route("/<int:auction_id>/pay/<kind>", methods=["POST"])
-@role_required("buyer")
+@role_required("member")
+@verified_email_required
 @limited("pay", 20, 60, by="user")
 def pay(auction_id, kind):
     if kind not in FORMS:

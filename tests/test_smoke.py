@@ -16,7 +16,7 @@ def test_home_empty(client):
 
 
 def test_home_lists_active_auction(client):
-    seller = User(name="S", email="s@t.test", role="seller")
+    seller = User(name="S", email="s@t.test", role="member")
     seller.set_password("x")
     cat = Category(name="Books")
     db.session.add_all([seller, cat])

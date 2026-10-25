@@ -4,6 +4,10 @@
 {% block heading %}Create your account{% endblock %}
 {% block lead %}<p class="auth-lead">One account to bid on cards or to sell them.</p>{% endblock %}
 {% block form %}
+{% if config.GOOGLE_CLIENT_ID and config.GOOGLE_CLIENT_SECRET %}
+{% include "auth/_google_button.html" %}
+<div class="auth-divider" role="presentation"><span>or with your email</span></div>
+{% endif %}
 <form method="post" novalidate>
   {{ form.hidden_tag() }}
   {{ field(form.name, autocomplete="name") }}
@@ -12,9 +16,8 @@
     {{ field(form.phone, autocomplete="tel", inputmode="tel", placeholder="+91 98765 43210") }}
   </div>
   {{ field(form.address, hint="Where won cards are shipped.", autocomplete="street-address", rows=2) }}
-  {{ field(form.role) }}
   <div class="auth-grid">
-    {{ field(form.password, hint="At least 8 characters, with upper and lower case letters and a number.", autocomplete="new-password") }}
+    {{ field(form.password, hint="At least 8 characters, with at least one letter and one number.", autocomplete="new-password") }}
     {{ field(form.confirm, autocomplete="new-password") }}
   </div>
   {% call checkbox(form.accept_terms) %}

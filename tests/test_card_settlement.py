@@ -272,10 +272,10 @@ def test_authorization_is_refused_once_the_payment_is_under_way(client, chain, s
 
 def test_sale_pages_belong_to_the_selling_seller_only(client, users, chain, s):
     assert client.get(sale_url(s)).status_code == 302
-    login(client, "buyer@t.test")
-    assert client.get(sale_url(s)).status_code == 403
+    login(client, "buyer@t.test")  # the winner: a member, but the sale page is the seller's
+    assert client.get(sale_url(s)).status_code == 404
     client.post("/auth/logout")
-    make_user("other@t.test", "seller")
+    make_user("other@t.test")
     login(client, "other@t.test")
     assert client.get(sale_url(s)).status_code == 404
     for tail in ("/prepare", "/check"):
@@ -336,7 +336,7 @@ def test_only_the_wallet_the_seller_authorized_can_be_used(client, chain, s):
 def test_other_users_cannot_touch_the_payment(client, chain, s):
     authorize_on_chain(client, chain, s)
     client.post("/auth/logout")
-    make_user("rival@t.test", "buyer")
+    make_user("rival@t.test")
     login(client, "rival@t.test")
     assert prepare_payment(client, s).status_code == 404
     assert jpost(client, pay_url(s, "/crypto/submit"), {"tx_hash": "0x" + "ab" * 32}).status_code == 404

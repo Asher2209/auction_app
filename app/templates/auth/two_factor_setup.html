@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "_form.html" import field %}
+{% block title %}Set up two-step sign-in · MintLot{% endblock %}
+{% block content %}
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('auth.profile') }}">Your account</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Two-step sign-in</li>
+  </ol>
+</nav>
+<header class="page-head">
+  <div>
+    <span class="eyebrow">Security</span>
+    <h1 class="page-title">Set up two-step sign-in</h1>
+    <p class="page-lead">After your password, MintLot will ask for a code from an app on your phone, so a stolen password alone is not enough.</p>
+  </div>
+</header>
+
+<div class="form-layout">
+  <div class="panel">
+    <ol class="setup-steps">
+      <li>
+        <h2 class="panel-title">Scan this code</h2>
+        <p class="small text-muted">Use any authenticator app: Google Authenticator, Microsoft Authenticator, 1Password, Authy and others all work.</p>
+        <div class="setup-qr">{{ qr|safe }}</div>
+        <p class="small mb-1">Can't scan it? Enter this key in the app instead:</p>
+        <code class="setup-key" aria-label="Setup key">{{ secret|batch(4)|map('join')|join(' ') }}</code>
+      </li>
+      <li>
+        <h2 class="panel-title">Type the code it shows</h2>
+        <form method="post" novalidate>
+          {{ form.hidden_tag() }}
+          {{ field(form.code, autocomplete="one-time-code", inputmode="numeric", class="code-input") }}
+          <button class="btn btn-primary" type="submit">{{ icon('shield-check', 16) }}Turn on two-step sign-in</button>
+        </form>
+      </li>
+    </ol>
+  </div>
+  <aside class="form-aside" aria-label="Tips">
+    <div class="form-tip">
+      {{ icon('key-round', 18) }}
+      <h2 class="form-tip-title">Recovery codes</h2>
+      <p class="small text-muted mb-0">Next you get ten single-use recovery codes. They are the only way back in if you lose your phone, so keep them somewhere safe.</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@ def utcnow():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-from .user import User  # noqa: E402
+from .user import User, UserSession  # noqa: E402
 from .catalog import Category, Product, ProductImage, Watchlist  # noqa: E402
 from .auction import Auction, Bid, Winner  # noqa: E402
 from .payment import Payment, CryptoPayment, Invoice  # noqa: E402
@@ -29,7 +29,7 @@ def load_user(user_id):
 
 
 __all__ = [
-    "User", "Category", "Product", "ProductImage", "Watchlist",
+    "User", "UserSession", "Category", "Product", "ProductImage", "Watchlist",
     "Auction", "Bid", "Winner", "Payment", "CryptoPayment", "Invoice",
     "Notification", "NotificationPreference", "Review", "Feedback", "Message",
     "CollectibleVerification", "VerificationLog", "SupportedGrader",

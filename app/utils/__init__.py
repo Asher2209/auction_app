@@ -3,7 +3,7 @@
 from functools import wraps
 from urllib.parse import urlparse
 
-from flask import abort, request
+from flask import abort, flash, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
 
 
@@ -19,6 +19,21 @@ def role_required(*roles):
         return wrapped
     return decorator
 
+
+
+def verified_email_required(view):
+    """Bidding, submitting cards and paying need a confirmed email address (see auth.verify_email)."""
+    @wraps(view)
+    @login_required
+    def wrapped(*args, **kwargs):
+        if not current_user.email_verified:
+            message = "Confirm your email address first: open the link we emailed you, or send a new one from the banner."
+            if request.is_json or request.headers.get("Accept", "").startswith("application/json"):
+                return jsonify(ok=False, error=message), 403
+            flash(message, "warning")
+            return redirect(url_for("main.dashboard"))
+        return view(*args, **kwargs)
+    return wrapped
 
 def safe_redirect_target(target):
     """A same-site path (plus query) to redirect to, or None if `target` is not safe."""

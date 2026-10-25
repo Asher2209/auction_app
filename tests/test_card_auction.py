@@ -138,12 +138,14 @@ def test_only_the_owning_seller_can_create_the_auction(client, users, seller, ca
     p = ready_card(users["seller"], cat, card_type)
     url = f"/seller/cards/{p.collectible_card.id}/auction"
     assert client.post(url, data=form()).status_code == 302  # anonymous: sent to log in
-    login(client, "buyer@t.test")
-    assert client.post(url, data=form()).status_code == 403
+    make_user("other@t.test")
+    for who in ("buyer@t.test", "other@t.test"):  # members who do not own the card: it is not theirs to find
+        client.post("/auth/logout")
+        login(client, who)
+        assert client.get(url).status_code == 404 and client.post(url, data=form()).status_code == 404, who
     client.post("/auth/logout")
-    make_user("other@t.test", "seller")
-    login(client, "other@t.test")
-    assert client.get(url).status_code == 404 and client.post(url, data=form()).status_code == 404
+    login(client, "admin@t.test")
+    assert client.post(url, data=form()).status_code == 403
     assert auctions() == []
 
 

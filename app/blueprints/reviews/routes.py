@@ -12,7 +12,7 @@ def _back(auction_id):
 
 
 @bp.route("/<int:auction_id>", methods=["POST"])
-@role_required("buyer")
+@role_required("member")
 def save(auction_id):
     """Create or update the buyer's review of an item they paid for."""
     try:
@@ -25,7 +25,7 @@ def save(auction_id):
 
 
 @bp.route("/<int:auction_id>/delete", methods=["POST"])
-@role_required("buyer")
+@role_required("member")
 def delete(auction_id):
     try:
         rs.delete_own_review(current_user, auction_id)

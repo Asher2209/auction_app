@@ -845,3 +845,24 @@ a.stat .stat-value { color: var(--dt-accent-strong); }
   .form-layout { grid-template-columns: 1fr; }
   .form-aside { position: static; }
 }
+
+/* ========== TWO-STEP SIGN-IN ========== */
+.code-input { font-family: var(--dt-font-mono); font-size: 1.25rem; letter-spacing: 0.2em; }
+.setup-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--dt-space-2xl); counter-reset: setup; }
+.setup-steps > li { counter-increment: setup; }
+.setup-steps .panel-title::before { content: counter(setup) "."; margin-right: 6px; font-family: var(--dt-font-mono); color: var(--dt-accent); }
+.setup-qr { width: 200px; margin: var(--dt-space-md) 0; padding: 8px; border-radius: var(--dt-radius-md); background: #fff; }  /* a QR code needs a light background to scan */
+.setup-qr svg { display: block; width: 100%; height: auto; }
+.setup-key { display: inline-block; padding: 6px 10px; border-radius: var(--dt-radius-sm, 6px); background: var(--dt-bg-1); font-size: 0.95rem; letter-spacing: 0.08em; user-select: all; }
+.recovery { max-width: 640px; }
+.recovery-codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--dt-space-sm) var(--dt-space-xl); margin: 0 0 var(--dt-space-xl); padding-left: 1.5rem; font-family: var(--dt-font-mono); }
+.recovery-codes code { font-size: 1rem; color: var(--dt-text-primary); user-select: all; }
+.manage-2fa { max-width: 720px; }
+.auth-divider { display: flex; align-items: center; gap: var(--dt-space-md); margin: var(--dt-space-xl) 0; color: var(--dt-text-muted); font-size: 0.8125rem; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--dt-border); }
+.auth-row-end { justify-content: flex-end; }
+.ws-switch { display: inline-flex; gap: 2px; margin-top: var(--dt-space-xl); padding: 3px; border: 1px solid var(--dt-border); border-radius: var(--dt-radius-pill); background: var(--dt-bg-1); }
+.ws-switch a { padding: 5px 14px; border-radius: var(--dt-radius-pill); color: var(--dt-text-secondary); font-size: 0.8125rem; font-weight: 600; text-decoration: none; }
+.ws-switch a:hover { color: var(--dt-text-primary); }
+.ws-switch a.is-active { background: var(--dt-accent); color: var(--dt-bg-0); }
+.ws-switch + .ws-head { padding-top: var(--dt-space-md); }
