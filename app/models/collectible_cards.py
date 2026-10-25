@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 from ..extensions import db
 from . import utcnow
 
@@ -44,7 +43,7 @@ class CollectibleCard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), unique=True, nullable=False)
     card_type_id = db.Column(db.Integer, db.ForeignKey('card_types.id'), nullable=False)
-    
+
     # Unique platform identifier for this specific physical card instance
     # Format: CARD-XXXXXX (e.g., CARD-000001)
     platform_card_id = db.Column(db.String(20), unique=True, index=True)
@@ -120,7 +119,7 @@ class CardImage(db.Model):
 
     def __repr__(self):
         return f'<CardImage {self.image_type} - {self.path or self.url}>'
-    
+
     def get_image_src(self):
         """The browser URL of this image: an external URL as it is, an uploaded file under /static/uploads."""
         if self.url:

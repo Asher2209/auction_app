@@ -1,10 +1,10 @@
 // Signed-in pages: one shared Socket.IO connection that delivers new notifications live
-// (bell badge + toast). Other scripts reuse it as window.chainbidSocket.
+// (bell badge + toast). Other scripts reuse it as window.mintlotSocket.
 // All text is written with textContent; links are only followed if they are in-site paths.
 (function () {
   if (typeof io !== "function") return;
   const socket = io();
-  window.chainbidSocket = socket;
+  window.mintlotSocket = socket;
 
   const badge = document.getElementById("notif-badge");
 

@@ -1,0 +1,15 @@
+# Development and test dependencies (also needed for LOCAL_CHAIN=1). Pinned in requirements-dev.lock:
+#   uv pip compile requirements-dev.txt -o requirements-dev.lock --python-version 3.12 --universal
+-r requirements.txt
+# in-memory Ethereum chain for the tests and the LOCAL_CHAIN demo
+eth-tester>=0.13.0b1
+py-evm>=0.12.0b1
+# Solidity compiler wrapper: the tests compile helper contracts (needs solc 0.8.24, see the CI workflow)
+py-solc-x>=2.0
+pytest>=8.0
+pytest-xdist>=3.6
+ruff>=0.15
+# render the invoice PDF and scan its QR code in the tests
+pypdf>=4.0
+pypdfium2>=4.30
+zxing-cpp>=2.2

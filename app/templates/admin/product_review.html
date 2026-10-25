@@ -44,7 +44,7 @@
 {% if product.approval_status == 'pending' and verification %}
 <p class="text-muted">This card is waiting for verification. It is approved or rejected on its checklist, and the seller schedules the auction once it is Platform Verified.</p>
 {% elif product.approval_status == 'pending' %}
-<p class="text-muted">This is a plain listing from before ChainBid listed trading cards only. It can no longer be approved, only removed.</p>
+<p class="text-muted">This is a plain listing from before MintLot listed trading cards only. It can no longer be approved, only removed.</p>
 {% endif %}
 
 {% if not auction or auction.status != 'closed' %}

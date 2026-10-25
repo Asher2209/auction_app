@@ -3,7 +3,7 @@
 (function () {
   var root = document.documentElement;
   var theme = null;
-  try { theme = window.localStorage.getItem("chainbid-theme"); } catch (e) { /* storage blocked: fall through */ }
+  try { theme = window.localStorage.getItem("mintlot-theme"); } catch (e) { /* storage blocked: fall through */ }
   if (theme !== "light" && theme !== "dark") {
     theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }

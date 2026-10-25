@@ -1,7 +1,7 @@
 """Cross-cutting security: response headers, error pages, production configuration checks, database integrity."""
 import time
 
-from flask import current_app, jsonify, render_template, request, session
+from flask import jsonify, render_template, request, session
 from flask_login import current_user, logout_user
 from flask_wtf.csrf import CSRFError
 from sqlalchemy import event

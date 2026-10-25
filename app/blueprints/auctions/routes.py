@@ -1,7 +1,7 @@
 from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import or_
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from ... import sockets
 from ...models import Auction, Product, Watchlist, utcnow, CollectibleCard
@@ -35,29 +35,29 @@ class FakeAuction:
 def browse():
     _refresh()
     f = parse_filters(request.args)
-    
+
     if f["category"] == 7:
         page_num = request.args.get("page", 1, type=int)
         query = CollectibleCard.query.filter(CollectibleCard.product.has(approval_status='approved'))
-        
+
         if f["q"]:
             search_term = f"%{f['q']}%"
             query = query.filter(or_(CollectibleCard.card_name.ilike(search_term), CollectibleCard.set_name.ilike(search_term)))
-        
+
         if f["min_price"] is not None:
             query = query.filter(CollectibleCard.estimated_value >= f["min_price"])
         if f["max_price"] is not None:
             query = query.filter(CollectibleCard.estimated_value <= f["max_price"])
-        
+
         if f["sort"] == "price_low":
             query = query.order_by(CollectibleCard.estimated_value.asc())
         elif f["sort"] == "price_high":
             query = query.order_by(CollectibleCard.estimated_value.desc())
         else:
             query = query.order_by(CollectibleCard.created_at.desc())
-        
+
         paginated = query.paginate(page=page_num, per_page=PER_PAGE, error_out=False)
-        
+
         class FakePage:
             def __init__(self, items, total, page, pages, has_prev, has_next, prev_num, next_num):
                 self.items = items
@@ -71,12 +71,12 @@ def browse():
             def iter_pages(self):
                 for p in range(1, self.pages + 1):
                     yield p
-        
+
         fake_items = [FakeAuction(card) for card in paginated.items]
         fake_page = FakePage(fake_items, paginated.total, paginated.page, paginated.pages, paginated.has_prev, paginated.has_next, paginated.prev_num, paginated.next_num)
-        
+
         return render_template("auctions/browse.html", page=fake_page, f=f, counts={}, ratings={}, categories=card_categories(), statuses=list(STATUS_FILTERS), sorts=SORTS, qs={k: v for k, v in {"q": f["q"], "category": f["category"], "status": f["status"], "sort": f["sort"], "min_price": request.args.get("min_price") if f["min_price"] is not None else None, "max_price": request.args.get("max_price") if f["max_price"] is not None else None}.items() if v not in (None, "")})
-    
+
     page = search_auctions(f).paginate(page=request.args.get("page", 1, type=int), per_page=PER_PAGE, error_out=False)
     return render_template("auctions/browse.html", page=page, f=f, counts=bid_counts([a.id for a in page.items]), ratings=rs.stats_for_products([a.product_id for a in page.items]), categories=card_categories(), statuses=list(STATUS_FILTERS), sorts=SORTS, qs={k: v for k, v in {"q": f["q"], "category": f["category"], "status": f["status"], "sort": f["sort"], "min_price": request.args.get("min_price") if f["min_price"] is not None else None, "max_price": request.args.get("max_price") if f["max_price"] is not None else None}.items() if v not in (None, "")})
 
@@ -88,9 +88,9 @@ def detail(auction_id):
         card_id = auction_id - 10000
         from flask import redirect
         from ...models import CollectibleCard
-        card = CollectibleCard.query.get_or_404(card_id)
+        CollectibleCard.query.get_or_404(card_id)  # 404 when the card does not exist
         return redirect(f"/cards/{card_id}")
-    
+
     auction = visible_auction_or_404(auction_id)
     bids = auction.bids[:20]
     watching = False

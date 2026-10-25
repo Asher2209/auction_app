@@ -61,7 +61,7 @@ curl http://localhost:5000/api/health/ready
 **3. Current State Documentation**
 ```bash
 git log --oneline -10
-docker images | grep chainbid
+docker images | grep mintlot
 ```
 - [ ] Current commit recorded
 - [ ] Current image version recorded
@@ -69,7 +69,7 @@ docker images | grep chainbid
 ### Deployment (execute deploy script)
 
 ```bash
-cd /opt/chainbid
+cd /opt/mintlot
 ./deployment/deploy.sh
 ```
 

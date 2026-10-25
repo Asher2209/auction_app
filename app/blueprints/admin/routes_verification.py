@@ -2,17 +2,15 @@
 Admin routes for collectible card verification workflow
 """
 
-from flask import abort, current_app, flash, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user
-from sqlalchemy import func
-from datetime import timedelta
 
 from ...extensions import db
 from ...models import (
     CollectibleVerification, CollectibleCard, CardVerificationChecklist,
-    CardVerificationHistory, Product, User, utcnow, BlockchainAsset
+    CardVerificationHistory, Product, utcnow
 )
-from ...services import auction_validation_service, card_identity_service, qrcode_service, verification_checklist_service
+from ...services import auction_validation_service, verification_checklist_service
 from ...services.notifications import notify
 from ...services.verification_completion_service import complete_verification_and_create_blockchain_asset
 from ...utils import role_required
@@ -311,7 +309,7 @@ def request_card_info(verification_id):
 
         db.session.commit()
 
-        flash(f"Seller notified to provide more information.", 'info')
+        flash("Seller notified to provide more information.", 'info')
     else:
         flash('Error sending request.', 'danger')
 

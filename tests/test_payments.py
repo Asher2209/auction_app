@@ -135,7 +135,7 @@ def test_successful_payment_each_method(app, setup, users, kind, data, ref):
     assert p.reference == ref and p.gateway_ref.startswith("SIM-") and p.payment_date and p.attempts == 1
     assert p.settle_at is None and p.failure_reason is None
     assert "Payment successful" in titles(users["buyer"]) and "Payment received" in titles(users["seller"])
-    assert sorted(m.subject for m in outbox) == ["[ChainBid] Payment received", "[ChainBid] Payment successful"]
+    assert sorted(m.subject for m in outbox) == ["[MintLot] Payment received", "[MintLot] Payment successful"]
     page = c.get(f"/payments/{a.id}").data.decode()
     assert "Payment complete" in page and 'name="card_number"' not in page
 

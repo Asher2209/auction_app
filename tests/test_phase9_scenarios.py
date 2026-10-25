@@ -871,7 +871,7 @@ def test_card_form_accepts_at_most_ten_images_and_at_least_one(app, client, user
 
 
 def test_card_form_filenames_cannot_escape_the_upload_folder(app, client, users, card_type, static_dir):
-    names = ("../../evil.png", "..\..\evil.png", "/etc/passwd.png", "shell.php.png", "x" * 300 + ".png")
+    names = ("../../evil.png", r"..\..\evil.png", "/etc/passwd.png", "shell.php.png", "x" * 300 + ".png")
     assert upload_card(client, card_type, [(io.BytesIO(png_bytes()), n) for n in names]).status_code == 302
     stored = [i.path for i in ProductImage.query.all()]
     assert len(stored) == len(names) and all(re.fullmatch(r"products/[0-9a-f]{32}\.png", p) for p in stored)

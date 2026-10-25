@@ -1,4 +1,4 @@
-/* Modern UI Effects for ChainBid */
+/* Modern UI Effects for MintLot */
 
 // 1. Cursor Beam Effect
 (function() {

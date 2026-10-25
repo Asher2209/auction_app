@@ -1,10 +1,10 @@
-# ChainBid
+# MintLot
 
 A blockchain-enabled online auction system for collectible trading cards (Pokemon first), written in Python with Flask. MSc project: *Blockchain-Enabled Online Auction System Using Python with Cryptocurrency Payment*.
 
 A seller submits a physical card. An admin reviews it against a structured checklist and, if it passes, marks it **Platform Verified**. The card then gets a platform ID (`CARD-xxxxxx`), a QR code and an ERC-721 token. The card is auctioned in real time; the winner pays in ETH through MetaMask and the token moves to them in the same transaction. The database mirrors what the chain records.
 
-**What "Platform Verified" means:** a ChainBid admin checked the submitted details and images against a checklist. It is not a guarantee that the physical card is genuine, and the blockchain is not proof of authenticity: it records identity and ownership only.
+**What "Platform Verified" means:** a MintLot admin checked the submitted details and images against a checklist. It is not a guarantee that the physical card is genuine, and the blockchain is not proof of authenticity: it records identity and ownership only.
 
 **Test network only.** Crypto payments run on the Sepolia test network (or an in-process test chain). No real funds are involved.
 
@@ -15,7 +15,7 @@ Developed and tested with Python 3.13.
 ```bash
 python -m venv .venv
 .venv/Scripts/activate            # Windows; on macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.lock  # exact tested versions; production needs only requirements.lock
 cp .env.example .env              # then edit .env
 python scripts/seed.py            # creates the tables, demo accounts and demo trading cards
 python run.py                     # http://127.0.0.1:5000
@@ -64,7 +64,7 @@ Settings come from environment variables, read from `.env` (see `.env.example`).
 | `MAIL_USE_TLS` | `1` | Use STARTTLS |
 | `MAIL_USERNAME` | empty | SMTP user |
 | `MAIL_PASSWORD` | empty | SMTP password |
-| `MAIL_DEFAULT_SENDER` | `ChainBid <noreply@chainbid.local>` | From address |
+| `MAIL_DEFAULT_SENDER` | `MintLot <noreply@mintlot.local>` | From address |
 | `RPC_URL` | empty | Ethereum JSON-RPC endpoint (Sepolia). Empty disables crypto payments |
 | `CONTRACT_ADDRESS` | empty | Deployed `AuctionPayment` contract |
 | `COLLECTIBLE_CONTRACT_ADDRESS` | empty | Deployed `CollectibleCardToken` contract (`python scripts/deploy_contract.py token`) |
@@ -74,7 +74,7 @@ Settings come from environment variables, read from `.env` (see `.env.example`).
 | `BLOCK_EXPLORER_TX_URL` | `https://sepolia.etherscan.io/tx/` | Prefix for transaction links |
 | `CONFIRMATIONS_REQUIRED` | `2` | Blocks to wait before a payment counts |
 | `INR_PER_ETH` | `320000` | Fixed exchange rate used to price auctions in ETH |
-| `LEGAL_CONTACT_EMAIL` | `privacy@chainbid.local` | Contact address shown on the policy pages |
+| `LEGAL_CONTACT_EMAIL` | `privacy@mintlot.local` | Contact address shown on the policy pages |
 | `APP_TZ_NAME` | `IST` | Name of the display time zone. Times are stored as UTC and typed and shown in this zone |
 | `APP_TZ_OFFSET_MINUTES` | `330` | Its fixed offset from UTC in minutes (IST is +5:30, no daylight saving) |
 | `LOCAL_CHAIN` | `0` | `1`: development-only in-process test chain with a demo wallet |
@@ -84,8 +84,13 @@ Deploying the contracts to Sepolia needs a funded test-only wallet; see `docs/CR
 ## Tests
 
 ```bash
-.venv/Scripts/python.exe -m pytest
+.venv/Scripts/python.exe -m pytest tests -n auto   # parallel on every CPU core (pytest-xdist)
+.venv/Scripts/ruff.exe check app tests scripts run.py
 ```
+
+A few tests compile helper contracts, so a fresh machine needs the Solidity compiler once: `python -c "import solcx; solcx.install_solc('0.8.24')"`. GitHub Actions runs the linter and the tests on every pull request (`.github/workflows/tests.yml`).
+
+**Dependencies.** `requirements.txt` (runtime) and `requirements-dev.txt` (tests and tools) list what the project needs; `requirements.lock` and `requirements-dev.lock` pin the exact versions that were tested. After changing a requirements file, regenerate the lock files with `uv pip compile requirements.txt -o requirements.lock --python-version 3.12 --universal` (and the same for `requirements-dev`).
 
 The tests use SQLite in memory and an in-process Ethereum test chain (eth-tester), so they need no network. `docs/TEST_MATRIX.md` maps each part of the test plan to the tests that cover it.
 

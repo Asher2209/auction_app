@@ -1,8 +1,8 @@
-# Admin Guide - ChainBid Operations & Monitoring
+# Admin Guide - MintLot Operations & Monitoring
 
 ## Overview
 
-This guide covers operational tasks for ChainBid administrators.
+This guide covers operational tasks for MintLot administrators.
 
 ## Daily Operations
 

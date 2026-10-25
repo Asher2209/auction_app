@@ -12,7 +12,7 @@
   <a href="{{ url_for('auctions.detail', auction_id=a.id) }}" class="cc text-decoration-none">
     <div class="cc-media">
       <img src="{{ img }}" alt="{{ name }}{% if c and c.set_name %}, {{ c.set_name }}{% endif %}" loading="lazy">
-      {% if verified %}<span class="cc-badge" title="Platform verified: a ChainBid admin reviewed the submitted details and images. This is not a guarantee of authenticity.">&#10003; Verified</span>{% endif %}
+      {% if verified %}<span class="cc-badge" title="Platform verified: a MintLot admin reviewed the submitted details and images. This is not a guarantee of authenticity.">&#10003; Verified</span>{% endif %}
     </div>
     <div class="cc-body">
       <h3 class="cc-name">{{ name }}</h3>

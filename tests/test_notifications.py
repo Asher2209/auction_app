@@ -97,7 +97,7 @@ def test_outbid_sends_email_but_bid_accepted_does_not(app, auction, users):
         svc.place_bid(auction.id, b2, "150")
     assert len(outbox) == 1
     m = outbox[0]
-    assert m.recipients == ["buyer@t.test"] and m.subject == "[ChainBid] You have been outbid"
+    assert m.recipients == ["buyer@t.test"] and m.subject == "[MintLot] You have been outbid"
     assert f"http://127.0.0.1:5000/auctions/{auction.id}" in m.body and "₹150.00" in m.body
 
 
@@ -106,8 +106,8 @@ def test_winner_and_seller_emails_on_close(app, auction, users):
     with mail.record_messages() as outbox:
         svc.close_auction(auction.id, now=auction.end_time + timedelta(seconds=1))
     by_rcpt = {m.recipients[0]: m.subject for m in outbox}
-    assert by_rcpt["buyer@t.test"] == "[ChainBid] Auction won"
-    assert by_rcpt["seller@t.test"] == "[ChainBid] Winner selected"
+    assert by_rcpt["buyer@t.test"] == "[MintLot] Auction won"
+    assert by_rcpt["seller@t.test"] == "[MintLot] Winner selected"
     assert len(outbox) == 2  # "Payment pending" and "Auction completed" are in-app only
 
 
@@ -118,7 +118,7 @@ def test_admin_decisions_email_the_seller(app, users, cats, card_type):  # noqa:
     complete_checklist(admin, v.id)
     with mail.record_messages() as outbox:
         admin.post(f"/admin/cards/verify/{v.id}/approve", data={"approval_notes": "ok"})
-    assert [m.subject for m in outbox] == ["[ChainBid] Card approved"]
+    assert [m.subject for m in outbox] == ["[MintLot] Card approved"]
     assert f"/seller/cards/{p.collectible_card.id}" in outbox[0].body
 
 

@@ -197,7 +197,8 @@ def test_daily_report_shows_started_ended_and_bidding_that_day(world):
 
 
 # ---- 2. active -----------------------------------------------------------------------------------------------
-def test_active_report_lists_only_live_and_upcoming(full):
+def test_active_report_lists_only_live_and_upcoming(full, monkeypatch):
+    monkeypatch.setattr(rs, "utcnow", lambda: NOW)  # "time left" is measured from the clock: pin it to the fixture's date
     report, _, _, data = run("active-auctions")
     products = {cell(report, r, "product"): r for r in data.rows}
     assert set(products) == {"Live item", "Upcoming"}  # closed and cancelled auctions are not shown
@@ -548,7 +549,7 @@ def test_downloads(app, full, ext, mimetype, magic):
     for key in ALL:
         r = client_for(app, "admin@t.test").get(f"/admin/reports/{key}/export/{ext}?from=2026-01-01&to=2026-12-31")
         assert r.status_code == 200 and r.mimetype == mimetype and r.data.startswith(magic), key
-        assert re.fullmatch(rf'attachment; filename="chainbid-{key}-\d{{8}}\.{ext}"', r.headers["Content-Disposition"]) and "no-store" in r.headers["Cache-Control"]
+        assert re.fullmatch(rf'attachment; filename="mintlot-{key}-\d{{8}}\.{ext}"', r.headers["Content-Disposition"]) and "no-store" in r.headers["Cache-Control"]
 
 
 def test_export_uses_the_same_filters_as_the_page(app, full):

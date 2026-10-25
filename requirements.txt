@@ -1,3 +1,5 @@
+# Runtime dependencies. Exact versions are pinned in requirements.lock (regenerate with:
+#   uv pip compile requirements.txt -o requirements.lock --python-version 3.12 --universal)
 Flask>=3.0
 Flask-SQLAlchemy>=3.1
 Flask-Login>=0.6.3
@@ -14,10 +16,3 @@ reportlab>=4.0
 openpyxl>=3.1
 qrcode[pil]>=7.4
 web3>=7
-eth-tester>=0.13.0b1
-py-evm>=0.12.0b1
-pytest>=8.0
-pypdf>=4.0
-# test-only: render the invoice PDF and scan its QR code
-pypdfium2>=4.30
-zxing-cpp>=2.2

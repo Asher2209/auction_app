@@ -350,7 +350,7 @@ def test_only_admins_can_moderate(app, users, cats):  # noqa: F811
     for role in ("buyer", "seller"):
         cl = client_for(app, f"{role}@t.test")
         assert cl.get("/admin/reviews").status_code == 403
-        for path in (f"hide", f"unhide", f"delete"):
+        for path in ("hide", "unhide", "delete"):
             assert cl.post(f"/admin/reviews/{rv.id}/{path}", data={"reason": "xxxxxx"}).status_code == 403
     g.pop("_login_user", None)
     anon = app.test_client()

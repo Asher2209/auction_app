@@ -1,4 +1,4 @@
-# Monitoring Guide - ChainBid
+# Monitoring Guide - MintLot
 
 ## Health Checks
 

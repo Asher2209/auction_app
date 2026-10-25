@@ -3,7 +3,7 @@
 {% block page_title %}Cookie Policy{% endblock %}
 {% block body %}
 <h2 class="h5 mt-4">1. What cookies are</h2>
-<p>Cookies are small text files a website saves in your browser. ChainBid uses only the cookies it needs to work, plus one that remembers your cookie choice. <strong>It sets no advertising, analytics or tracking cookies.</strong></p>
+<p>Cookies are small text files a website saves in your browser. MintLot uses only the cookies it needs to work, plus one that remembers your cookie choice. <strong>It sets no advertising, analytics or tracking cookies.</strong></p>
 
 <h2 class="h5 mt-4">2. The cookies we set</h2>
 <div class="table-responsive">
@@ -12,14 +12,14 @@
   <thead><tr><th scope="col">Name</th><th scope="col">Purpose</th><th scope="col">Type</th><th scope="col">Lasts</th></tr></thead>
   <tbody>
     <tr><th scope="row"><code>session</code></th><td>Keeps you signed in, protects forms against forgery (CSRF), holds the one-time message you sign when linking a wallet, and carries one-time notices such as "Account created". Set only after you sign in or open a form.</td><td>Essential</td><td>Until you close the browser (the server also ends a login after 8 hours)</td></tr>
-    <tr><th scope="row"><code>chainbid_consent</code></th><td>Remembers your choice on this page so we do not ask again on every visit.</td><td>Essential (records your preference)</td><td>180 days, or until the policy version changes</td></tr>
+    <tr><th scope="row"><code>mintlot_consent</code></th><td>Remembers your choice on this page so we do not ask again on every visit.</td><td>Essential (records your preference)</td><td>180 days, or until the policy version changes</td></tr>
   </tbody>
 </table>
 </div>
 <p>Both are first-party, <code>HttpOnly</code> and <code>SameSite=Lax</code>, and <code>Secure</code> when the site runs over HTTPS.</p>
 
 <h2 class="h5 mt-4">3. Other things stored in your browser</h2>
-<p>If you use the light/dark switch, your choice is saved in this browser's local storage under the name <code>chainbid-theme</code>. It is not a cookie, is never sent to the server, and you can clear it in your browser settings.</p>
+<p>If you use the light/dark switch, your choice is saved in this browser's local storage under the name <code>mintlot-theme</code>. It is not a cookie, is never sent to the server, and you can clear it in your browser settings.</p>
 <p>Nothing else is stored for tracking. Files from third-party content delivery networks (jsdelivr, cdnjs) are fetched when a page loads; those services may log your IP address, and your browser may cache the files. See the <a href="{{ url_for('legal.privacy') }}">Privacy Policy</a>.</p>
 
 <h2 class="h5 mt-4">4. Your choice</h2>

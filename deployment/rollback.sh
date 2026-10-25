@@ -1,14 +1,14 @@
 ﻿#!/bin/bash
 
-# ChainBid Rollback Script
+# MintLot Rollback Script
 
 set -e
 
-BACKUP_DIR="/backups/chainbid"
-DEPLOY_DIR="/opt/chainbid"
+BACKUP_DIR="/backups/mintlot"
+DEPLOY_DIR="/opt/mintlot"
 
 echo "================================"
-echo "ChainBid Rollback"
+echo "MintLot Rollback"
 echo "================================"
 
 # Get latest backup
@@ -23,7 +23,7 @@ echo "Rolling back to: $LATEST_BACKUP"
 
 # Stop application
 echo "[1/4] Stopping application..."
-systemctl stop chainbid
+systemctl stop mintlot
 
 # Restore backup
 echo "[2/4] Restoring backup..."
@@ -32,7 +32,7 @@ cp -r "$BACKUP_DIR/$LATEST_BACKUP" "$DEPLOY_DIR"
 
 # Start application
 echo "[3/4] Starting application..."
-systemctl start chainbid
+systemctl start mintlot
 
 # Verify
 echo "[4/4] Verifying rollback..."

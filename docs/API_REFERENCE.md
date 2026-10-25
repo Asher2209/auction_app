@@ -1,4 +1,4 @@
-# API Reference - ChainBid
+# API Reference - MintLot
 
 ## Endpoints
 

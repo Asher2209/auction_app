@@ -34,7 +34,7 @@ def _email_body(item):
     lines = [item["message"], ""]
     if item["url"]:
         lines += [f"View it here: {base}{item['url']}", ""]
-    lines.append("You are receiving this because of your activity on ChainBid.")
+    lines.append("You are receiving this because of your activity on MintLot.")
     return "\n".join(lines)
 
 
@@ -44,7 +44,7 @@ def _deliver_after_commit(session):
         payload = {k: item[k] for k in ("title", "message", "url")}
         socketio.emit("notification", payload, to=user_room(item["user_id"]))
         if item["email_to"]:
-            send_email(item["email_to"], f"[ChainBid] {item['title']}", _email_body(item))
+            send_email(item["email_to"], f"[MintLot] {item['title']}", _email_body(item))
 
 
 @event.listens_for(Session, "after_rollback")

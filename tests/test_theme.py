@@ -143,7 +143,7 @@ def test_the_theme_choice_never_leaves_the_browser_and_is_documented(app):
     assert "try {" in js  # storage can be blocked
     assert "prefers-color-scheme: dark" in js  # with no saved choice, the system setting decides
     policy = anon(app).get("/legal/cookies").data.decode()
-    assert "chainbid-theme" in policy and "local storage" in policy
+    assert "mintlot-theme" in policy and "local storage" in policy
 
 
 def test_motion_respects_reduced_motion():

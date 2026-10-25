@@ -28,7 +28,7 @@ def dashboard():
 @bp.route("/products/new")
 @role_required("seller")
 def create_product():
-    # ChainBid lists trading cards only; the old generic product form is gone.
+    # MintLot lists trading cards only; the old generic product form is gone.
     return redirect(url_for("seller.create_card"))
 
 

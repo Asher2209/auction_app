@@ -11,7 +11,7 @@ def readiness_check():
     """Readiness check - is the app ready to serve requests?"""
     checker = get_health_checker()
     health = checker.check_all()
-    
+
     status_code = 200 if health["overall"] == "healthy" else 503
     return jsonify(health), status_code
 
@@ -38,14 +38,14 @@ def get_metrics_summary():
     """Get metrics summary with alerts."""
     collector = get_metrics_collector()
     checker = get_health_checker()
-    
+
     metrics = collector.get_metrics(minutes=60)
     health = checker.check_all()
-    
+
     # Count transaction types
     success_count = len([m for m in metrics if m.metric_type == "tx_success"])
     failure_count = len([m for m in metrics if m.metric_type == "tx_failure"])
-    
+
     return jsonify({
         "health": health,
         "transactions": {

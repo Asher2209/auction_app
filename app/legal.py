@@ -1,7 +1,7 @@
 """Versions and helpers shared by the legal pages, the cookie banner and the consent checkboxes."""
 POLICY_VERSION = "2026-10-04"  # bump when a policy changes in a way users should re-read
 LAST_UPDATED = "4 October 2026"
-CONSENT_COOKIE = "chainbid_consent"
+CONSENT_COOKIE = "mintlot_consent"
 CONSENT_CHOICES = ("all", "essential")
 CONSENT_MAX_AGE = 180 * 24 * 3600
 MUST_AGREE = "You must agree to continue."  # the one message every consent checkbox shows when it is left unticked

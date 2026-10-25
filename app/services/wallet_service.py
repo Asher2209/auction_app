@@ -50,7 +50,7 @@ def _other_holder(user, address):
 def challenge_message(user, address, host, nonce, issued):
     when = datetime.fromtimestamp(issued, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     return (
-        "ChainBid: confirm that you control this wallet\n"
+        "MintLot: confirm that you control this wallet\n"
         "\n"
         f"Wallet: {address}\n"
         f"Account: #{user.id}\n"
