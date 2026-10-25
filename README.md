@@ -90,7 +90,7 @@ Deploying the contracts to Sepolia needs a funded test-only wallet; see `docs/CR
 
 GitHub Actions runs both on every pull request (`.github/workflows/tests.yml`).
 
-**Dependencies.** `requirements.txt` (runtime) and `requirements-dev.txt` (tests and tools) list what the project needs; `requirements.lock` and `requirements-dev.lock` pin the exact versions that were tested. After changing a requirements file, regenerate the lock files with `uv pip compile requirements.txt -o requirements.lock --python-version 3.12` (and the same for `requirements-dev`).
+**Dependencies.** `requirements.txt` (runtime) and `requirements-dev.txt` (tests and tools) list what the project needs; `requirements.lock` and `requirements-dev.lock` pin the exact versions that were tested. After changing a requirements file, regenerate the lock files with `uv pip compile requirements.txt -o requirements.lock --python-version 3.12 --universal` (and the same for `requirements-dev`).
 
 The tests use SQLite in memory and an in-process Ethereum test chain (eth-tester), so they need no network. `docs/TEST_MATRIX.md` maps each part of the test plan to the tests that cover it.
 

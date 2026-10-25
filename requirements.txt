@@ -1,5 +1,5 @@
 # Runtime dependencies. Exact versions are pinned in requirements.lock (regenerate with:
-#   uv pip compile requirements.txt -o requirements.lock --python-version 3.12)
+#   uv pip compile requirements.txt -o requirements.lock --python-version 3.12 --universal)
 Flask>=3.0
 Flask-SQLAlchemy>=3.1
 Flask-Login>=0.6.3
