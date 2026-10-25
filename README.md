@@ -55,8 +55,20 @@ Settings come from environment variables, read from `.env` (see `.env.example`).
 | `SECRET_KEY` | dev-only value | Signs sessions and CSRF tokens. Production refuses to start without a random 32+ character key |
 | `APP_ENV` | `development` | `production` turns on strict startup checks |
 | `SECURE_COOKIES` | `0` | `1` when the site is served over HTTPS (session cookie sent over HTTPS only) |
-| `DATABASE_URL` | `sqlite:///auction.db` | SQLAlchemy URL. For MySQL: `mysql+pymysql://user:pass@localhost/auction_db` |
-| `ENABLE_SCHEDULER` | `1` | Background loop that starts and closes auctions |
+| `DATABASE_URL` | `sqlite:///auction.db` | SQLAlchemy URL. Production needs PostgreSQL: `postgresql+psycopg://user:pass@host:5432/mintlot` (MySQL: `mysql+pymysql://...`) |
+| `ENABLE_SCHEDULER` | `1` | Run the background jobs (start and close auctions...) inside the web process. Set `0` on web servers when a separate `flask run-worker` process runs them |
+| `REDIS_URL` | empty | Redis, needed with more than one process: live updates reach every browser and rate limits are shared |
+| `TRUSTED_PROXY_HOPS` | `0` | How many proxies sit in front of the app (`1` behind one load balancer). `0` trusts no `X-Forwarded-*` header |
+| `STORAGE_BACKEND` | `local` | `s3` keeps uploaded images in an S3-compatible bucket (Cloudflare R2, AWS S3...) instead of on disk |
+| `S3_BUCKET` | empty | The bucket's name |
+| `S3_ENDPOINT_URL` | empty | The S3 API address; for R2 `https://<account id>.r2.cloudflarestorage.com`. Empty for AWS |
+| `S3_REGION` | empty | The bucket's region (R2: leave empty) |
+| `S3_ACCESS_KEY_ID` | empty | An access key allowed to write to the bucket |
+| `S3_SECRET_ACCESS_KEY` | empty | Its secret. Keep it out of version control |
+| `S3_PUBLIC_BASE_URL` | empty | The public address images are served from (an r2.dev URL or your own domain) |
+| `SENTRY_DSN` | empty | Send error reports to Sentry (no cookies, IP addresses or user details) |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0` | Share of requests Sentry also times, from `0` to `1` |
+| `TEST_DATABASE_URL` | empty | Tests only: run the suite on this database server (e.g. Postgres) instead of in-memory SQLite |
 | `ALLOW_TEST_EMAILS` | `1` | Accept reserved domains such as `.test`. Set to `0` in production |
 | `APP_BASE_URL` | `http://127.0.0.1:5000` | Public address of the site, used in email links |
 | `GOOGLE_CLIENT_ID` | empty | With `GOOGLE_CLIENT_SECRET`, turns on "Continue with Google" (an OAuth client from Google Cloud Console; redirect URI `<APP_BASE_URL>/auth/google/callback`) |

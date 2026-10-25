@@ -5,7 +5,7 @@
 {% set v = p.collectible_verification %}
 {% set verified = c and v and v.verification_status == 'verified' %}
 {% if c and c.images %}{% set img = c.images[0].get_image_src() %}
-{% elif p.cover %}{% set img = url_for('static', filename='uploads/' ~ p.cover) %}
+{% elif p.cover %}{% set img = upload_url(p.cover) %}
 {% else %}{% set img = url_for('static', filename='img/no-image.svg') %}{% endif %}
 {% set name = c.card_name if c else p.title %}
 <div class="cc-cell">

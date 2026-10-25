@@ -26,8 +26,15 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     csrf.init_app(app)
     mail.init_app(app)
-    socketio.init_app(app, async_mode="threading")
+    socketio.init_app(app, async_mode="threading", message_queue=app.config.get("REDIS_URL"))  # see Config.REDIS_URL
 
+    from . import cli
+    cli.init_app(app)
+    from . import observability
+    observability.init_app(app)
+    from .services import storage
+    storage.init_app(app)  # where uploaded images live (disk or an S3-compatible bucket)
+    app.jinja_env.globals["upload_url"] = storage.upload_url  # a real global: imported macros (the card tiles) see it too
     from .services import google_login
     google_login.init_app(app)  # registered always; the routes stay closed unless it is configured
 
@@ -46,6 +53,7 @@ def create_app(config_class=Config):
     from .blueprints.reviews import bp as reviews_bp
     from .blueprints.seller import bp as seller_bp
     from .blueprints.collectibles import bp as collectibles_bp
+    from .blueprints.health import bp as health_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -60,6 +68,7 @@ def create_app(config_class=Config):
     app.register_blueprint(legal_bp)
     app.register_blueprint(reviews_bp)
     app.register_blueprint(collectibles_bp)
+    app.register_blueprint(health_bp)
 
     from .security import init_security
     init_security(app)  # before anything is started: an unsafe production config must stop the app here

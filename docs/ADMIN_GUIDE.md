@@ -9,19 +9,18 @@ This guide covers operational tasks for MintLot administrators.
 ### System Health Check
 
 ```
-curl http://localhost:5000/api/health/ready
+curl http://localhost:5000/readyz
 ```
 
-Check:
-- Database: healthy
-- RPC: healthy
-- Contract: healthy
+It answers `{"status": "ok", "checks": {"database": "ok"}}` (and `"redis"` when `REDIS_URL` is set), or HTTP 503 with
+the failing check named. `/healthz` only says the process is up. The blockchain connection is not part of the check:
+a slow RPC provider must not take the whole site out of service. See [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ### Monitor Logs
 
-- transactions.log: All blockchain events
-- blockchain_errors.log: All errors
-- app.log: General application logs
+The app writes its log to standard output, so read it where it runs: the terminal for `python run.py`,
+`docker compose logs -f web worker` for the Docker stack, or the hosting platform's log view. Each request is one
+line ending in its request id, which a user can find in the `X-Request-ID` response header if something went wrong.
 
 ### Responding to Alerts
 

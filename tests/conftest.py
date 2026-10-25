@@ -1,4 +1,5 @@
 import pytest
+import sqlalchemy as sa
 from eth_account import Account
 from eth_account.messages import encode_defunct
 from web3 import Web3
@@ -9,6 +10,20 @@ from app.extensions import db
 from app.models import User, utcnow
 
 PASSWORD = "Test@1234"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _test_database_exists():
+    """With TEST_DATABASE_URL (Postgres in CI), make this worker's own database once; SQLite in memory needs nothing."""
+    url = TestConfig.SQLALCHEMY_DATABASE_URI
+    if url.startswith("sqlite"):
+        return
+    server, name = url.rsplit("/", 1)
+    engine = sa.create_engine(f"{server}/postgres", isolation_level="AUTOCOMMIT")
+    with engine.connect() as conn:
+        if conn.execute(sa.text("SELECT 1 FROM pg_database WHERE datname = :n"), {"n": name}).scalar() is None:
+            conn.execute(sa.text(f'CREATE DATABASE "{name}"'))
+    engine.dispose()
 
 
 @pytest.fixture

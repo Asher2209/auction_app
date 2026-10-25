@@ -13,8 +13,8 @@ placeholder otherwise. The cards are ungraded: no grading certificate number is 
 Run scripts/seed.py and scripts/seed_card_types.py first, then:
     python scripts/seed_collectible_cards.py [seller-email]
 """
+import io
 import random
-import shutil
 import sys
 import uuid
 from decimal import Decimal
@@ -29,6 +29,7 @@ from app.blueprints.seller.routes_cards import CARD_CATEGORY_NAME  # noqa: E402
 from app.extensions import db  # noqa: E402
 from app.models import (CardImage, CardType, CardVerificationHistory, Category, CollectibleCard,  # noqa: E402
                         CollectibleVerification, Product, ProductImage, User, utcnow)
+from app.services import storage  # noqa: E402
 from app.services.card_identity_service import assign_platform_card_id  # noqa: E402
 
 # The holo rares of the 1999 English Base Set (Wizards of the Coast), as the Pokemon TCG API lists them (set "base1").
@@ -48,24 +49,26 @@ IMAGE_DIR = Path(__file__).resolve().parent / "demo_card_images"  # filled by fe
 CONDITIONS = ["Good", "Very Good", "Excellent", "Near Mint", "Mint"]
 
 
-def placeholder_image(upload_folder, card_name, colour):
-    """A plain 400x600 PNG with the card's name, saved under the upload folder. Returns its file name."""
+def placeholder_image(card_name, colour):
+    """A plain 400x600 PNG with the card's name, stored where uploads are stored (disk or bucket). Returns its key."""
     img = Image.new("RGB", (400, 600), colour)
     draw = ImageDraw.Draw(img)
     draw.rectangle([5, 5, 394, 594], outline=(40, 40, 40), width=3)
     draw.text((200, 280), card_name[:24], fill=(30, 30, 30), anchor="mm")
     draw.text((200, 320), "DEMO IMAGE", fill=(30, 30, 30), anchor="mm")
-    Path(upload_folder).mkdir(parents=True, exist_ok=True)
+    data = io.BytesIO()
+    img.save(data, "PNG")
+    data.seek(0)
     name = f"seed_{uuid.uuid4().hex}.png"
-    img.save(Path(upload_folder) / name, "PNG")
+    storage.backend().save(data, name, "image/png")
     return name
 
 
-def scan_image(upload_folder, scan):
-    """Copy a downloaded card scan into the upload folder under a random name. Returns its file name."""
-    Path(upload_folder).mkdir(parents=True, exist_ok=True)
+def scan_image(scan):
+    """Store a downloaded card scan where uploads are stored, under a random name. Returns its key."""
     name = f"seed_{uuid.uuid4().hex}.png"
-    shutil.copyfile(scan, Path(upload_folder) / name)
+    with open(scan, "rb") as f:
+        storage.backend().save(f, name, "image/png")
     return name
 
 
@@ -85,9 +88,9 @@ def add_card(app, seller, card_type, category, fields, details, colour, rng, sca
     if exists:
         return None
     if scan is not None and scan.is_file():
-        image = scan_image(app.config["UPLOAD_FOLDER"], scan)
+        image = scan_image(scan)
     else:
-        image = placeholder_image(app.config["UPLOAD_FOLDER"], fields["card_name"], colour)
+        image = placeholder_image(fields["card_name"], colour)
     product = Product(seller_id=seller.id, category_id=category.id, title=fields["card_name"],
                       description=f"Demo card. {fields['card_name']} {fields['card_number']} ({fields['release_year']}), {fields['condition']} condition.",
                       starting_price=Decimal(rng.randint(500, 20000)), auction_start=utcnow(), auction_end=utcnow(),

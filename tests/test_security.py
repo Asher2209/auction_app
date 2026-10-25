@@ -391,6 +391,7 @@ def prod(**over):
         ALLOW_TEST_EMAILS = False
         LOCAL_CHAIN = False
         APP_BASE_URL = "https://auction.example.org"
+        SQLALCHEMY_DATABASE_URI = "postgresql+psycopg://mintlot@db.example/mintlot"  # never connected to here
 
     for k, v in over.items():
         setattr(Prod, k, v)
@@ -405,6 +406,7 @@ def test_a_correct_production_config_starts():
     ({"SECRET_KEY": "dev-only-secret"}, "SECRET_KEY"), ({"SECRET_KEY": "short"}, "SECRET_KEY"), ({"SECRET_KEY": "change-me"}, "SECRET_KEY"),
     ({"SESSION_COOKIE_SECURE": False}, "SECURE_COOKIES"), ({"ALLOW_TEST_EMAILS": True}, "ALLOW_TEST_EMAILS"),
     ({"APP_BASE_URL": "http://insecure.example"}, "https://"), ({"APP_BASE_URL": "http://127.0.0.1:5000"}, "https://"),
+    ({"SQLALCHEMY_DATABASE_URI": "sqlite:///auction.db"}, "PostgreSQL"),
 ])
 def test_each_unsafe_production_setting_stops_the_app(over, phrase):
     with pytest.raises(RuntimeError) as e:
@@ -531,7 +533,8 @@ PUBLIC = {"main.index", "main.health", "auctions.browse", "auctions.detail", "au
           "auth.forgot_password", "auth.reset_password", "invoices.verify", "static",
           "legal.privacy", "legal.terms", "legal.refunds", "legal.cookies", "legal.cookie_consent",  # the legal pages and the cookie choice
           "main.shop", "main.browse_cards", "main.search_cards", "main.api_search_cards", "main.view_card",  # the public card catalogue
-          "collectibles.verify_card"}  # the public QR record
+          "collectibles.verify_card",  # the public QR record
+          "health.healthz", "health.readyz"}  # probes for the hosting platform
 FILL = {"integer": 1, "string": "x", "path": "x", "uuid": "00000000-0000-0000-0000-000000000000"}
 
 

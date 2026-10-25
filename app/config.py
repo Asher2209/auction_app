@@ -16,6 +16,16 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     UPLOAD_FOLDER = str(BASE_DIR / "app" / "static" / "uploads")
+    # Uploaded images: "local" keeps them in UPLOAD_FOLDER; "s3" puts them in an S3-compatible bucket (services/storage.py).
+    # For Cloudflare R2: S3_ENDPOINT_URL=https://<account id>.r2.cloudflarestorage.com and S3_PUBLIC_BASE_URL=the bucket's
+    # public address (an r2.dev URL or your own domain).
+    STORAGE_BACKEND = os.environ.get("STORAGE_BACKEND", "local")
+    S3_BUCKET = os.environ.get("S3_BUCKET")
+    S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL")
+    S3_REGION = os.environ.get("S3_REGION")
+    S3_ACCESS_KEY_ID = os.environ.get("S3_ACCESS_KEY_ID")
+    S3_SECRET_ACCESS_KEY = os.environ.get("S3_SECRET_ACCESS_KEY")
+    S3_PUBLIC_BASE_URL = os.environ.get("S3_PUBLIC_BASE_URL")
     MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # whole request
     MAX_IMAGE_BYTES = 5 * 1024 * 1024  # per image
     MAX_IMAGES_PER_PRODUCT = 5
@@ -26,6 +36,15 @@ class Config:
     # Background loop that starts and closes auctions (off in tests)
     ENABLE_SCHEDULER = os.environ.get("ENABLE_SCHEDULER", "1") == "1"
     SCHEDULER_INTERVAL_SECONDS = 5
+    # Redis (optional). Set it when more than one process serves the site: live bid updates then reach browsers on every
+    # web process and from the worker, and rate limits are counted once across all of them. Empty: all in this process.
+    REDIS_URL = os.environ.get("REDIS_URL")
+    # How many proxies (load balancer, platform router) sit in front of the app. 0 trusts no X-Forwarded-* header, so
+    # nobody can fake their address; behind exactly one proxy set 1, or every visitor looks like the proxy to the limits.
+    TRUSTED_PROXY_HOPS = int(os.environ.get("TRUSTED_PROXY_HOPS", "0"))
+    # Error reports to Sentry (free tier is enough), off unless set. Traces: share of requests timed, 0 to 1.
+    SENTRY_DSN = os.environ.get("SENTRY_DSN")
+    SENTRY_TRACES_SAMPLE_RATE = float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0"))
     ENDING_SOON_MINUTES = 10  # "auction ending" notices go out this long before the end
     # Email. With no MAIL_SERVER, emails are written to the server log instead of sent.
     MAIL_SERVER = os.environ.get("MAIL_SERVER")
@@ -67,11 +86,28 @@ class Config:
     ALLOW_TEST_EMAILS = os.environ.get("ALLOW_TEST_EMAILS", "1") == "1"
 
 
+def _test_database_url():
+    """In-memory SQLite, or TEST_DATABASE_URL (e.g. a Postgres server in CI) with one database per parallel test
+    worker, named <database>_<worker>, so workers never share tables (tests/conftest.py creates them)."""
+    url = os.environ.get("TEST_DATABASE_URL")
+    if not url:
+        return "sqlite:///:memory:"
+    return f"{url}_{os.environ.get('PYTEST_XDIST_WORKER', 'main')}"
+
+
 class TestConfig(Config):
     TESTING = True
     ENABLE_SCHEDULER = False
     MAIL_ASYNC = False
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    SQLALCHEMY_DATABASE_URI = _test_database_url()
+    # Whatever the developer's .env switches on, tests start from everything off; the tests that need one turn it on.
+    REDIS_URL = None
+    SENTRY_DSN = None
+    STORAGE_BACKEND = "local"
+    TRUSTED_PROXY_HOPS = 0
+    GOOGLE_CLIENT_ID = None
+    GOOGLE_CLIENT_SECRET = None
+    MAIL_SERVER = None
     WTF_CSRF_ENABLED = False
     TZ_NAME, TZ_OFFSET_MINUTES = "UTC", 0  # tests pin UTC; tests/test_timezone.py switches to IST
     # The real .env is still loaded, but tests never reach a real blockchain or depend on the contracts deployed

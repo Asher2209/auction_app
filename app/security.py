@@ -7,7 +7,7 @@ from flask_wtf.csrf import CSRFError
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
-from .ratelimit import RateLimiter
+from .ratelimit import RateLimiter, RedisRateLimiter
 
 DEFAULT_SECRET = "dev-only-secret"
 CDN_HOSTS = "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com"
@@ -46,11 +46,22 @@ def production_problems(app):
         problems.append("debug mode must be off")
     if not str(cfg.get("APP_BASE_URL", "")).startswith("https://"):
         problems.append("APP_BASE_URL must be the public https:// address of the site")
+    if str(cfg.get("SQLALCHEMY_DATABASE_URI", "")).startswith("sqlite"):
+        problems.append("DATABASE_URL must be a PostgreSQL (or MySQL) server: an SQLite file inside a container is lost "
+                        "whenever the container is replaced")
     return problems
 
 
 def init_security(app):
-    app.extensions["limiter"] = RateLimiter()
+    if app.config.get("REDIS_URL"):
+        import redis
+        app.extensions["limiter"] = RedisRateLimiter(redis.Redis.from_url(app.config["REDIS_URL"], socket_timeout=2))
+    else:
+        app.extensions["limiter"] = RateLimiter()
+    hops = app.config.get("TRUSTED_PROXY_HOPS", 0)
+    if hops:  # behind a load balancer: take the client's address and scheme from that many X-Forwarded-* hops
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=hops, x_proto=hops, x_host=hops)
 
     if app.config.get("APP_ENV") == "production":
         problems = production_problems(app)

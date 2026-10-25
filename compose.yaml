@@ -1,0 +1,73 @@
+# The whole MintLot stack on one machine, as production runs it: Postgres, Redis, the web server and the worker.
+#   docker compose up --build      then open http://localhost:8000
+#   docker compose down            stop (the database is kept in the "pgdata" volume; add -v to delete it)
+# Secrets come from your .env (SECRET_KEY, MAIL_*, GOOGLE_*, RPC_URL ...); the database and Redis settings below win.
+x-app: &app
+  build: .
+  image: mintlot:local
+  env_file:
+    - path: .env
+      required: false
+  environment: &app-env
+    DATABASE_URL: postgresql+psycopg://mintlot:mintlot@db:5432/mintlot
+    REDIS_URL: redis://redis:6379/0
+    APP_BASE_URL: http://localhost:8000
+    TRUSTED_PROXY_HOPS: "0"
+    ENABLE_SCHEDULER: "0"  # never inside web or one-off commands: the worker container runs the jobs
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_started
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: mintlot
+      POSTGRES_PASSWORD: mintlot  # local only; a hosted database gets its own credentials
+      POSTGRES_DB: mintlot
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mintlot -d mintlot"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+
+  migrate:  # brings the schema up to date, then exits; web and worker wait for it
+    <<: *app
+    command: ["flask", "db", "upgrade"]
+    restart: "no"
+
+  web:
+    <<: *app
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads:/app/app/static/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+
+  worker:
+    <<: *app
+    command: ["flask", "run-worker"]
+    healthcheck:
+      disable: true  # the image's check calls the web server, which this container does not run
+    volumes:
+      - uploads:/app/app/static/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+
+volumes:
+  pgdata:
+  uploads:

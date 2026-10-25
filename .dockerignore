@@ -1,0 +1,24 @@
+# Only what the app needs to run goes into the image: never secrets, local databases or uploads.
+.git
+.github
+.venv
+.env
+.env.*
+!.env.example
+instance
+*.db
+*.log
+__pycache__
+.pytest_cache
+.ruff_cache
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+app/static/qrcodes
+contracts/node_modules
+node_modules
+scripts/demo_card_images
+docs
+tests
+.claude
+claude-mem
+handoff.md

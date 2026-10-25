@@ -9,7 +9,7 @@
 {% set verified = c and v and v.verification_status == 'verified' %}
 {% set gallery = [] %}
 {% if c and c.images %}{% for i in c.images %}{% set _ = gallery.append({'src': i.get_image_src(), 'label': i.image_type|replace('_', ' ')}) %}{% endfor %}
-{% else %}{% for i in product.images %}{% set _ = gallery.append({'src': url_for('static', filename='uploads/' ~ i.path), 'label': 'photo'}) %}{% endfor %}{% endif %}
+{% else %}{% for i in product.images %}{% set _ = gallery.append({'src': upload_url(i.path), 'label': 'photo'}) %}{% endfor %}{% endif %}
 
 <nav class="mb-4" aria-label="Breadcrumb">
   <ol class="breadcrumb">
