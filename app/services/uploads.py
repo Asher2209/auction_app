@@ -63,7 +63,7 @@ def save_images(files):
     exts = [_validate(f) for f in files]  # all-or-nothing
     saved = []
     try:
-        for f, ext in zip(files, exts):
+        for f, ext in zip(files, exts, strict=True):
             fname = f"{uuid.uuid4().hex}.{ext}"
             f.save(os.path.join(_folder(), fname))
             saved.append(f"{SUBDIR}/{fname}")

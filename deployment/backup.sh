@@ -2,7 +2,7 @@
 
 # Database Backup Script
 
-BACKUP_DIR="/backups/chainbid"
+BACKUP_DIR="/backups/mintlot"
 DB_PATH="instance/auction.db"
 RETENTION_DAYS=30
 

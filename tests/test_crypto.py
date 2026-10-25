@@ -283,7 +283,7 @@ def test_full_payment_flow_with_confirmations(app, setup, users):
     assert chain.w3.eth.get_balance(chain.seller) - seller_before == ETH // 4  # the seller really got paid
     assert chain.w3.eth.get_balance(chain.contract.address) == 0  # the contract holds nothing
     assert "Payment successful" in titles(users["buyer"]) and "Payment received" in titles(users["seller"])
-    assert sorted(m.subject for m in outbox) == ["[ChainBid] Payment received", "[ChainBid] Payment successful"]
+    assert sorted(m.subject for m in outbox) == ["[MintLot] Payment received", "[MintLot] Payment successful"]
     assert "Payment complete" in c.get(f"/payments/{a.id}").data.decode()
 
 

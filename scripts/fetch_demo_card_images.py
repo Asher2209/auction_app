@@ -29,7 +29,7 @@ def demo_cards():
 def fetch(card, dest, opener=urllib.request.urlopen):
     """Download one card's scan to dest/<api_id>.png; raise ValueError if the reply is not a PNG of sensible size."""
     set_id, number = card["api_id"].split("-")
-    request = urllib.request.Request(URL.format(set_id=set_id, number=number), headers={"User-Agent": "ChainBid demo seed"})
+    request = urllib.request.Request(URL.format(set_id=set_id, number=number), headers={"User-Agent": "MintLot demo seed"})
     with opener(request, timeout=60) as reply:
         data = reply.read(MAX_BYTES + 1)
     if len(data) > MAX_BYTES:

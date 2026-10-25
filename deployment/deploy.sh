@@ -1,16 +1,16 @@
 ﻿#!/bin/bash
 
-# ChainBid Production Deployment Script
+# MintLot Production Deployment Script
 
 set -e  # Exit on error
 
 REPO_URL="https://github.com/Asher2209/auction_app.git"
-DEPLOY_DIR="/opt/chainbid"
-APP_USER="chainbid"
-BACKUP_DIR="/backups/chainbid"
+DEPLOY_DIR="/opt/mintlot"
+APP_USER="mintlot"
+BACKUP_DIR="/backups/mintlot"
 
 echo "================================"
-echo "ChainBid Deployment"
+echo "MintLot Deployment"
 echo "================================"
 
 # Step 1: Pre-flight checks
@@ -29,8 +29,8 @@ fi
 echo "[2/8] Backing up current deployment..."
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 if [ -d "$DEPLOY_DIR" ]; then
-    cp -r "$DEPLOY_DIR" "$BACKUP_DIR/chainbid_$TIMESTAMP"
-    echo "Backup saved to $BACKUP_DIR/chainbid_$TIMESTAMP"
+    cp -r "$DEPLOY_DIR" "$BACKUP_DIR/mintlot_$TIMESTAMP"
+    echo "Backup saved to $BACKUP_DIR/mintlot_$TIMESTAMP"
 fi
 
 # Step 3: Pull latest code
@@ -48,11 +48,11 @@ python3 -m flask db upgrade
 
 # Step 6: Stop current application
 echo "[6/8] Stopping application..."
-systemctl stop chainbid || true
+systemctl stop mintlot || true
 
 # Step 7: Start new application
 echo "[7/8] Starting application..."
-systemctl start chainbid
+systemctl start mintlot
 
 # Step 8: Verify deployment
 echo "[8/8] Verifying deployment..."

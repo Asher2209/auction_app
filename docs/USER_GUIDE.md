@@ -1,12 +1,12 @@
-# User Guide - ChainBid Auction System
+# User Guide - MintLot Auction System
 
 ## Getting Started
 
-Welcome to ChainBid, a blockchain-backed auction system for collectible cards!
+Welcome to MintLot, a blockchain-backed auction system for collectible cards!
 
 ### System Overview
 
-ChainBid allows you to:
+MintLot allows you to:
 - List collectible cards for auction
 - Bid on cards in real-time
 - Complete payments using cryptocurrency (ETH on Sepolia testnet)
@@ -38,7 +38,7 @@ ChainBid allows you to:
 
 ### Step 1: Verify Your Card
 
-1. Log in to ChainBid
+1. Log in to MintLot
 2. Go to **My Cards** → **Add Card**
 3. Fill in card details:
    - Card Name (e.g., "Charizard Base Set")
@@ -210,8 +210,8 @@ A: Yes! Your card is locked on blockchain. Only you can transfer it.
 
 ## Support
 
-- Email: support@chainbid.example
+- Email: support@mintlot.example
 - Discord: Join our community
-- Docs: https://docs.chainbid.example
+- Docs: https://docs.mintlot.example
 
 **Happy bidding!**

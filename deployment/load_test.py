@@ -1,4 +1,4 @@
-"""Load testing script for ChainBid auction system - FIXED VERSION.
+"""Load testing script for MintLot auction system - FIXED VERSION.
 
 Fixes applied:
 - UTF-8 encoding for Windows compatibility
@@ -175,7 +175,7 @@ def main():
     """Run all load tests."""
     base_url = "http://localhost:5000"
     
-    print("ChainBid Load Testing Suite")
+    print("MintLot Load Testing Suite")
     print("=" * 80)
     print(f"Target: {base_url}")
     print(f"Start Time: {datetime.now()}")

@@ -72,7 +72,7 @@ def _generated(now):
 
 
 def filename(report, ext, now):
-    return f"chainbid-{report.key}-{timeutil.to_local(now).strftime('%Y%m%d')}.{ext}"
+    return f"mintlot-{report.key}-{timeutil.to_local(now).strftime('%Y%m%d')}.{ext}"
 
 
 # ---- Excel ------------------------------------------------------------------------------------------------------
@@ -113,7 +113,7 @@ def render_xlsx(report, data, params, now):
         c.fill = head_fill
         c.alignment = Alignment(vertical="center", wrap_text=True, horizontal="left" if col.kind in ("text", "mono") else "right")
     for r, row in enumerate(data.rows, header_row + 1):
-        for i, (col, value) in enumerate(zip(report.columns, row), 1):
+        for i, (col, value) in enumerate(zip(report.columns, row, strict=True), 1):
             cell = ws.cell(r, i)
             _put(cell, col.kind, value)
             cell.border = Border(bottom=thin)
@@ -203,7 +203,7 @@ def render_pdf(report, data, params, now):
     title = ParagraphStyle("title", parent=base, fontName="Helvetica-Bold", fontSize=16, leading=19, textColor=INK)
     sub = ParagraphStyle("sub", parent=base, fontSize=8.5, leading=11, textColor=MUTED)
     story = [Paragraph(_t(report.title), title), Paragraph(_t(describe_params(report, params)), sub),
-             Paragraph(_t(f"Generated {_generated(now)} by ChainBid. Amounts in INR unless stated."), sub), Spacer(1, 4 * mm)]
+             Paragraph(_t(f"Generated {_generated(now)} by MintLot. Amounts in INR unless stated."), sub), Spacer(1, 4 * mm)]
     if data.summary:
         cells = [[Paragraph(f'<font size=6.5 color="#6c757d">{_t(label).upper()}</font><br/><font size=11><b>{_t(fmt(kind, value))}</b></font>', base)
                   for label, value, kind in data.summary]]
@@ -222,5 +222,5 @@ def render_pdf(report, data, params, now):
 
     buf = io.BytesIO()
     SimpleDocTemplate(buf, pagesize=page, leftMargin=12 * mm, rightMargin=12 * mm, topMargin=12 * mm, bottomMargin=14 * mm,
-                      title=report.title, author="ChainBid").build(story, canvasmaker=_NumberedCanvas)
+                      title=report.title, author="MintLot").build(story, canvasmaker=_NumberedCanvas)
     return buf.getvalue()

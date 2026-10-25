@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% macro row(label, value, mono=false) %}{% if value %}<div class="cd-row"><dt>{{ label }}</dt><dd{% if mono %} class="cd-mono"{% endif %}>{{ value }}</dd></div>{% endif %}{% endmacro %}
-{% block title %}{{ collectible_card.card_name }} - {% if is_verified %}Platform Verified{% else %}Card Record{% endif %} - ChainBid{% endblock %}
+{% block title %}{{ collectible_card.card_name }} - {% if is_verified %}Platform Verified{% else %}Card Record{% endif %} - MintLot{% endblock %}
 {% block content %}
 {% set c = collectible_card %}
 {% set asset = blockchain_asset %}
@@ -40,7 +40,7 @@
       {% if is_verified %}
       <div class="cd-status cd-status-ok mt-3">&#10003; Platform Verified</div>
       {% if verification.verification_date %}<dl class="cd-grid mt-2">{{ row('Verified On', verification.verification_date|local) }}</dl>{% endif %}
-      <p class="cd-note"><span class="cd-note-label">Platform review</span>This card has been reviewed and verified by the ChainBid platform. The review checks the submitted details and images against a checklist. It is not a guarantee that the physical card is genuine.</p>
+      <p class="cd-note"><span class="cd-note-label">Platform review</span>This card has been reviewed and verified by the MintLot platform. The review checks the submitted details and images against a checklist. It is not a guarantee that the physical card is genuine.</p>
       {% else %}
       <div class="cd-status {{ 'cd-status-bad' if vstatus == 'rejected' else 'cd-status-wait' }} mt-3">
         {% if vstatus == 'rejected' %}Not verified{% elif vstatus == 'under_review' %}Under review{% elif vstatus == 'more_info_needed' %}More information needed{% else %}Awaiting review{% endif %}

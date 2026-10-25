@@ -48,7 +48,7 @@ def test_the_auction_page_keeps_the_live_bidding_contract(client, users, seller,
     a = listed(users["seller"], cat, card_type).auction
     login(client, "buyer@t.test")
     html = page(client, f"/auctions/{a.id}")
-    assert f'id="auction-live"' in html and f'data-auction-id="{a.id}"' in html and "data-end=" in html
+    assert 'id="auction-live"' in html and f'data-auction-id="{a.id}"' in html and "data-end=" in html
     for element in ("current-bid", "bid-count", "countdown", "bid-form", "bid-rows", "status-badge", "live-indicator", "winner-box", "notice"):
         assert f'id="{element}"' in html, element
     assert "js/auction.js" in html  # without this script nothing on the page updates live

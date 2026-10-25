@@ -16,10 +16,10 @@ def test_bid_notifies_watchers(app):
         bidder.set_password("password")
         watcher = User(name="watcher", email="watcher@test.com", role="buyer")
         watcher.set_password("password")
-        
+
         db.session.add_all([seller, bidder, watcher])
         db.session.flush()
-        
+
         # Create notification preferences (watcher has notifications enabled)
         NotificationPreference(user_id=watcher.id, notify_ending_soon=True)
         NotificationPreference(user_id=bidder.id)
@@ -28,12 +28,12 @@ def test_bid_notifies_watchers(app):
             NotificationPreference(user_id=bidder.id)
         ])
         db.session.flush()
-        
+
         # Create category and product
         cat = Category(name="Test")
         db.session.add(cat)
         db.session.flush()
-        
+
         product = Product(
             seller_id=seller.id,
             category_id=cat.id,
@@ -46,7 +46,7 @@ def test_bid_notifies_watchers(app):
         )
         db.session.add(product)
         db.session.flush()
-        
+
         # Create auction
         auction = Auction(
             product_id=product.id,
@@ -58,12 +58,12 @@ def test_bid_notifies_watchers(app):
         )
         db.session.add(auction)
         db.session.flush()
-        
+
         # Watcher watches the auction
         watchlist_entry = Watchlist(user_id=watcher.id, product_id=product.id)
         db.session.add(watchlist_entry)
         db.session.commit()
-        
+
         # Verify watcher is watching
         assert Watchlist.query.filter_by(user_id=watcher.id, product_id=product.id).first() is not None
 
@@ -76,12 +76,12 @@ def test_watcher_notification_respects_preferences(app):
         watcher.set_password("password")
         db.session.add(watcher)
         db.session.flush()
-        
+
         # Disable ending soon notifications
         pref = NotificationPreference(user_id=watcher.id, notify_ending_soon=False)
         db.session.add(pref)
         db.session.commit()
-        
+
         loaded = NotificationPreference.query.get(watcher.id)
         assert loaded.notify_ending_soon is False
 
@@ -93,18 +93,18 @@ def test_watchers_notified_when_auction_ending_soon(app):
         seller.set_password("password")
         watcher = User(name="watcher", email="watcher@test.com", role="buyer")
         watcher.set_password("password")
-        
+
         db.session.add_all([seller, watcher])
         db.session.flush()
-        
+
         NotificationPreference(user_id=watcher.id, notify_ending_soon=True)
         db.session.add(NotificationPreference(user_id=watcher.id, notify_ending_soon=True))
         db.session.flush()
-        
+
         cat = Category(name="Test")
         db.session.add(cat)
         db.session.flush()
-        
+
         product = Product(
             seller_id=seller.id,
             category_id=cat.id,
@@ -117,7 +117,7 @@ def test_watchers_notified_when_auction_ending_soon(app):
         )
         db.session.add(product)
         db.session.flush()
-        
+
         auction = Auction(
             product_id=product.id,
             start_time=utcnow() - timedelta(hours=1),
@@ -128,11 +128,11 @@ def test_watchers_notified_when_auction_ending_soon(app):
         )
         db.session.add(auction)
         db.session.flush()
-        
+
         # Watcher watches the item
         watchlist = Watchlist(user_id=watcher.id, product_id=product.id)
         db.session.add(watchlist)
         db.session.commit()
-        
+
         # Verify watchlist entry exists
         assert Watchlist.query.filter_by(user_id=watcher.id, product_id=product.id).first() is not None

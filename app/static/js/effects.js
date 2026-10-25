@@ -48,7 +48,7 @@
     toggle.addEventListener("click", () => {
       const next = root.getAttribute("data-bs-theme") === "dark" ? "light" : "dark";
       root.setAttribute("data-bs-theme", next);
-      try { window.localStorage.setItem("chainbid-theme", next); } catch (e) { /* storage blocked: still switches for this visit */ }
+      try { window.localStorage.setItem("mintlot-theme", next); } catch (e) { /* storage blocked: still switches for this visit */ }
       sync();
     });
   }

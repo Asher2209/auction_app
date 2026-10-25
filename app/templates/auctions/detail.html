@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_auction_card.html" import card %}
 {% macro row(label, value, mono=false) %}{% if value %}<div class="cd-row"><dt>{{ label }}</dt><dd{% if mono %} class="cd-mono"{% endif %}>{{ value }}</dd></div>{% endif %}{% endmacro %}
-{% block title %}{{ product.collectible_card.card_name if product.collectible_card else product.title }} - ChainBid{% endblock %}
+{% block title %}{{ product.collectible_card.card_name if product.collectible_card else product.title }} - MintLot{% endblock %}
 {% block content %}
 {% set c = product.collectible_card %}
 {% set v = product.collectible_verification %}
@@ -48,7 +48,7 @@
       <h1 class="product-info-title">{{ c.card_name if c else product.title }}</h1>
       <div class="product-info-meta">
         <span class="product-info-badge">{{ product.category.name }}</span>
-        {% if verified %}<span class="badge text-bg-success" title="A ChainBid admin reviewed the submitted details and images. This is not a guarantee of authenticity.">&#10003; Platform verified</span>{% endif %}
+        {% if verified %}<span class="badge text-bg-success" title="A MintLot admin reviewed the submitted details and images. This is not a guarantee of authenticity.">&#10003; Platform verified</span>{% endif %}
         {% set sb = {'active': ('Live', 'text-bg-success'), 'scheduled': ('Upcoming', 'text-bg-info'), 'closed': ('Ended', 'text-bg-dark')}[auction.status] %}
         <span id="status-badge" class="badge {{ sb[1] }}">{{ sb[0] }}</span>
         <span id="live-indicator" class="badge text-bg-light border text-muted">connecting&hellip;</span>
@@ -154,7 +154,7 @@
     {% if verified %}
     <div class="cd-status cd-status-ok">&#10003; Platform verified</div>
     <dl class="cd-grid mt-2">{{ row('Verified on', v.verification_date|local if v.verification_date) }}</dl>
-    <p class="cd-note"><span class="cd-note-label">Platform review</span>A ChainBid admin checked the submitted details and images against a checklist. This is a platform review, not a guarantee that the physical card is genuine.</p>
+    <p class="cd-note"><span class="cd-note-label">Platform review</span>A MintLot admin checked the submitted details and images against a checklist. This is a platform review, not a guarantee that the physical card is genuine.</p>
     {% else %}
     <div class="cd-status cd-status-wait">Not platform verified</div>
     <p class="cd-note">The details on this page were entered by the seller and have not been reviewed by the platform.</p>

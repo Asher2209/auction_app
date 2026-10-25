@@ -5,7 +5,7 @@ from sqlalchemy import or_
 from ...extensions import db
 from ...models import Message, Product
 from ...services.notifications import notify
-from ...utils import role_required, safe_redirect_target
+from ...utils import safe_redirect_target
 from . import bp
 
 

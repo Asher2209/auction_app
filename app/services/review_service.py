@@ -11,7 +11,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db
-from ..models import Auction, Payment, Product, Review, utcnow
+from ..models import Payment, Product, Review, utcnow
 from .notifications import notify
 
 MAX_COMMENT = 1000

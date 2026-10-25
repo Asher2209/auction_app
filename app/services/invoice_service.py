@@ -152,13 +152,13 @@ def render_pdf(invoice):
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm,
-                            bottomMargin=16 * mm, title=f"Invoice {invoice.number}", author="ChainBid")
+                            bottomMargin=16 * mm, title=f"Invoice {invoice.number}", author="MintLot")
     story = []
 
     qr = Image(io.BytesIO(qr_png(verify_url(invoice))), width=32 * mm, height=32 * mm)
     head_left = [
         Paragraph("INVOICE", st["title"]),
-        Paragraph("ChainBid online auctions &middot; academic project", st["brand"]),
+        Paragraph("MintLot online auctions &middot; academic project", st["brand"]),
         Spacer(1, 4 * mm),
         Paragraph("INVOICE NUMBER", st["label"]), Paragraph(_t(invoice.number), st["bold"]),
         Spacer(1, 1.5 * mm),

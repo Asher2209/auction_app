@@ -1,0 +1,40 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Ruff
+        run: uvx ruff@0.17.2 check app tests scripts run.py
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: requirements-dev.lock
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -r requirements-dev.lock
+      - name: Run the test suite
+        # The tests use in-memory SQLite and an in-process Ethereum chain: no services or secrets needed.
+        run: uv run --no-project python -m pytest tests -q -p no:cacheprovider -n auto -rfE

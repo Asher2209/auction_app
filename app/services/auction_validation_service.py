@@ -19,7 +19,7 @@ from flask import current_app
 from sqlalchemy import func
 
 from ..extensions import db
-from ..models import Auction, CollectibleCard, Winner
+from ..models import CollectibleCard, Winner
 from . import blockchain_ownership_service as ownership
 
 LIVE_STATUSES = ("scheduled", "active")

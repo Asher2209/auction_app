@@ -33,7 +33,7 @@ def test_each_policy_page_is_public_and_complete(app, path, title):
     r = anon(app).get(path)
     assert r.status_code == 200
     html = r.data.decode()
-    assert f"<h1" in html and title in html
+    assert "<h1" in html and title in html
     assert legal.POLICY_VERSION in html and legal.LAST_UPDATED in html
     assert app.config["LEGAL_CONTACT_EMAIL"] in html
     assert "academic project" in html and "not legal" in html  # never presented as vetted legal advice

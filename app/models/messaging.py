@@ -1,6 +1,4 @@
 from ..extensions import db
-from .user import User
-from .catalog import Product
 from . import utcnow
 
 

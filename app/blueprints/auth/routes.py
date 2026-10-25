@@ -1,6 +1,6 @@
 import time
 
-from flask import current_app, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from ... import legal
@@ -97,7 +97,7 @@ def forgot_password():
                 "",
                 "If you did not ask for this, you can ignore this email; your password has not changed.",
             ])
-            send_email(user.email, "[ChainBid] Reset your password", body)
+            send_email(user.email, "[MintLot] Reset your password", body)
         flash("If that email is registered, a reset link has been sent.", "info")
         return redirect(url_for("auth.login"))
     return render_template("auth/forgot_password.html", form=form)

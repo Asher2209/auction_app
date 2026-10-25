@@ -73,8 +73,8 @@ def feedback():
 @bp.route("/cards/search", methods=["GET"])
 def search_cards():
     """Search and filter collectible cards"""
-    from sqlalchemy import or_, and_
-    
+    from sqlalchemy import or_
+
     page = request.args.get('page', 1, type=int)
     q = request.args.get('q', '').strip()
     card_type = request.args.get('type')
@@ -84,11 +84,11 @@ def search_cards():
     min_price = request.args.get('min_price', type=float)
     max_price = request.args.get('max_price', type=float)
     sort = request.args.get('sort', 'newest')
-    
+
     query = CollectibleCard.query.filter(
         CollectibleCard.product.has(approval_status='approved')
     )
-    
+
     if q:
         search_term = f"%{q}%"
         query = query.filter(
@@ -98,32 +98,32 @@ def search_cards():
                 CollectibleCard.manufacturer.ilike(search_term),
             )
         )
-    
+
     if card_type:
         try:
             card_type_id = int(card_type)
             query = query.filter(CollectibleCard.card_type_id == card_type_id)
         except (ValueError, TypeError):
             pass
-    
+
     conditions_list = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent', 'Near Mint', 'Mint']
     if condition and condition in conditions_list:
         query = query.filter(CollectibleCard.condition == condition)
-    
+
     if graded == 'true':
-        query = query.filter(CollectibleCard.is_graded == True)
+        query = query.filter(CollectibleCard.is_graded.is_(True))
     elif graded == 'false':
-        query = query.filter(CollectibleCard.is_graded == False)
-    
+        query = query.filter(CollectibleCard.is_graded.is_(False))
+
     graders_list = ['PSA', 'Beckett', 'CGC']
     if grader and grader in graders_list:
         query = query.filter(CollectibleCard.grading_company == grader)
-    
+
     if min_price is not None:
         query = query.filter(CollectibleCard.estimated_value >= min_price)
     if max_price is not None:
         query = query.filter(CollectibleCard.estimated_value <= max_price)
-    
+
     if sort == 'price_low':
         query = query.order_by(CollectibleCard.estimated_value.asc())
     elif sort == 'price_high':
@@ -134,10 +134,10 @@ def search_cards():
         query = query.order_by(CollectibleCard.created_at.asc())
     else:
         query = query.order_by(CollectibleCard.created_at.desc())
-    
+
     cards = query.paginate(page=page, per_page=12)
     card_types = CardType.query.order_by(CardType.name).all()
-    
+
     return render_template(
         'cards/search_results.html',
         cards=cards,
@@ -163,13 +163,13 @@ def shop():
     category_filter = request.args.get('category', 'all')
     sort = request.args.get('sort', 'newest')
     card_type_slug = request.args.get('card_type')
-    
+
     items = []
     all_card_types = CardType.query.order_by(CardType.name).all()
     card_type = None
     if card_type_slug:
         card_type = CardType.query.filter_by(slug=card_type_slug).first()
-    
+
     if category_filter in ('all', 'auctions'):
         auction_query = Auction.query.filter(
             Auction.status.in_(['scheduled', 'active'])
@@ -182,7 +182,7 @@ def shop():
             auction_query = auction_query.order_by(Auction.start_time.desc())
         auctions = auction_query.limit(12).all()
         items.extend([{'type': 'auction', 'data': a} for a in auctions])
-    
+
     if category_filter in ('all', 'cards'):
         card_query = CollectibleCard.query.filter(
             CollectibleCard.product.has(approval_status='approved')
@@ -197,13 +197,13 @@ def shop():
             card_query = card_query.order_by(CollectibleCard.created_at.desc())
         cards = card_query.limit(12).all()
         items.extend([{'type': 'card', 'data': c} for c in cards])
-    
+
     per_page = 12
     start = (page - 1) * per_page
     end = start + per_page
     paginated_items = items[start:end]
     total = len(items)
-    
+
     return render_template(
         'browse.html',
         items=paginated_items,
@@ -224,30 +224,30 @@ def browse_cards():
     page = request.args.get('page', 1, type=int)
     sort = request.args.get('sort', 'newest')
     card_type_slug = request.args.get('type')
-    
+
     card_type = None
     if card_type_slug:
         card_type = CardType.query.filter_by(slug=card_type_slug).first()
         if not card_type:
             abort(404)
-    
+
     query = CollectibleCard.query.filter(
         CollectibleCard.product.has(approval_status='approved')
     )
-    
+
     if card_type:
         query = query.filter(CollectibleCard.card_type_id == card_type.id)
-    
+
     if sort == 'price_low':
         query = query.order_by(CollectibleCard.estimated_value.asc())
     elif sort == 'price_high':
         query = query.order_by(CollectibleCard.estimated_value.desc())
     else:
         query = query.order_by(CollectibleCard.created_at.desc())
-    
+
     cards = query.paginate(page=page, per_page=12)
     all_types = CardType.query.order_by(CardType.name).all()
-    
+
     return render_template(
         'cards/browse.html',
         cards=cards,
@@ -260,17 +260,17 @@ def browse_cards():
 @bp.route("/cards/<int:card_id>", methods=["GET"])
 def view_card(card_id):
     """View a specific card listing"""
-    from sqlalchemy import or_, and_
-    
+    from sqlalchemy import and_
+
     card = CollectibleCard.query.get_or_404(card_id)
     product = card.product
-    
+
     if product.approval_status != 'approved':
         abort(404)
-    
+
     seller = product.seller
     images = card.images
-    
+
     related = CollectibleCard.query.join(Product).filter(
         and_(
             CollectibleCard.card_type_id == card.card_type_id,
@@ -278,7 +278,7 @@ def view_card(card_id):
             Product.approval_status == 'approved'
         )
     ).limit(4).all()
-    
+
     return render_template(
         'cards/view_card.html',
         card=card,
@@ -294,19 +294,19 @@ def api_search_cards():
     """API endpoint for card search autocomplete"""
     q = request.args.get('q', '').strip()
     limit = min(max(request.args.get('limit', 10, type=int), 1), 50)  # never let a caller page through the whole table
-    
+
     if len(q) < 2:
         return jsonify([])
-    
+
     query = CollectibleCard.query.filter(
         CollectibleCard.product.has(approval_status='approved')
     )
-    
+
     search_term = f"%{q}%"
     results = query.filter(
         CollectibleCard.card_name.ilike(search_term)
     ).limit(limit).all()
-    
+
     return jsonify([{
         'id': card.id,
         'name': card.card_name,

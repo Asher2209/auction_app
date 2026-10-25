@@ -1,4 +1,4 @@
-# Architecture - ChainBid
+# Architecture - MintLot
 
 ## System Overview
 
@@ -57,11 +57,10 @@
 - `app/services/`: Business logic
   - `blockchain_service.py`: Blockchain interaction
   - `blockchain_minting_service.py`: Token minting
-  - `blockchain_transfer_service.py`: Ownership transfer
+  - `ownership_transfer_service.py`: Ownership transfer
   - `payment_service.py`: Payment processing
 - `app/utils/`: Utilities
   - `monitoring.py`: Metrics and health checks
-  - `logging_config.py`: Logging setup
 
 ### 3. Database (SQLite)
 

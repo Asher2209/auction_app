@@ -1,0 +1,24 @@
+[project]
+name = "mintlot"
+version = "0.2.0"
+description = "Live auctions for platform-verified trading cards, with card tokens and settlement on Ethereum"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 130
+target-version = "py312"
+extend-exclude = ["migrations/versions", "contracts/node_modules", "docs/archive"]
+
+[tool.ruff.lint]
+# pycodestyle errors/warnings, pyflakes, bugbear
+select = ["E", "F", "W", "B"]
+ignore = [
+    "E501",  # long lines: formatting is not enforced yet
+    "B904",  # `raise ... from err` inside except: user-facing errors deliberately hide the cause
+]
+
+[tool.ruff.lint.per-file-ignores]
+# pytest fixtures are imported into test modules and then shadowed by fixture arguments
+"tests/**" = ["F401", "F811", "F841", "B007", "B017", "B023", "B905"]
+# blueprint packages import their routes after creating the blueprint
+"app/blueprints/*/__init__.py" = ["E402", "F401"]
