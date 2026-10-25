@@ -3,6 +3,8 @@ from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
+from sqlalchemy.pool import NullPool
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -100,6 +102,9 @@ class TestConfig(Config):
     ENABLE_SCHEDULER = False
     MAIL_ASYNC = False
     SQLALCHEMY_DATABASE_URI = _test_database_url()
+    # On a database server, close connections when a test is done with them: tests make many short-lived apps, and
+    # each keeping a pool of open connections would soon pass the server's limit (100 on a default Postgres).
+    SQLALCHEMY_ENGINE_OPTIONS = {} if SQLALCHEMY_DATABASE_URI.startswith("sqlite") else {"poolclass": NullPool}
     # Whatever the developer's .env switches on, tests start from everything off; the tests that need one turn it on.
     REDIS_URL = None
     SENTRY_DSN = None

@@ -31,6 +31,8 @@ def app(tmp_path):
     app = create_app(TestConfig)
     app.config["UPLOAD_FOLDER"] = str(tmp_path)  # never write test images into the real uploads dir
     with app.app_context():
+        if not TestConfig.SQLALCHEMY_DATABASE_URI.startswith("sqlite"):
+            db.drop_all()  # a database server outlives the run: start clean even after an interrupted one
         db.create_all()
         yield app
         db.session.remove()

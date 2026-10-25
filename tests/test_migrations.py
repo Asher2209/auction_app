@@ -1,7 +1,7 @@
 """The migration chain builds the schema the models describe (so a MySQL database built with `flask db upgrade` works).
 
-The whole chain runs for real on a throwaway SQLite file. The migrations target MySQL, which can ALTER constraints in
-place; SQLite cannot, so the two non-batch constraint calls are routed through Alembic's batch mode here.
+The whole chain runs for real on a throwaway SQLite file (CI also runs it on PostgreSQL). The migrations now use batch
+mode wherever SQLite needs it; routing any plain constraint call through it here as well keeps older ones safe.
 """
 import importlib.util
 from pathlib import Path
@@ -14,9 +14,10 @@ from alembic.operations import Operations
 from app.extensions import db
 
 VERSIONS = Path(__file__).resolve().parent.parent / "migrations" / "versions"
-# left by the abandoned listing-details feature (b15d3tails02): nullable and unused, kept rather than dropped with their data
-LEFTOVER_TABLES = {"category_questions", "product_answers"}
-LEFTOVER_COLUMNS = {("products", "condition"), ("products", "known_issues"), ("products", "whats_included"), ("products", "pickup_location")}
+# The abandoned listing-details feature (b15d3tails02) left tables and columns behind; q27schemaalign01 removes them,
+# so nothing may differ any more.
+LEFTOVER_TABLES = set()
+LEFTOVER_COLUMNS = set()
 
 
 class _SqliteOp:
