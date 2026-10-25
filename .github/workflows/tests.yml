@@ -35,6 +35,8 @@ jobs:
         run: |
           uv venv
           uv pip install -r requirements-dev.lock
+      - name: Install the Solidity compiler used by the tests
+        run: uv run --no-project python -c "import solcx; solcx.install_solc('0.8.24')"
       - name: Run the test suite
         # The tests use in-memory SQLite and an in-process Ethereum chain: no services or secrets needed.
         run: uv run --no-project python -m pytest tests -q -p no:cacheprovider -n auto -rfE

@@ -170,7 +170,9 @@ multidict==7.2.1
 openpyxl==3.1.5
     # via -r requirements.txt
 packaging==26.3
-    # via pytest
+    # via
+    #   py-solc-x
+    #   pytest
 parsimonious==0.10.0
     # via eth-abi
 pillow==13.0.0
@@ -189,6 +191,8 @@ py-ecc==8.0.0
     #   eth-keyfile
     #   py-evm
 py-evm==0.12.1b1
+    # via -r requirements-dev.txt
+py-solc-x==2.0.5
     # via -r requirements-dev.txt
 pycryptodome==3.24.1
     # via
@@ -232,7 +236,9 @@ regex==2026.9.29
 reportlab==5.1.0
     # via -r requirements.txt
 requests==2.34.2
-    # via web3
+    # via
+    #   py-solc-x
+    #   web3
 rlp==5.0.0
     # via
     #   eth-account

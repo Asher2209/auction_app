@@ -4,6 +4,8 @@
 # in-memory Ethereum chain for the tests and the LOCAL_CHAIN demo
 eth-tester>=0.13.0b1
 py-evm>=0.12.0b1
+# Solidity compiler wrapper: the tests compile helper contracts (needs solc 0.8.24, see the CI workflow)
+py-solc-x>=2.0
 pytest>=8.0
 pytest-xdist>=3.6
 ruff>=0.15

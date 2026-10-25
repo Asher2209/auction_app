@@ -88,7 +88,7 @@ Deploying the contracts to Sepolia needs a funded test-only wallet; see `docs/CR
 .venv/Scripts/ruff.exe check app tests scripts run.py
 ```
 
-GitHub Actions runs both on every pull request (`.github/workflows/tests.yml`).
+A few tests compile helper contracts, so a fresh machine needs the Solidity compiler once: `python -c "import solcx; solcx.install_solc('0.8.24')"`. GitHub Actions runs the linter and the tests on every pull request (`.github/workflows/tests.yml`).
 
 **Dependencies.** `requirements.txt` (runtime) and `requirements-dev.txt` (tests and tools) list what the project needs; `requirements.lock` and `requirements-dev.lock` pin the exact versions that were tested. After changing a requirements file, regenerate the lock files with `uv pip compile requirements.txt -o requirements.lock --python-version 3.12 --universal` (and the same for `requirements-dev`).
 
