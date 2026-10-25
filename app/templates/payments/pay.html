@@ -1,15 +1,22 @@
 {% extends "base.html" %}
 {% from "_form.html" import checkbox, field %}
-{% block title %}Pay for {{ product.title }} - MintLot{% endblock %}
+{% block title %}Pay for {{ product.title }} · MintLot{% endblock %}
 {% block content %}
-<a class="small" href="{{ url_for('buyer.won') }}">&larr; Won auctions</a>
-<h1 class="h3 mt-2 mb-3">Payment</h1>
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('buyer.won') }}">Won auctions</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Payment</li>
+  </ol>
+</nav>
+<header class="ws-head"><span class="eyebrow">Checkout</span><h1 class="ws-title">Payment</h1></header>
 
 <div class="row g-4" id="payment-root" data-auction-id="{{ auction.id }}" data-processing="{{ 'true' if payment.processing else 'false' }}" data-method="{{ payment.payment_method or '' }}">
   <div class="col-lg-5">
     <div class="card"><div class="card-body">
       <div class="d-flex gap-3">
-        {% if product.cover %}<img src="{{ url_for('static', filename='uploads/' ~ product.cover) }}" alt="" class="rounded" style="width:72px;height:72px;object-fit:cover">{% endif %}
+        {% set c = product.collectible_card %}
+        {% set src = c.images[0].get_image_src() if c and c.images else (url_for('static', filename='uploads/' ~ product.cover) if product.cover else none) %}
+        {% if src %}<img src="{{ src }}" alt="" class="thumb">{% endif %}
         <div>
           <div class="fw-semibold">{{ product.title }}</div>
           <div class="small text-muted">Sold by {{ product.seller.name }} &middot; Auction #{{ auction.id }}</div>

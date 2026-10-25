@@ -1,52 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Verify Card - {{ card.card_name }} - MintLot Admin{% endblock %}
+{% block title %}Review {{ card.card_name }} · Admin · MintLot{% endblock %}
 
 {% block content %}
-<!-- Header with Back Link -->
-<div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
-  <a href="{{ url_for('admin.cards_verify_dashboard') }}" style="color: var(--dt-accent); text-decoration: none;">← Back to Dashboard</a>
-  <h1 class="h2 mb-0">Card Verification</h1>
-</div>
+{% set labels = {'pending': 'Pending', 'under_review': 'In review', 'more_info_needed': 'Waiting for seller', 'verified': 'Approved', 'rejected': 'Rejected'} %}
+{% set tones = {'pending': 'chip-upcoming', 'under_review': 'chip-upcoming', 'more_info_needed': 'chip-live', 'verified': 'chip-verified', 'rejected': 'chip-danger'} %}
+{% set ws_title = card.card_name %}
+{% include "admin/_nav.html" %}
 
-<!-- Status Bar -->
-<div class="p-4 mb-5" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border); border-left: 4px solid var(--dt-accent);">
-  <div class="row">
-    <div class="col-auto">
-      <div class="small text-muted mb-1">Card</div>
-      <strong>{{ card.card_name }}</strong>
-    </div>
-    <div class="col-auto">
-      <div class="small text-muted mb-1">Set</div>
-      <strong>{{ card.set_name or 'N/A' }}</strong>
-    </div>
-    <div class="col-auto">
-      <div class="small text-muted mb-1">Type</div>
-      <span class="badge" style="background: rgba(107, 114, 128, 0.15); color: #4b5563; border-radius: 0.5rem; padding: 0.4rem 0.8rem;">{{ card.card_type.name }}</span>
-    </div>
-    <div class="col-auto">
-      <div class="small text-muted mb-1">Seller</div>
-      <strong>{{ seller.name }}</strong>
-    </div>
-    <div class="col-auto">
-      <div class="small text-muted mb-1">Status</div>
-      {% set status_color = {
-        'pending': '#f59e0b',
-        'submitted': '#3b82f6',
-        'under_review': '#3b82f6',
-        'more_info_needed': '#f97316',
-        'verified': '#10b981',
-        'rejected': '#ef4444'
-      } %}
-      <span class="badge" style="background: {{ status_color.get(verification.verification_status, '#6b7280') }}; color: white; border-radius: 0.5rem; padding: 0.4rem 0.8rem;">
-        {% if verification.verification_status == 'pending' %}⏳ Pending
-        {% elif verification.verification_status == 'under_review' %}👁️ In Review
-        {% elif verification.verification_status == 'more_info_needed' %}❓ More Info
-        {% elif verification.verification_status == 'verified' %}✓ Approved
-        {% elif verification.verification_status == 'rejected' %}✗ Rejected
-        {% endif %}
-      </span>
-    </div>
-  </div>
+<div class="review-strip">
+  <a href="{{ url_for('admin.cards_verify_dashboard') }}" class="btn btn-secondary btn-sm">{{ icon('arrow-left', 16) }}Queue</a>
+  <dl class="review-facts">
+    <div><dt>Set</dt><dd>{{ card.set_name or 'Not given' }}</dd></div>
+    <div><dt>Type</dt><dd>{{ card.card_type.name }}</dd></div>
+    <div><dt>Seller</dt><dd>{{ seller.name }}</dd></div>
+    <div><dt>Status</dt><dd><span class="chip {{ tones.get(verification.verification_status, 'chip-muted') }}">{{ labels.get(verification.verification_status, verification.verification_status|replace('_', ' ')|capitalize) }}</span></dd></div>
+  </dl>
 </div>
 
 <div class="row g-4">
@@ -55,15 +23,15 @@
 
     <!-- Card Images -->
     {% if card_images %}
-    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-      <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Images</h6>
-      <div id="gallery" class="carousel slide" style="background: var(--dt-bg-2); border-radius: 1rem; overflow: hidden;">
+    <div class="panel mb-4">
+      <h2 class="cd-heading">Card Images</h2>
+      <div id="gallery" class="carousel slide review-gallery">
         <div class="carousel-inner">
           {% for image in card_images %}
           <div class="carousel-item {{ 'active' if loop.first }}">
             {# centre inside the slide: a flex .carousel-inner breaks Bootstrap's slide positioning and pushes images right #}
-            <div class="d-flex flex-column align-items-center justify-content-center p-3" style="min-height: 400px;">
-              <img src="{{ url_for('static', filename='uploads/' ~ image.path) }}" class="d-block" alt="{{ image.image_type }}" style="max-height:400px;max-width:100%;object-fit:contain;">
+            <div class="d-flex flex-column align-items-center justify-content-center p-3 review-slide">
+              <img src="{{ image.get_image_src() }}" class="d-block" alt="{{ card.card_name }}, {{ image.image_type|replace('_', ' ') }}">
               <div class="small text-muted text-center mt-2">{{ image.image_type|title }}</div>
             </div>
           </div>
@@ -71,10 +39,10 @@
         </div>
         {% if card_images|length > 1 %}
         <button class="carousel-control-prev" type="button" data-bs-target="#gallery" data-bs-slide="prev">
-          <span class="carousel-control-prev-icon"></span>
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous image</span>
         </button>
         <button class="carousel-control-next" type="button" data-bs-target="#gallery" data-bs-slide="next">
-          <span class="carousel-control-next-icon"></span>
+          <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next image</span>
         </button>
         {% endif %}
       </div>
@@ -82,8 +50,8 @@
     {% endif %}
 
     <!-- Card Details -->
-    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-      <h6 class="text-muted small text-uppercase fw-600 mb-3">Card Information</h6>
+    <div class="panel mb-4">
+      <h2 class="cd-heading">Card Information</h2>
 
       <div class="row mb-3">
         <div class="col-6">
@@ -92,35 +60,35 @@
         </div>
         <div class="col-6">
           <div class="small text-muted mb-1">Card Number</div>
-          <strong>{{ card.card_number or 'N/A' }}</strong>
+          <strong>{{ card.card_number or 'Not given' }}</strong>
         </div>
       </div>
 
       <div class="row mb-3">
         <div class="col-6">
           <div class="small text-muted mb-1">Manufacturer</div>
-          <strong>{{ card.manufacturer or 'N/A' }}</strong>
+          <strong>{{ card.manufacturer or 'Not given' }}</strong>
         </div>
         <div class="col-6">
           <div class="small text-muted mb-1">Release Year</div>
-          <strong>{{ card.release_year or 'N/A' }}</strong>
+          <strong>{{ card.release_year or 'Not given' }}</strong>
         </div>
       </div>
 
       <div class="row mb-3">
         <div class="col-6">
           <div class="small text-muted mb-1">Rarity</div>
-          <strong>{{ card.rarity or 'N/A' }}</strong>
+          <strong>{{ card.rarity or 'Not given' }}</strong>
         </div>
         <div class="col-6">
           <div class="small text-muted mb-1">Language</div>
-          <strong>{{ card.language or 'N/A' }}</strong>
+          <strong>{{ card.language or 'Not given' }}</strong>
         </div>
       </div>
 
       {% if card.is_graded %}
-      <div style="padding: 1.5rem; background: var(--dt-bg-2); border-radius: 0.75rem; margin-top: 1.5rem;">
-        <h6 class="small text-muted text-uppercase fw-600 mb-2">Professional Grading</h6>
+      <div class="review-inset">
+        <h3 class="cd-heading">Professional Grading</h3>
         <div class="row">
           <div class="col-6">
             <div class="small text-muted mb-1">Company</div>
@@ -137,15 +105,15 @@
         </div>
         {% if card.certification_url %}
         <div class="mt-2">
-          <a href="{{ card.certification_url }}" target="_blank" class="small" style="color: var(--dt-accent);">Verify Certificate →</a>
+          <a href="{{ card.certification_url }}" target="_blank" rel="noopener noreferrer" class="small">Open the grading company certificate page</a>
         </div>
         {% endif %}
       </div>
       {% endif %}
 
       {% if card.condition_notes %}
-      <div style="padding: 1.5rem; background: var(--dt-bg-2); border-radius: 0.75rem; margin-top: 1.5rem;">
-        <h6 class="small text-muted text-uppercase fw-600 mb-2">Condition Notes</h6>
+      <div class="review-inset">
+        <h3 class="cd-heading">Condition notes</h3>
         <p class="small mb-0">{{ card.condition_notes }}</p>
       </div>
       {% endif %}
@@ -164,181 +132,161 @@
     </div>
 
     {% if duplicate_issues %}
-    <div class="cd-panel mb-4" id="admin-duplicates" style="border-color: var(--dt-warning);">
-      <h2 class="cd-heading" style="color: var(--dt-warning);">Potential duplicates</h2>
+    <div class="cd-panel cd-panel-warn mb-4" id="admin-duplicates">
+      <h2 class="cd-heading">Potential duplicates</h2>
       <ul class="mb-0 small">{% for issue in duplicate_issues %}<li>{{ issue.message }}</li>{% endfor %}</ul>
       <p class="cd-note">A shared certification number is a signal, not proof. Images alone cannot show that two entries are the same physical card.</p>
     </div>
     {% endif %}
 
     <!-- Verification Checklist Form -->
-    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-      <h6 class="text-muted small text-uppercase fw-600 mb-4">Verification Checklist</h6>
+    <div class="panel mb-4">
+      <h2 class="cd-heading">Verification Checklist</h2>
 
       <form method="POST" action="{{ url_for('admin.save_verification_checklist', verification_id=verification.id) }}">
         {{ form.hidden_tag() }}
 
         <!-- Card Identity -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
+        <div class="review-check">
           <div class="row g-3">
             <div class="col-12">
-              <label class="small fw-600 mb-2">{{ form.card_identity_result.label.text }}</label>
-              {{ form.card_identity_result(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+              {{ form.card_identity_result.label(class_='form-label') }}
+              {{ form.card_identity_result(class_='form-select form-select-sm') }}
             </div>
             <div class="col-12">
-              {{ form.card_identity_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Any notes about card identity...') }}
+              {{ form.card_identity_notes(class_='form-control form-control-sm', placeholder='Any notes about card identity...', **{'aria-label': form.card_identity_notes.label.text}) }}
             </div>
           </div>
         </div>
 
         <!-- Set Checked -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
+        <div class="review-check">
           <div class="row g-3">
             <div class="col-12">
-              <label class="small fw-600 mb-2">{{ form.set_checked_result.label.text }}</label>
-              {{ form.set_checked_result(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+              {{ form.set_checked_result.label(class_='form-label') }}
+              {{ form.set_checked_result(class_='form-select form-select-sm') }}
             </div>
             <div class="col-12">
-              {{ form.set_checked_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Notes about set verification...') }}
+              {{ form.set_checked_notes(class_='form-control form-control-sm', placeholder='Notes about set verification...', **{'aria-label': form.set_checked_notes.label.text}) }}
             </div>
           </div>
         </div>
 
         <!-- Card Number -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
+        <div class="review-check">
           <div class="row g-3">
             <div class="col-12">
-              <label class="small fw-600 mb-2">{{ form.card_number_result.label.text }}</label>
-              {{ form.card_number_result(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+              {{ form.card_number_result.label(class_='form-label') }}
+              {{ form.card_number_result(class_='form-select form-select-sm') }}
             </div>
             <div class="col-12">
-              {{ form.card_number_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Notes about card number...') }}
+              {{ form.card_number_notes(class_='form-control form-control-sm', placeholder='Notes about card number...', **{'aria-label': form.card_number_notes.label.text}) }}
             </div>
           </div>
         </div>
 
         <!-- Manufacturer -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
+        <div class="review-check">
           <div class="row g-3">
             <div class="col-12">
-              <label class="small fw-600 mb-2">{{ form.manufacturer_result.label.text }}</label>
-              {{ form.manufacturer_result(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+              {{ form.manufacturer_result.label(class_='form-label') }}
+              {{ form.manufacturer_result(class_='form-select form-select-sm') }}
             </div>
             <div class="col-12">
-              {{ form.manufacturer_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Notes about manufacturer...') }}
+              {{ form.manufacturer_notes(class_='form-control form-control-sm', placeholder='Notes about manufacturer...', **{'aria-label': form.manufacturer_notes.label.text}) }}
             </div>
           </div>
         </div>
 
         <!-- Images Reviewed -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
+        <div class="review-check">
           <div class="row g-3">
             <div class="col-12">
-              <label class="small fw-600 mb-2">{{ form.images_reviewed_result.label.text }}</label>
-              {{ form.images_reviewed_result(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+              {{ form.images_reviewed_result.label(class_='form-label') }}
+              {{ form.images_reviewed_result(class_='form-select form-select-sm') }}
             </div>
             <div class="col-12">
-              {{ form.images_reviewed_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Are images clear and complete?') }}
+              {{ form.images_reviewed_notes(class_='form-control form-control-sm', placeholder='Are images clear and complete?', **{'aria-label': form.images_reviewed_notes.label.text}) }}
             </div>
           </div>
         </div>
 
         <!-- Condition Reviewed -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
+        <div class="review-check">
           <div class="row g-3">
             <div class="col-12">
-              <label class="small fw-600 mb-2">{{ form.condition_reviewed_result.label.text }}</label>
-              {{ form.condition_reviewed_result(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+              {{ form.condition_reviewed_result.label(class_='form-label') }}
+              {{ form.condition_reviewed_result(class_='form-select form-select-sm') }}
             </div>
             <div class="col-12">
-              {{ form.condition_reviewed_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Does condition match photos?') }}
+              {{ form.condition_reviewed_notes(class_='form-control form-control-sm', placeholder='Does condition match photos?', **{'aria-label': form.condition_reviewed_notes.label.text}) }}
             </div>
           </div>
         </div>
 
         <!-- Grading Checked -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
+        <div class="review-check">
           <div class="row g-3">
             <div class="col-12">
-              <label class="small fw-600 mb-2">{{ form.grading_checked_result.label.text }}</label>
-              {{ form.grading_checked_result(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+              {{ form.grading_checked_result.label(class_='form-label') }}
+              {{ form.grading_checked_result(class_='form-select form-select-sm') }}
             </div>
             <div class="col-12">
-              {{ form.grading_checked_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Verified grading certificate at...') }}
+              {{ form.grading_checked_notes(class_='form-control form-control-sm', placeholder='Verified grading certificate at...', **{'aria-label': form.grading_checked_notes.label.text}) }}
             </div>
           </div>
         </div>
 
         <!-- Seller Info -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
+        <div class="review-check">
           <div class="row g-3">
             <div class="col-12">
-              <label class="small fw-600 mb-2">{{ form.seller_info_reviewed_result.label.text }}</label>
-              {{ form.seller_info_reviewed_result(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+              {{ form.seller_info_reviewed_result.label(class_='form-label') }}
+              {{ form.seller_info_reviewed_result(class_='form-select form-select-sm') }}
             </div>
             <div class="col-12">
-              {{ form.seller_info_reviewed_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Any concerns about the seller...') }}
+              {{ form.seller_info_reviewed_notes(class_='form-control form-control-sm', placeholder='Any concerns about the seller...', **{'aria-label': form.seller_info_reviewed_notes.label.text}) }}
             </div>
           </div>
         </div>
 
         <!-- Counterfeit Check -->
-        <div class="mb-4 pb-4" style="border-bottom: 1px solid var(--dt-border-light);">
+        <div class="review-check">
           <div class="row g-3">
             <div class="col-12">
-              <label class="small fw-600 mb-2">{{ form.counterfeit_check_result.label.text }}</label>
-              {{ form.counterfeit_check_result(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+              {{ form.counterfeit_check_result.label(class_='form-label') }}
+              {{ form.counterfeit_check_result(class_='form-select form-select-sm') }}
             </div>
             <div class="col-12">
-              {{ form.counterfeit_check_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Red flags? Printing issues?') }}
+              {{ form.counterfeit_check_notes(class_='form-control form-control-sm', placeholder='Red flags? Printing issues?', **{'aria-label': form.counterfeit_check_notes.label.text}) }}
             </div>
           </div>
         </div>
 
         <!-- Overall Notes -->
         <div class="mb-4">
-          <label class="small fw-600 mb-2">{{ form.overall_notes.label.text }}</label>
-          {{ form.overall_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;') }}
+          {{ form.overall_notes.label(class_='form-label') }}
+          {{ form.overall_notes(class_='form-control form-control-sm') }}
         </div>
 
-        <button type="submit" class="btn btn-primary btn-sm" style="border-radius: 0.5rem;">💾 Save Checklist</button>
+        <button type="submit" class="btn btn-primary">Save checklist</button>
       </form>
     </div>
 
     <!-- Verification History -->
     {% if history %}
-    <div class="p-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-      <h6 class="text-muted small text-uppercase fw-600 mb-4">Verification History</h6>
+    <div class="panel">
+      <h2 class="cd-heading">Verification History</h2>
 
-      <div style="position: relative; padding: 1rem 0;">
+      <ol class="review-history">
         {% for entry in history %}
-        <div style="display: flex; gap: 1.5rem; padding-bottom: 2rem;">
-          <!-- Timeline dot -->
-          <div style="flex-shrink: 0; position: relative; width: 24px;">
-            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--dt-accent); border: 3px solid var(--dt-bg-1); position: relative; z-index: 2;"></div>
-            {% if not loop.last %}
-            <div style="position: absolute; left: 50%; transform: translateX(-50%); width: 2px; height: 2rem; background: var(--dt-border-light); top: 24px;"></div>
-            {% endif %}
-          </div>
-
-          <!-- Event content -->
-          <div style="flex: 1;">
-            <div class="small fw-600">
-              {% if entry.new_status == 'verified' %}✓ Approved
-              {% elif entry.new_status == 'rejected' %}✗ Rejected
-              {% elif entry.new_status == 'more_info_needed' %}❓ More Info Requested
-              {% elif entry.new_status == 'under_review' %}👁️ Under Review
-              {% else %}{{ entry.new_status|title }}
-              {% endif %}
-            </div>
-            {% if entry.change_reason %}
-            <p class="small text-muted mb-0 mt-1">{{ entry.change_reason }}</p>
-            {% endif %}
-            <div class="small text-muted" style="margin-top: 0.5rem;">{{ entry.created_at.strftime('%d %b %Y at %H:%M') }}</div>
-          </div>
-        </div>
+        <li>
+          <div class="review-history-status">{{ labels.get(entry.new_status, entry.new_status|replace('_', ' ')|capitalize) }}</div>
+          {% if entry.change_reason %}<p class="small text-muted mb-0">{{ entry.change_reason }}</p>{% endif %}
+          <time class="feed-time">{{ entry.created_at|local }}</time>
+        </li>
         {% endfor %}
-      </div>
+      </ol>
     </div>
     {% endif %}
   </div>
@@ -347,8 +295,8 @@
   <div class="col-lg-4">
 
     <!-- Quick Actions -->
-    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-      <h6 class="text-muted small text-uppercase fw-600 mb-3">Actions</h6>
+    <div class="panel mb-4">
+      <h2 class="cd-heading">Actions</h2>
 
       <!-- Approve Button -->
       <form method="POST" action="{{ url_for('admin.approve_card', verification_id=verification.id) }}" class="mb-3">
@@ -360,34 +308,28 @@
         </div>
         {% endif %}
         <div class="mb-3">
-          {{ approval_form.approval_notes(class_='form-control form-control-sm', style='border-radius: 0.5rem;', placeholder='Optional approval notes') }}
+          {{ approval_form.approval_notes(class_='form-control form-control-sm', placeholder='Optional approval notes', **{'aria-label': 'Approval notes'}) }}
         </div>
-        <button type="submit" class="btn btn-success btn-sm w-100" style="border-radius: 0.5rem; background: #10b981; border: none;"{% if approval_blockers or verification.verification_status == 'verified' %} disabled{% endif %}>
-          ✓ Approve Card
-        </button>
+        <button type="submit" class="btn btn-success w-100"{% if approval_blockers or verification.verification_status == 'verified' %} disabled{% endif %}>{{ icon('check', 16) }}Approve card</button>
       </form>
 
       <!-- Reject Button -->
-      <button type="button" class="btn btn-danger btn-sm w-100" style="border-radius: 0.5rem; background: #ef4444; border: none; margin-bottom: 0.75rem;" data-bs-toggle="modal" data-bs-target="#rejectModal">
-        ✗ Reject Card
-      </button>
+      <button type="button" class="btn btn-outline-danger w-100 mb-2" data-bs-toggle="modal" data-bs-target="#rejectModal">{{ icon('x', 16) }}Reject card</button>
 
       <!-- More Info Button -->
-      <button type="button" class="btn btn-warning btn-sm w-100" style="border-radius: 0.5rem; background: #f97316; border: none; color: white;" data-bs-toggle="modal" data-bs-target="#infoModal">
-        ❓ Request More Info
-      </button>
+      <button type="button" class="btn btn-outline-warning w-100" data-bs-toggle="modal" data-bs-target="#infoModal">{{ icon('circle-alert', 16) }}Ask the seller for more information</button>
     </div>
 
     <!-- Seller Information -->
-    <div class="p-4 mb-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-      <h6 class="text-muted small text-uppercase fw-600 mb-3">Seller Information</h6>
+    <div class="panel mb-4">
+      <h2 class="cd-heading">Seller Information</h2>
       <div class="mb-3">
         <div class="small text-muted mb-1">Name</div>
         <strong>{{ seller.name }}</strong>
       </div>
       <div class="mb-3">
         <div class="small text-muted mb-1">Email</div>
-        <a href="mailto:{{ seller.email }}" style="color: var(--dt-accent); text-decoration: none;">{{ seller.email }}</a>
+        <a href="mailto:{{ seller.email }}">{{ seller.email }}</a>
       </div>
       <div class="mb-3" id="seller-wallet">
         <div class="small text-muted mb-1">Wallet</div>
@@ -403,11 +345,11 @@
     </div>
 
     <!-- Submission Details -->
-    <div class="p-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-      <h6 class="text-muted small text-uppercase fw-600 mb-3">Submission Details</h6>
+    <div class="panel">
+      <h2 class="cd-heading">Submission Details</h2>
       <div class="mb-3">
         <div class="small text-muted mb-1">Submitted</div>
-        <strong>{{ verification.created_at.strftime('%d %b %Y') }}</strong>
+        <strong>{{ verification.created_at|local }}</strong>
       </div>
       <div class="mb-3">
         <div class="small text-muted mb-1">Submission #</div>
@@ -416,7 +358,7 @@
       {% if verification.verification_date %}
       <div>
         <div class="small text-muted mb-1">Reviewed</div>
-        <strong>{{ verification.verification_date.strftime('%d %b %Y') }}</strong>
+        <strong>{{ verification.verification_date|local }}</strong>
       </div>
       {% endif %}
     </div>
@@ -424,23 +366,23 @@
 </div>
 
 <!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1">
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalTitle" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content" style="border-radius: 1.5rem; border: 1px solid var(--dt-border);">
-      <div class="modal-header" style="border-bottom: 1px solid var(--dt-border-light);">
-        <h5 class="modal-title">✗ Reject Card</h5>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="rejectModalTitle">Reject this card</h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form method="POST" action="{{ url_for('admin.reject_card', verification_id=verification.id) }}">
         {{ rejection_form.hidden_tag() }}
         <div class="modal-body">
           <div class="mb-3">
-            <label class="small fw-600 mb-2">{{ rejection_form.rejection_reason.label.text }}</label>
-            {{ rejection_form.rejection_reason(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+            {{ rejection_form.rejection_reason.label(class_='form-label') }}
+            {{ rejection_form.rejection_reason(class_='form-select form-select-sm') }}
           </div>
           <div class="mb-3">
-            <label class="small fw-600 mb-2">{{ rejection_form.rejection_details.label.text }}</label>
-            {{ rejection_form.rejection_details(class_='form-control form-control-sm', style='border-radius: 0.5rem;', rows='4') }}
+            {{ rejection_form.rejection_details.label(class_='form-label') }}
+            {{ rejection_form.rejection_details(class_='form-control form-control-sm', rows='4') }}
           </div>
           <div>
             <div class="form-check">
@@ -451,9 +393,9 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer" style="border-top: 1px solid var(--dt-border-light);">
-          <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal" style="border-radius: 0.5rem;">Cancel</button>
-          <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 0.5rem; background: #ef4444; border: none;">✗ Reject Card</button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger">Reject card</button>
         </div>
       </form>
     </div>
@@ -461,32 +403,32 @@
 </div>
 
 <!-- More Info Modal -->
-<div class="modal fade" id="infoModal" tabindex="-1">
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalTitle" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content" style="border-radius: 1.5rem; border: 1px solid var(--dt-border);">
-      <div class="modal-header" style="border-bottom: 1px solid var(--dt-border-light);">
-        <h5 class="modal-title">❓ Request More Information</h5>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="infoModalTitle">Ask the seller for more information</h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form method="POST" action="{{ url_for('admin.request_card_info', verification_id=verification.id) }}">
         {{ info_form.hidden_tag() }}
         <div class="modal-body">
           <div class="mb-3">
-            <label class="small fw-600 mb-2">{{ info_form.info_request.label.text }}</label>
-            {{ info_form.info_request(class_='form-select form-select-sm', style='border-radius: 0.5rem;') }}
+            {{ info_form.info_request.label(class_='form-label') }}
+            {{ info_form.info_request(class_='form-select form-select-sm') }}
           </div>
           <div class="mb-3">
-            <label class="small fw-600 mb-2">{{ info_form.custom_request.label.text }}</label>
-            {{ info_form.custom_request(class_='form-control form-control-sm', style='border-radius: 0.5rem;', rows='2') }}
+            {{ info_form.custom_request.label(class_='form-label') }}
+            {{ info_form.custom_request(class_='form-control form-control-sm', rows='2') }}
           </div>
           <div>
-            <label class="small fw-600 mb-2">{{ info_form.message.label.text }}</label>
-            {{ info_form.message(class_='form-control form-control-sm', style='border-radius: 0.5rem;', rows='4') }}
+            {{ info_form.message.label(class_='form-label') }}
+            {{ info_form.message(class_='form-control form-control-sm', rows='4') }}
           </div>
         </div>
-        <div class="modal-footer" style="border-top: 1px solid var(--dt-border-light);">
-          <button type="button" class="btn btn-ghost btn-sm" data-bs-dismiss="modal" style="border-radius: 0.5rem;">Cancel</button>
-          <button type="submit" class="btn btn-warning btn-sm" style="border-radius: 0.5rem; background: #f97316; border: none; color: white;">❓ Send Request</button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning">Send request</button>
         </div>
       </form>
     </div>

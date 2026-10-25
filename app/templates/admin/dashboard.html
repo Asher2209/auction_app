@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Admin - MintLot{% endblock %}
+{% block title %}Admin · MintLot{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">Admin</h1>
+{% set ws_title = "Marketplace overview" %}
 {% include "admin/_nav.html" %}
 
-<div class="row g-3 mb-4">
+<div class="stat-grid">
   {% for label, value, href in [
       ('Pending approvals', stats.pending, url_for('admin.products', status='pending')),
       ('Users', stats.users, url_for('admin.users')),
@@ -17,17 +17,14 @@
       ('Crypto payments (confirmed)', stats.crypto_payments, none),
       ('Pending payments', stats.pending_payments, none),
       ('Revenue (paid)', stats.revenue|money, none)] %}
-  <div class="col-6 col-md-3">
-    <div class="card h-100"><div class="card-body">
-      <div class="text-muted small">{{ label }}</div>
-      <div class="fs-3 fw-semibold">{% if href %}<a class="text-decoration-none" href="{{ href }}">{{ value }}</a>{% else %}{{ value }}{% endif %}</div>
-    </div></div>
-  </div>
+  {% if href %}<a class="stat" href="{{ href }}">{% else %}<div class="stat">{% endif %}
+    <span class="stat-label">{{ label }}</span><span class="stat-value">{{ value }}</span>
+  {% if href %}</a>{% else %}</div>{% endif %}
   {% endfor %}
 </div>
 
-<h2 class="h5">Trading cards &amp; blockchain</h2>
-<div class="row g-3 mb-4" id="card-stats">
+<h2 class="section-title">Trading cards &amp; blockchain</h2>
+<div class="stat-grid" id="card-stats">
   {% for label, value, href in [
       ('Collectible cards', cs.total, url_for('admin.cards_verify_dashboard')),
       ('Pending verification', cs.pending, url_for('admin.cards_verify_dashboard', status='pending')),
@@ -40,17 +37,14 @@
       ('Blockchain assets', cs.assets, url_for('admin.tokens')),
       ('Tokens minted', cs.minted, url_for('admin.tokens', status='minted')),
       ('Ownership transfers', cs.transfers, none)] %}
-  <div class="col-6 col-md-3">
-    <div class="card h-100"><div class="card-body">
-      <div class="text-muted small">{{ label }}</div>
-      <div class="fs-3 fw-semibold">{% if href %}<a class="text-decoration-none" href="{{ href }}">{{ value }}</a>{% else %}{{ value }}{% endif %}</div>
-    </div></div>
-  </div>
+  {% if href %}<a class="stat" href="{{ href }}">{% else %}<div class="stat">{% endif %}
+    <span class="stat-label">{{ label }}</span><span class="stat-value">{{ value }}</span>
+  {% if href %}</a>{% else %}</div>{% endif %}
   {% endfor %}
 </div>
 
-<h2 class="h5">Waiting for review</h2>
-<div class="list-group bg-white">
+<h2 class="section-title">Waiting for review</h2>
+<div class="list-group">
   {% for p in pending %}
   <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ url_for('admin.card_verification_detail', verification_id=p.collectible_verification.id) if p.collectible_verification else url_for('admin.product_review', product_id=p.id) }}">
     <span>{{ p.title }} <span class="text-muted small">by {{ p.seller.name }}</span></span>

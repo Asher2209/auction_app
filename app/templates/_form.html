@@ -1,8 +1,11 @@
-{% macro field(f, type=None) %}
+{# A labelled control with its errors under it; `hint` adds help text that the control points at with aria-describedby. #}
+{% macro field(f, hint=None) %}
 <div class="mb-3">
   {{ f.label(class="form-label") }}
   {% set cls = "form-select" if f.type == "SelectField" else "form-control" %}
-  {{ f(class=cls ~ (" is-invalid" if f.errors else ""), **kwargs) }}
+  {% set attrs = dict(kwargs) %}{% if hint %}{% set _ = attrs.update({"aria-describedby": f.id ~ "-hint"}) %}{% endif %}
+  {{ f(class=cls ~ (" is-invalid" if f.errors else ""), **attrs) }}
+  {% if hint %}<div class="form-text" id="{{ f.id }}-hint">{{ hint }}</div>{% endif %}
   {% for e in f.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
 </div>
 {% endmacro %}

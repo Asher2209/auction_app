@@ -1,14 +1,14 @@
 {% extends "auth/_card.html" %}
 {% from "_form.html" import checkbox, field %}
-{% block title %}Send feedback - MintLot{% endblock %}
+{% block title %}Send feedback · MintLot{% endblock %}
 {% block heading %}Send feedback{% endblock %}
+{% block lead %}<p class="auth-lead">Tell the administrators what works, what does not, or what you would like to see.</p>{% endblock %}
 {% block form %}
-<p class="text-muted small">Tell the administrators what works, what does not, or what you would like to see.</p>
 <form method="post" novalidate>
   {{ form.hidden_tag() }}
   {{ field(form.message, rows=6, maxlength=1000) }}
   {% call checkbox(form.consent) %}I agree that this message is stored with my account and read by the administrators, as the
     <a href="{{ url_for('legal.privacy') }}">Privacy Policy</a> describes.{% endcall %}
-  <button class="btn btn-primary" type="submit">Send</button>
+  <button class="btn btn-primary btn-lg w-100" type="submit">{{ icon('send', 18) }}Send feedback</button>
 </form>
 {% endblock %}

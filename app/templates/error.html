@@ -1,9 +1,13 @@
 {% extends "base.html" %}
-{% block title %}{{ code }} - MintLot{% endblock %}
+{% block title %}{{ code }} · MintLot{% endblock %}
 {% block content %}
-<div class="text-center py-5">
-  <h1 class="display-4">{{ code }}</h1>
-  <p class="lead">{{ message }}</p>
-  <a class="btn btn-primary" href="{{ url_for('main.index') }}">Back to home</a>
+<div class="error-page">
+  <span class="error-code" aria-hidden="true">{{ code }}</span>
+  <h1 class="error-title">{{ message }}</h1>
+  {% if code == 404 %}<p class="page-lead">The page may have moved, or the link may be out of date.</p>{% endif %}
+  <div class="d-flex gap-2 justify-content-center flex-wrap">
+    <a class="btn btn-primary" href="{{ url_for('main.index') }}">{{ icon('house', 16) }}Back to home</a>
+    <a class="btn btn-secondary" href="{{ url_for('auctions.browse') }}">Live auctions</a>
+  </div>
 </div>
 {% endblock %}

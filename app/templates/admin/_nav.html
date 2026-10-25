@@ -1,5 +1,17 @@
-<ul class="nav nav-tabs mb-4">
-  {% for label, ep in [('Overview', 'admin.dashboard'), ('Analytics', 'admin.analytics'), ('Reports', 'admin.reports'), ('Products', 'admin.products'), ('Card verification', 'admin.cards_verify_dashboard'), ('Users', 'admin.users'), ('Card tokens', 'admin.tokens'), ('Reviews', 'admin.reviews'), ('Feedback', 'admin.feedback')] %}
-  <li class="nav-item"><a class="nav-link {{ 'active' if request.endpoint == ep or (ep == 'admin.reports' and request.endpoint in ('admin.report_view',)) }}" href="{{ url_for(ep) }}">{{ label }}</a></li>
+{# Admin section header and tabs. The active tab names the page; a page may set ws_title / ws_lead before including this. #}
+{% set tabs = [('Overview', 'admin.dashboard'), ('Analytics', 'admin.analytics'), ('Reports', 'admin.reports'), ('Products', 'admin.products'), ('Card verification', 'admin.cards_verify_dashboard'), ('Users', 'admin.users'), ('Card tokens', 'admin.tokens'), ('Reviews', 'admin.reviews'), ('Feedback', 'admin.feedback')] %}
+{# detail pages light up the tab they belong to #}
+{% set parent = {'admin.report_view': 'admin.reports', 'admin.card_verification_detail': 'admin.cards_verify_dashboard', 'admin.product_review': 'admin.products', 'admin.token_detail': 'admin.tokens'}.get(request.endpoint, request.endpoint) %}
+{% set ns = namespace(title='Admin') %}
+{% for label, ep in tabs if parent == ep %}{% set ns.title = label %}{% endfor %}
+<header class="ws-head">
+  <span class="eyebrow">Admin</span>
+  <h1 class="ws-title">{{ ws_title or ns.title }}</h1>
+  {% if ws_lead %}<p class="page-lead">{{ ws_lead }}</p>{% endif %}
+</header>
+<nav class="ws-tabs" aria-label="Admin sections">
+  {% for label, ep in tabs %}
+  {% set on = parent == ep %}
+  <a class="ws-tab{{ ' is-active' if on }}" href="{{ url_for(ep) }}"{% if on %} aria-current="page"{% endif %}>{{ label }}</a>
   {% endfor %}
-</ul>
+</nav>

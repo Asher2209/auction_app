@@ -1,0 +1,23 @@
+{# The listing a conversation is about: where it lives, and a side panel describing it. #}
+{% macro listing_url(product) -%}
+{%- if product.auction -%}{{ url_for('auctions.detail', auction_id=product.auction.id) }}
+{%- elif product.collectible_card and product.approval_status == 'approved' -%}{{ url_for('main.view_card', card_id=product.collectible_card.id) }}
+{%- endif -%}
+{%- endmacro %}
+
+{% macro listing_panel(product, extra=none) %}
+{% set c = product.collectible_card %}
+{% set src = c.images[0].get_image_src() if c and c.images else (url_for('static', filename='uploads/' ~ product.images[0].path) if product.images else none) %}
+<aside class="panel msg-listing">
+  <span class="eyebrow">About</span>
+  {% if src %}<img class="msg-listing-img" src="{{ src }}" alt="">{% endif %}
+  <h2 class="panel-title">{{ c.card_name if c else product.title }}</h2>
+  <dl class="settings-facts">
+    <div><dt>Seller</dt><dd>{{ product.seller.name }}</dd></div>
+    {% if extra %}<div><dt>{{ extra[0] }}</dt><dd>{{ extra[1] }}</dd></div>{% endif %}
+    <div><dt>Starting price</dt><dd>{{ product.starting_price|money }}</dd></div>
+  </dl>
+  {% set href = listing_url(product) %}
+  {% if href %}<a href="{{ href }}" class="btn btn-secondary btn-sm w-100">View listing</a>{% endif %}
+</aside>
+{% endmacro %}

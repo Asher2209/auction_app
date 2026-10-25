@@ -1,98 +1,50 @@
 {% extends "base.html" %}
-{% block title %}Browse Trading Cards - MintLot{% endblock %}
+{% from "_auction_card.html" import card_tile %}
+{% from "_pagination.html" import pager %}
+{% block title %}Trading cards · MintLot{% endblock %}
 {% block content %}
 
-<div style="margin-bottom: var(--dt-space-3xl);">
-  <h1 class="h1 mb-2">Browse Trading Cards</h1>
-  <p class="lead">Explore verified collectible cards</p>
-</div>
+<header class="page-head">
+  <div>
+    <span class="eyebrow">Collection</span>
+    <h1 class="page-title">{{ card_type.name if card_type else 'Trading cards' }}</h1>
+    <p class="page-lead">{{ cards.total }} listed card{{ '' if cards.total == 1 else 's' }}, each reviewed by MintLot before it appears here.</p>
+  </div>
+  <a href="{{ url_for('main.search_cards') }}" class="btn btn-secondary">{{ icon('sliders-horizontal', 16) }}Search and filter</a>
+</header>
 
-{% if card_type %}
-<div class="mb-4">
-  <p style="color: var(--dt-text-secondary);">Browsing: <strong>{{ card_type.name }}</strong></p>
-</div>
-{% endif %}
+<form method="get" class="toolbar" aria-label="Card type and order">
+  <nav class="chip-row" aria-label="Card types">
+    <a href="{{ url_for('main.browse_cards', sort=sort) }}" class="chip chip-link{{ ' is-active' if not card_type }}"{% if not card_type %} aria-current="page"{% endif %}>All</a>
+    {% for t in all_types %}
+    <a href="{{ url_for('main.browse_cards', type=t.slug, sort=sort) }}" class="chip chip-link{{ ' is-active' if card_type and card_type.id == t.id }}"{% if card_type and card_type.id == t.id %} aria-current="page"{% endif %}>{{ t.name }}</a>
+    {% endfor %}
+  </nav>
+  {% if card_type %}<input type="hidden" name="type" value="{{ card_type.slug }}">{% endif %}
+  <div class="toolbar-sort">
+    <label class="form-label" for="cards-browse-sort">Sort by</label>
+    <select id="cards-browse-sort" class="form-select form-select-sm" name="sort" data-autosubmit>
+      {% for value, label in [('newest', 'Newest'), ('price_low', 'Estimate: low to high'), ('price_high', 'Estimate: high to low')] %}
+      <option value="{{ value }}" {{ 'selected' if sort == value }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <noscript><button type="submit" class="btn btn-secondary btn-sm">Apply</button></noscript>
+  </div>
+</form>
 
 {% if cards.items %}
 <div class="product-grid">
-  {% for card in cards.items %}
-    <div class="auction-card">
-      <div class="auction-card-image">
-        {% if card.images %}
-          {% set img = card.images[0] %}
-          {% if img.url %}
-            <img src="{{ img.url }}" alt="{{ card.card_name }}" style="height: 300px; object-fit: cover; width: 100%;" loading="lazy">
-          {% elif img.path %}
-            <img src="{{ url_for('static', filename='uploads/' ~ img.path) }}" alt="{{ card.card_name }}" style="height: 300px; object-fit: cover; width: 100%;">
-          {% else %}
-            <div style="display: flex; align-items: center; justify-content: center; height: 300px; background: var(--dt-bg-1);">
-              <span style="color: var(--dt-text-muted);">No image</span>
-            </div>
-          {% endif %}
-        {% else %}
-          <div style="display: flex; align-items: center; justify-content: center; height: 300px; background: var(--dt-bg-1);">
-            <span style="color: var(--dt-text-muted);">No image</span>
-          </div>
-        {% endif %}
-      </div>
-      
-      <div class="auction-card-body">
-        <div class="auction-card-category">{{ card.card_type.name }}</div>
-        <h3 class="auction-card-title">{{ card.card_name }}</h3>
-        
-        <div class="auction-card-info">
-          <div class="auction-card-bid">
-            <div class="auction-card-bid-label">Seller's estimate</div>
-            <div class="auction-card-bid-amount" style="color: var(--dt-accent); font-size: 1.25rem; font-weight: 600;">{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</div>
-          </div>
-        </div>
-        
-        <div class="auction-card-meta" style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--dt-space-md);">
-          <span class="auction-card-bids" style="font-size: 0.9rem; color: var(--dt-text-muted);">{{ card.set_name }}</span>
-          <a href="{{ url_for('main.view_card', card_id=card.id) }}" class="btn btn-sm btn-primary">View</a>
-        </div>
-      </div>
-    </div>
-  {% endfor %}
+  {% for c in cards.items %}{{ card_tile(c) }}{% endfor %}
 </div>
-
-{% if cards.pages > 1 %}
-<nav style="text-align: center; margin-top: var(--dt-space-3xl);">
-  <ul class="pagination" style="justify-content: center;">
-    {% if cards.has_prev %}
-    <li class="page-item">
-      <a class="page-link" href="{{ url_for('main.browse_cards', page=cards.prev_num) }}">&lt;&lt; Previous</a>
-    </li>
-    {% endif %}
-    
-    {% for page_num in cards.iter_pages() %}
-      {% if page_num %}
-        {% if page_num == cards.page %}
-        <li class="page-item active">
-          <span class="page-link">{{ page_num }}</span>
-        </li>
-        {% else %}
-        <li class="page-item">
-          <a class="page-link" href="{{ url_for('main.browse_cards', page=page_num) }}">{{ page_num }}</a>
-        </li>
-        {% endif %}
-      {% endif %}
-    {% endfor %}
-    
-    {% if cards.has_next %}
-    <li class="page-item">
-      <a class="page-link" href="{{ url_for('main.browse_cards', page=cards.next_num) }}">Next &gt;&gt;</a>
-    </li>
-    {% endif %}
-  </ul>
-</nav>
-{% endif %}
-
+<div class="results-pager d-flex justify-content-center">
+  {{ pager(cards, 'main.browse_cards', type=card_type.slug if card_type else none, sort=sort) }}
+</div>
 {% else %}
-<div class="empty-state" style="text-align: center; padding: var(--dt-space-3xl); background: var(--dt-bg-1); border-radius: var(--dt-radius-lg);">
-  <div class="empty-state-icon" style="font-size: 3rem; margin-bottom: var(--dt-space-lg);">No Cards</div>
-  <h3 class="empty-state-title">No Cards Available</h3>
-  <p class="empty-state-description" style="color: var(--dt-text-secondary); margin-bottom: var(--dt-space-lg);">Check back soon for new collectible cards.</p>
+<div class="empty-state">
+  {{ icon('layers', 32) }}
+  <h2 class="empty-state-title">No cards listed yet</h2>
+  <p class="empty-state-description">Cards appear here once a MintLot admin has reviewed them. Check back soon, or list one of your own.</p>
+  <a href="{{ url_for('seller.create_card') }}" class="btn btn-primary">Sell a card</a>
 </div>
 {% endif %}
 

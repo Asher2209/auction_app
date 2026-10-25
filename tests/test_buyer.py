@@ -150,7 +150,8 @@ def test_detail_shows_required_fields(client, market):
     assert "Sam" not in d  # seller name below
     assert users_seller_name(a) in d
     assert "$" not in d and "70.00" in d  # current highest bid
-    assert "Number of bids" in d and "Time remaining" in d and "Starting price" in d
+    # the bid count, the time left and the starting price, each labelled
+    assert '<span id="bid-count">' in d and " bid" in d and "Ends in" in d and 'id="countdown"' in d and "Starting price" in d
 
 
 def users_seller_name(a):
@@ -288,8 +289,8 @@ def test_dashboard_stats(client, market, users):
     login(client, "buyer@t.test")
     d = client.get("/buyer/").data.decode()
     # bidding on: Blue Book + Lead Item (2); leading: Lead Item (1); watching 1; won 1
-    for label, value in (("Bidding On", 2), ("Currently Leading", 1), ("Watching", 1), ("Auctions Won", 1)):
-        assert re.search(rf">{label}</div>\s*<div class=\"h2\"[^>]*>{value}</div>", d), label
+    for label, value in (("Bidding on", 2), ("Currently leading", 1), ("Watching", 1), ("Auctions won", 1)):
+        assert f'stat-label">{label}</span><span class="stat-value">{value}</span>' in d, label
 
 
 def test_won_page_lists_wins_with_payment_status(client, market, users):

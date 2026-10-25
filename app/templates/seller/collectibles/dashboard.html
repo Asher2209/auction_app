@@ -1,27 +1,22 @@
 {% extends "base.html" %}
-{% block title %}My cards - MintLot{% endblock %}
+{% block title %}My cards · MintLot{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-  <div>
-    <h1 class="h3 mb-1">My cards</h1>
-    <p class="text-muted small mb-0">Every card you have submitted, from verification to sale.</p>
-  </div>
-  <a href="{{ url_for('seller.create_card') }}" class="btn btn-primary">Add a card</a>
-</div>
+{% set ws_lead = 'Every card you have submitted, from verification to sale.' %}
+{% include "seller/_nav.html" %}
 {% if current_user.has_verified_wallet %}
 <p class="small text-muted mb-3" id="seller-wallet">Wallet <code>{{ current_user.wallet_address[:6] }}...{{ current_user.wallet_address[-4:] }}</code> (verified). Your cards are registered to it and buyers pay it.</p>
 {% else %}
 <div class="alert alert-warning small mb-3" role="status" id="seller-wallet"><span><strong>No verified wallet.</strong> Your verified cards can be registered on the blockchain and listed only after you <a href="{{ url_for("auth.profile") }}">verify a wallet</a> by signing a message with it.</span></div>
 {% endif %}
 
-<ul class="nav nav-tabs mb-3" id="card-tabs">
+<ul class="nav nav-pills mb-3" id="card-tabs">
   {% for key, label, count in tabs %}
   <li class="nav-item"><a class="nav-link {{ 'active' if key == group }}" href="{{ url_for('seller.collectibles_dashboard', status=key, sort=sort) }}">{{ label }} <span class="text-muted">({{ count }})</span></a></li>
   {% endfor %}
 </ul>
 
-<p class="small text-muted mb-2">Sort:
-  {% for key, label in sorts.items() %}<a class="{{ 'fw-bold' if key == sort else '' }}" href="{{ url_for('seller.collectibles_dashboard', status=group, sort=key) }}">{{ label }}</a>{{ ' &middot; '|safe if not loop.last }}{% endfor %}
+<p class="small text-muted mb-3">Sort:
+  {% for key, label in sorts.items() %}<a class="{{ 'fw-bold' if key == sort else '' }}" href="{{ url_for('seller.collectibles_dashboard', status=group, sort=key) }}"{% if key == sort %} aria-current="true"{% endif %}>{{ label }}</a>{{ ' &middot; '|safe if not loop.last }}{% endfor %}
 </p>
 
 {% if rows %}
@@ -34,7 +29,7 @@
       <tr>
         <td>
           <div class="d-flex align-items-center gap-3">
-            {% if c.images %}<img src="{{ c.images[0].get_image_src() }}" alt="" width="40" height="56" style="object-fit: contain; background: var(--dt-bg-0); border: 1px solid var(--dt-border); border-radius: 4px;">{% endif %}
+            {% if c.images %}<img src="{{ c.images[0].get_image_src() }}" alt="" width="40" height="56" class="thumb">{% endif %}
             <div>
               <a href="{{ url_for('seller.view_card', card_id=c.id) }}">{{ c.card_name }}</a>
               <div class="small text-muted">{{ [c.set_name, c.release_year, ('#' ~ c.card_number) if c.card_number else none]|select|join(' &middot; '|safe) }}</div>

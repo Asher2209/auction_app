@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Card tokens - Admin - MintLot{% endblock %}
+{% block title %}Card tokens · Admin · MintLot{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">Admin</h1>
 {% include "admin/_nav.html" %}
 
 <p class="text-muted small">Each platform-verified card gets one blockchain token. The token is a digital identity and ownership record; it does not prove the physical card is genuine.</p>
@@ -13,7 +12,7 @@
 </div>
 
 <div class="table-responsive">
-  <table class="table table-sm align-middle bg-white">
+  <table class="table table-sm align-middle">
     <thead><tr><th>Card ID</th><th>Card</th><th>Owner wallet</th><th>Status</th><th>Token</th><th>Ownership</th><th></th></tr></thead>
     <tbody>
       {% for a in page.items %}

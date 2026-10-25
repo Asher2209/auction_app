@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% macro row(label, value, mono=false) %}{% if value %}<div class="cd-row"><dt>{{ label }}</dt><dd{% if mono %} class="cd-mono"{% endif %}>{{ value }}</dd></div>{% endif %}{% endmacro %}
-{% block title %}{{ collectible_card.card_name }} - {% if is_verified %}Platform Verified{% else %}Card Record{% endif %} - MintLot{% endblock %}
+{% block title %}{{ collectible_card.card_name }} · {% if is_verified %}Platform Verified{% else %}Card Record{% endif %} · MintLot{% endblock %}
 {% block content %}
 {% set c = collectible_card %}
 {% set asset = blockchain_asset %}

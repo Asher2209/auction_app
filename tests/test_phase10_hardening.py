@@ -196,7 +196,7 @@ def test_the_edit_rule_follows_the_state_of_the_card(client, users, cat, card_ty
 def test_csp_no_unused_third_party_assets_are_loaded(client):
     page = client.get("/")
     html = page.get_data(as_text=True)
-    assert "lucide" not in html.lower() and "fonts.googleapis.com" not in html
+    assert "unpkg.com" not in html and "fonts.googleapis.com" not in html  # icons come from the local sprite, not a CDN
     csp = page.headers["Content-Security-Policy"]
     assert "'unsafe-inline'" not in dict(d.strip().split(" ", 1) for d in csp.split(";"))["script-src"] and "googleapis" not in csp
     assert "window.fetch" not in client.get("/static/js/modern-effects.js").get_data(as_text=True)

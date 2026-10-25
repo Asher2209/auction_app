@@ -1,15 +1,20 @@
 {% extends "base.html" %}
-{% block title %}{{ product.title }} - MintLot{% endblock %}
+{% block title %}{{ product.title }} · MintLot{% endblock %}
 {% block content %}
-<a class="small" href="{{ url_for('seller.dashboard') }}">&larr; My products</a>
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-2 mb-3">
+<nav aria-label="Breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('seller.collectibles_dashboard') }}">My cards</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ product.title[:40] }}</li>
+  </ol>
+</nav>
+<header class="page-head">
   <div>
-    <h1 class="h3 mb-1">{{ product.title }}</h1>
-    <span class="badge text-bg-secondary">{{ product.category.name }}</span>
-    <span class="badge text-bg-primary">{{ product.display_status|capitalize }}</span>
+    <span class="eyebrow">Selling</span>
+    <h1 class="page-title">{{ product.title }}</h1>
+    <div class="chip-row"><span class="chip chip-muted">{{ product.category.name }}</span><span class="chip chip-live">{{ product.display_status|capitalize }}</span></div>
   </div>
   {% if product.collectible_card %}
-  <a class="btn btn-outline-secondary" href="{{ url_for('seller.view_card', card_id=product.collectible_card.id) }}">Manage card</a>
+  <a class="btn btn-secondary" href="{{ url_for('seller.view_card', card_id=product.collectible_card.id) }}">Manage card</a>
   {% elif product.is_editable %}
   <div class="d-flex gap-2">
     <form method="post" action="{{ url_for('seller.delete_product', product_id=product.id) }}"
@@ -19,7 +24,7 @@
     </form>
   </div>
   {% endif %}
-</div>
+</header>
 
 {% if product.rejection_reason %}
 <div class="alert alert-danger"><strong>Rejected by administrator:</strong> {{ product.rejection_reason }}
@@ -70,7 +75,7 @@
 
 {% if bids %}
 <h2 class="h5 mt-4">Recent bids</h2>
-<table class="table table-sm bg-white" style="max-width:520px">
+<table class="table table-sm" style="max-width:520px">
   <thead><tr><th>Bidder</th><th>Amount</th><th>Time</th></tr></thead>
   <tbody>{% for b in bids %}<tr><td>{{ b.buyer.name }}</td><td>{{ b.amount|money }}</td><td>{{ b.bid_time|local }}</td></tr>{% endfor %}</tbody>
 </table>

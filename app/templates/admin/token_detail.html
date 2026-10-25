@@ -1,8 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Token for {{ card.platform_card_id }} - Admin - MintLot{% endblock %}
+{% block title %}Token for {{ card.platform_card_id }} · Admin · MintLot{% endblock %}
 {% block content %}
-<a class="small" href="{{ url_for('admin.tokens') }}">&larr; Card tokens</a>
-<h1 class="h3 my-3">{{ card.card_name }} <code class="fs-6">{{ card.platform_card_id }}</code></h1>
+{% set ws_title = card.card_name %}
+{% include "admin/_nav.html" %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+  <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.tokens') }}">{{ icon('arrow-left', 16) }}Card tokens</a>
+  <span class="chip chip-muted cd-mono">{{ card.platform_card_id }}</span>
+</div>
 
 <div class="row g-4">
   <div class="col-lg-6">

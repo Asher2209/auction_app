@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 {% from "_pagination.html" import pager %}
-{% block title %}My bids - MintLot{% endblock %}
+{% block title %}My bids · MintLot{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">My bids</h1>
 {% include "buyer/_nav.html" %}
 <div class="table-responsive">
-<table class="table table-hover align-middle bg-white">
+<table class="table table-hover align-middle">
   <thead><tr><th>Product</th><th>My bid</th><th>Highest bid</th><th>Status</th><th>Placed</th></tr></thead>
   <tbody>
   {% for b in page.items %}

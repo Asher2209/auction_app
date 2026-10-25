@@ -1,70 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Buyer Dashboard - MintLot{% endblock %}
+{% block title %}Your buying · MintLot{% endblock %}
 {% block content %}
+{% set ws_title = 'Welcome back, ' ~ current_user.name %}
+{% set ws_lead = 'Your bids, watchlist and wins in one place.' %}
+{% include "buyer/_nav.html" %}
 
-<!-- ========== PAGE HEADER ========== -->
-<div style="padding-bottom: 2rem; margin-bottom: 3rem; border-bottom: 1px solid var(--dt-border);">
-  <h1 class="h1 mb-1">Welcome back, {{ current_user.name }}</h1>
-  <p class="lead text-muted">Track your bids and manage your auctions</p>
-</div>
-
-<!-- ========== NAVIGATION TABS ========== -->
-<div style="display: flex; gap: 1rem; margin-bottom: 3rem; flex-wrap: wrap;">
-  {% include "buyer/_nav.html" %}
-</div>
-
-<!-- ========== STATS GRID ========== -->
-<div class="row g-4 mb-5">
-  {% set stats_items = [
-    ('Bidding On', stats.bidding_on, 'buyer.bids'),
-    ('Currently Leading', stats.leading, 'buyer.bids'),
-    ('Watching', stats.watching, 'buyer.watchlist'),
-    ('Auctions Won', stats.won, 'buyer.won')
-  ] %}
-
-  {% for label, value, endpoint in stats_items %}
-  <div class="col-12 col-sm-6 col-lg-3">
-    <a href="{{ url_for(endpoint) }}" class="text-decoration-none" style="transition: transform 0.2s;">
-      <div class="p-5 hover-lift" style="border-radius: 1.5rem; text-align: center; cursor: pointer; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-        <div style="width: 60px; height: 60px; background: var(--dt-bg-2); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: var(--dt-accent);">
-          {% if 'Bidding' in label %}
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
-            <path d="M12 2v20m0 0l-7-7m7 7l7-7"></path>
-          </svg>
-          {% elif 'Leading' in label %}
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
-            <path d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-          </svg>
-          {% elif 'Watching' in label %}
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          {% else %}
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 28px; height: 28px;">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          {% endif %}
-        </div>
-        <div class="text-muted small mb-2" style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">{{ label }}</div>
-        <div class="h2" style="color: var(--dt-text-primary); margin-bottom: 0;">{{ value }}</div>
-      </div>
-    </a>
-  </div>
+<div class="stat-grid">
+  {% for label, value, endpoint in [('Bidding on', stats.bidding_on, 'buyer.bids'), ('Currently leading', stats.leading, 'buyer.bids'), ('Watching', stats.watching, 'buyer.watchlist'), ('Auctions won', stats.won, 'buyer.won')] %}
+  <a class="stat" href="{{ url_for(endpoint) }}"><span class="stat-label">{{ label }}</span><span class="stat-value">{{ value }}</span></a>
   {% endfor %}
 </div>
 
-<!-- ========== EMPTY STATE / CTA ========== -->
-<div class="p-5" style="border-radius: 1.5rem; text-align: center; background: var(--dt-bg-1); border: 1px solid var(--dt-border); border-left: 4px solid var(--dt-accent);">
-  <h3 class="h5 mb-2" style="color: var(--dt-text-primary);">Ready to bid?</h3>
-  <p class="text-muted mb-4">Browse platform-verified trading cards and place your bids</p>
-  <a class="btn btn-primary" href="{{ url_for('auctions.browse') }}">
-    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="11" cy="11" r="8"></circle>
-      <path d="m21 21-4.35-4.35"></path>
-    </svg>
-    Browse All Auctions
-  </a>
-</div>
-
+<section class="home-cta">
+  <div>
+    <h2>Ready to bid?</h2>
+    <p>Browse live auctions of Platform Verified cards. New bids reach everyone instantly.</p>
+  </div>
+  <a class="btn btn-primary btn-lg" href="{{ url_for('auctions.browse') }}">{{ icon('search', 18) }}Browse live auctions</a>
+</section>
 {% endblock %}

@@ -1,127 +1,116 @@
 {% extends "base.html" %}
-{% block title %}{{ card.card_name }} - MintLot{% endblock %}
+{% from "_auction_card.html" import card_tile %}
+{% macro row(label, value, mono=false) %}{% if value %}<div class="cd-row"><dt>{{ label }}</dt><dd{% if mono %} class="cd-mono"{% endif %}>{{ value }}</dd></div>{% endif %}{% endmacro %}
+{% block title %}{{ card.card_name }} · MintLot{% endblock %}
 {% block content %}
-<nav class="mb-4">
+{% set v = product.collectible_verification %}
+{% set verified = v and v.verification_status == 'verified' %}
+{% set auction = product.auction %}
+
+<nav aria-label="Breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ url_for('main.browse_cards') }}">Cards</a></li>
     <li class="breadcrumb-item"><a href="{{ url_for('main.browse_cards', type=card.card_type.slug) }}">{{ card.card_type.name }}</a></li>
-    <li class="breadcrumb-item active">{{ card.card_name }}</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ card.card_name[:40] }}</li>
   </ol>
 </nav>
 
 <div class="product-detail-grid">
   <div class="product-detail-gallery">
-    {% if card.images and card.images|length > 0 %}
+    {% if images %}
     <div class="product-detail-gallery-main">
-      <img id="gallery-main" src="{{ card.images[0].get_image_src() }}" alt="{{ card.card_name }}" style="height: 400px; object-fit: contain; background: #f5f5f5; padding: 10px;">
+      <img id="gallery-main" src="{{ images[0].get_image_src() }}" alt="{{ card.card_name }}">
     </div>
-    {% if card.images|length > 1 %}
+    {% if images|length > 1 %}
     <div class="product-detail-gallery-thumbs" id="gallery-thumbs">
-      {% for img in card.images[:4] %}
-      <button type="button" class="product-detail-gallery-thumb" data-gallery-src="{{ img.get_image_src() }}" aria-label="Show image {{ loop.index }}">
-        <img src="{{ img.get_image_src() }}" alt="" style="height: 60px; object-fit: contain;">
-      </button>
+      {% for img in images %}
+      <button type="button" class="product-detail-gallery-thumb" data-gallery-src="{{ img.get_image_src() }}" aria-label="Show the {{ img.image_type|replace('_', ' ') }} image"><img src="{{ img.get_image_src() }}" alt=""></button>
       {% endfor %}
     </div>
     {% endif %}
     {% else %}
-    <div class="product-detail-gallery-main" style="display: flex; align-items: center; justify-content: center; height: 400px; background: #f5f5f5;">
-      <p>No image available</p>
-    </div>
+    <div class="product-detail-gallery-main d-flex align-items-center justify-content-center"><p class="text-muted mb-0">No image available</p></div>
     {% endif %}
   </div>
-  
+
   <div class="product-detail-info">
     <div class="product-info-header">
+      <div class="eyebrow">{{ [card.set_name, card.release_year, card.card_number, card.rarity, card.language]|select|join(' &middot; '|safe) }}</div>
       <h1 class="product-info-title">{{ card.card_name }}</h1>
       <div class="product-info-meta">
-        <span class="product-info-badge">{{ card.card_type.name }}</span>
-        {% if card.is_graded %}
-        <span class="badge badge-success">{{ card.grading_company or 'Verified' }}</span>
-        {% endif %}
+        {% if verified %}<span class="chip chip-verified" title="A MintLot admin reviewed the submitted details and images. This is not a guarantee of authenticity.">{{ icon('badge-check', 15) }}Platform verified</span>{% endif %}
+        {% if card.condition %}<span class="chip">{{ card.condition }}{% if not card.is_graded %} &middot; ungraded{% endif %}</span>{% endif %}
+        {% if card.is_graded and card.grade %}<span class="chip">{{ card.grading_company }} {{ card.grade }}</span>{% endif %}
+        <span class="chip chip-muted">{{ card.card_type.name }}</span>
       </div>
     </div>
-    
+
     <div class="product-auction-info">
       <div class="product-auction-bid">
         <div class="product-auction-bid-label">Seller's estimate</div>
         <div class="product-auction-bid-value">{{ card.estimated_value|money if card.estimated_value else 'Not given' }}</div>
+        <div class="product-auction-bid-count">The seller's own view of the card's value, not a price or an appraisal.</div>
       </div>
-      
-      <div style="display: grid; gap: var(--dt-space-md); padding-top: var(--dt-space-xl); border-top: 1px solid var(--dt-border);">
-        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-          <span style="color: var(--dt-text-muted);">Condition</span>
-          <strong>{{ card.condition }}</strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-          <span style="color: var(--dt-text-muted);">Set</span>
-          <strong>{{ card.set_name }}</strong>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-          <span style="color: var(--dt-text-muted);">Year</span>
-          <strong>{{ card.release_year }}</strong>
-        </div>
-        {% if card.is_graded %}
-        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-          <span style="color: var(--dt-text-muted);">Grade</span>
-          <strong style="color: var(--dt-accent);">{{ card.grade }}</strong>
-        </div>
-        {% endif %}
-      </div>
-      
-      <div style="margin-top: var(--dt-space-xl); padding-top: var(--dt-space-xl); border-top: 1px solid var(--dt-border);">
-        <a href="{{ url_for('main.browse_cards') }}" class="btn btn-secondary w-100">Back to Browse</a>
-      </div>
+      {% if auction and auction.status in ('active', 'scheduled') %}
+      <a href="{{ url_for('auctions.detail', auction_id=auction.id) }}" class="btn btn-primary btn-lg w-100 mt-4">{{ icon('gavel', 18) }}{{ 'Bid on this card' if auction.status == 'active' else 'See the upcoming auction' }}</a>
+      {% else %}
+      <p class="bid-note">{{ icon('clock', 16) }}<span>This card is not at auction right now. It can be bid on once its seller starts an auction.</span></p>
+      {% endif %}
     </div>
-    
+
     <div class="product-seller-info">
       <div class="product-seller-header">
-        <div class="product-seller-avatar">{{ product.seller.name[0].upper() }}</div>
-        <div style="flex: 1;">
-          <div class="product-seller-name">{{ product.seller.name }}</div>
-          <div class="product-seller-rating">Seller</div>
+        <div class="product-seller-avatar">{{ seller.name[0].upper() }}</div>
+        <div>
+          <div class="product-seller-name">{{ seller.name }}</div>
+          <div class="product-seller-rating text-muted small">Seller</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-{% if card.condition_notes %}
-<section class="description-section" style="margin-top: var(--dt-space-4xl);">
-  <h2 class="description-title">Condition Notes</h2>
-  <div class="description-content">{{ card.condition_notes }}</div>
-</section>
-{% endif %}
+<div class="cd-stack">
+  <section class="cd-panel">
+    <h2 class="cd-heading">Card details</h2>
+    <dl class="cd-grid">
+      {{ row('Set', card.set_name ~ (' (' ~ card.set_code ~ ')' if card.set_code else '') if card.set_name) }}
+      {{ row('Year', card.release_year) }}
+      {{ row('Card number', card.card_number) }}
+      {{ row('Rarity', card.rarity) }}
+      {{ row('Edition', card.edition) }}
+      {{ row('Language', card.language) }}
+      {{ row('Manufacturer', card.manufacturer) }}
+    </dl>
+  </section>
+
+  <section class="cd-panel">
+    <h2 class="cd-heading">Condition &amp; grading</h2>
+    <dl class="cd-grid">
+      {{ row('Condition', card.condition) }}
+      {% if card.is_graded %}
+      {{ row('Grading company', card.grading_company) }}
+      {{ row('Grade', card.grade) }}
+      {% else %}
+      {{ row('Grading', 'Ungraded') }}
+      {% endif %}
+    </dl>
+    {% if card.condition_notes %}<p class="cd-note"><span class="cd-note-label">Condition notes</span>{{ card.condition_notes }}</p>{% endif %}
+    <p class="cd-note">Condition and grading details are entered by the seller.{% if card.platform_card_id %} <a href="{{ url_for('collectibles.verify_card', platform_card_id=card.platform_card_id) }}">See this card's public record</a>.{% endif %}</p>
+  </section>
+</div>
 
 {% if related %}
-<section style="margin-top: var(--dt-space-4xl);">
-  <div class="section-header">
-    <h2 class="section-title">Similar Cards</h2>
-  </div>
-  
-  <div class="product-grid">
-    {% for item in related %}
-    <div class="auction-card">
-      <div class="auction-card-image">
-        {% if item.images and item.images|length > 0 %}
-          <img src="{{ item.images[0].get_image_src() }}" alt="{{ item.card_name }}" style="height: 300px; object-fit: contain; background: #f5f5f5; padding: 5px;">
-        {% else %}
-          <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: var(--dt-bg-1);"><span>No image</span></div>
-        {% endif %}
-      </div>
-      <div class="auction-card-body">
-        <div class="auction-card-category">{{ item.card_type.name }}</div>
-        <h3 class="auction-card-title">{{ item.card_name }}</h3>
-        <div class="auction-card-bid">
-          <div class="auction-card-bid-label">Seller's estimate</div>
-          <div class="auction-card-bid-amount">{{ item.estimated_value|money if item.estimated_value else 'Not given' }}</div>
-        </div>
-        <div class="auction-card-meta">
-          <a href="{{ url_for('main.view_card', card_id=item.id) }}" class="btn btn-sm btn-primary">View</a>
-        </div>
-      </div>
+<section class="home-section" aria-labelledby="similar-cards">
+  <div class="home-section-head">
+    <div>
+      <span class="eyebrow">More {{ card.card_type.name }}</span>
+      <h2 id="similar-cards">Similar cards</h2>
     </div>
-    {% endfor %}
+    <a href="{{ url_for('main.browse_cards', type=card.card_type.slug) }}" class="btn btn-link">See all</a>
+  </div>
+  <div class="product-grid">
+    {% for item in related %}{{ card_tile(item) }}{% endfor %}
   </div>
 </section>
 {% endif %}

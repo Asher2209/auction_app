@@ -27,9 +27,21 @@ def index():
         .all()
     )
     categories = card_categories()
-    return render_template("index.html", auctions=live, categories=categories,
+    return render_template("index.html", auctions=live, categories=categories, showcase=_showcase(live),
                            counts=bid_counts([a.id for a in live]),
                            ratings=rs.stats_for_products([a.product_id for a in live]))
+
+
+def _showcase(live, size=3):
+    """Up to three card images for the home page hero: cards in live auctions first, then recently verified ones."""
+    from ...models import CollectibleVerification
+    cards = [a.product.collectible_card for a in live if a.product.collectible_card]
+    if len(cards) < size:
+        recent = (CollectibleCard.query.join(CollectibleVerification, CollectibleVerification.collectible_card_id == CollectibleCard.id)
+                  .filter(CollectibleVerification.verification_status == "verified")
+                  .order_by(CollectibleVerification.verification_date.desc()).limit(size * 3).all())
+        cards += [c for c in recent if c not in cards]
+    return [{"src": c.images[0].get_image_src(), "name": c.card_name} for c in cards if c.images][:size]
 
 
 @bp.route("/dashboard")

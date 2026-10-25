@@ -1,132 +1,59 @@
 {% extends "base.html" %}
 {% from "_form.html" import field %}
-{% block title %}Account Settings - MintLot{% endblock %}
+{% block title %}Your account · MintLot{% endblock %}
 {% block content %}
 
-<!-- ========== PAGE HEADER ========== -->
-<div style="padding-bottom: 2rem; border-bottom: 1px solid var(--dt-border); margin-bottom: 3rem;">
-  <h1 class="h1 mb-2">Account Settings</h1>
-  <p class="lead text-muted">Manage your profile and account preferences</p>
-</div>
-
-<div class="row g-4">
-  <!-- ========== SIDEBAR: ACCOUNT INFO ========== -->
-  <div class="col-lg-3">
-    <div class="p-5" style="border-radius: 1.5rem; text-align: center; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
-      <!-- Avatar -->
-      <div style="width: 100px; height: 100px; background: var(--dt-bg-2); border: 1px solid var(--dt-border); border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: var(--dt-accent); font-size: 2.5rem; font-weight: 700;">
-        {{ current_user.name[0] }}
-      </div>
-
-      <!-- User Info -->
-      <h3 class="h5 mb-1" style="color: var(--dt-text-primary);">{{ current_user.name }}</h3>
-      <p class="text-muted small mb-3">{{ current_user.email }}</p>
-
-      <!-- Badge -->
-      <div class="mb-4">
-        <span class="badge" style="background: {% if current_user.role == 'seller' %}rgba(37, 99, 235, 0.15){% else %}rgba(16, 185, 129, 0.15){% endif %}; color: {% if current_user.role == 'seller' %}#1d4ed8{% else %}#047857{% endif %}; padding: 0.5rem 1rem; font-size: 0.85rem;">
-          {{ {'seller': '🏪 Seller Account', 'buyer': '👤 Buyer Account'}[current_user.role] }}
-        </span>
-      </div>
-
-      <!-- Member Since -->
-      <p class="text-muted small mb-4" style="border-top: 1px solid var(--dt-border); padding-top: 1rem;">
-        Member since<br>
-        <strong style="color: var(--dt-text-primary);">{{ current_user.created_at|datetimeformat("%b %Y") }}</strong>
-      </p>
-
-      <!-- Quick Links -->
-      <div class="d-grid gap-2">
-        <a href="{{ url_for('main.dashboard') }}" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">
-          Dashboard
-        </a>
-        <a href="{{ url_for('auth.change_password') }}" class="btn btn-ghost" style="font-size: 0.9rem; padding: 0.5rem;">
-          Change Password
-        </a>
-      </div>
-    </div>
+<header class="page-head">
+  <div>
+    <span class="eyebrow">Settings</span>
+    <h1 class="page-title">Your account</h1>
+    <p class="page-lead">Your details, password and the wallet that holds your cards.</p>
   </div>
+</header>
 
-  <!-- ========== MAIN FORM ========== -->
-  <div class="col-lg-9">
-    <form method="post" novalidate class="p-5" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);">
+<div class="settings">
+  <aside class="panel settings-summary">
+    <div class="settings-avatar" aria-hidden="true">{{ current_user.name[0]|upper }}</div>
+    <div class="settings-name">{{ current_user.name }}</div>
+    <div class="settings-email">{{ current_user.email }}</div>
+    <span class="chip {{ 'chip-live' if current_user.role == 'seller' else 'chip-verified' if current_user.role == 'buyer' else 'chip-upcoming' }}">{{ current_user.role|capitalize }} account</span>
+    <dl class="settings-facts">
+      <div><dt>Member since</dt><dd>{{ current_user.created_at|datetimeformat("%b %Y") }}</dd></div>
+      <div><dt>Wallet</dt><dd>{{ 'Verified' if current_user.has_verified_wallet else 'Not verified' if current_user.wallet_address else 'None' }}</dd></div>
+    </dl>
+    <div class="d-grid gap-2">
+      <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary btn-sm">{{ icon('layout-dashboard', 16) }}Dashboard</a>
+      <a href="{{ url_for('auth.change_password') }}" class="btn btn-secondary btn-sm">{{ icon('key-round', 16) }}Change password</a>
+    </div>
+  </aside>
+
+  <div class="settings-main">
+    <form method="post" novalidate class="panel">
       {{ form.hidden_tag() }}
-
-      <!-- Personal Information Section -->
-      <div class="mb-5">
-        <h2 class="h5 mb-4" style="color: var(--dt-text-primary);">
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 0.5rem;">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-          Personal Information
-        </h2>
-
-        <div class="row g-4">
-          <div class="col-md-6">
-            {{ form.name.label(class="form-label") }}
-            {{ form.name(class="form-control" ~ (" is-invalid" if form.name.errors else ""), style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
-            {% for e in form.name.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label" for="profile-email">Email Address</label>
-            <input id="profile-email" type="email" class="form-control" value="{{ current_user.email }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
-            <small class="text-muted d-block mt-1">Your email cannot be changed</small>
-          </div>
-
-          <div class="col-md-6">
-            {{ form.phone.label(class="form-label") }}
-            {{ form.phone(class="form-control" ~ (" is-invalid" if form.phone.errors else ""), style="border-radius: 0.75rem; padding: 0.75rem 1rem;") }}
-            {% for e in form.phone.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label" for="profile-role">Account Role</label>
-            <input id="profile-role" type="text" class="form-control" value="{{ current_user.role|capitalize }}" disabled style="border-radius: 0.75rem; padding: 0.75rem 1rem;">
-            <small class="text-muted d-block mt-1">Your account type cannot be changed</small>
-          </div>
+      <h2 class="panel-title">Personal details</h2>
+      <div class="auth-grid">
+        {{ field(form.name, autocomplete="name") }}
+        <div class="mb-3">
+          <label class="form-label" for="profile-email">Email</label>
+          <input id="profile-email" type="email" class="form-control" value="{{ current_user.email }}" disabled aria-describedby="profile-email-hint">
+          <div class="form-text" id="profile-email-hint">Your email can't be changed.</div>
+        </div>
+        {{ field(form.phone, autocomplete="tel", inputmode="tel") }}
+        <div class="mb-3">
+          <label class="form-label" for="profile-role">Account type</label>
+          <input id="profile-role" type="text" class="form-control" value="{{ current_user.role|capitalize }}" disabled aria-describedby="profile-role-hint">
+          <div class="form-text" id="profile-role-hint">Your account type can't be changed.</div>
         </div>
       </div>
-
-      <!-- Address Section -->
-      <div class="mb-5" style="border-top: 1px solid var(--dt-border); padding-top: 2rem;">
-        <h2 class="h5 mb-4" style="color: var(--dt-text-primary);">
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 0.5rem;">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-          Mailing Address
-        </h2>
-
-        {{ form.address.label(class="form-label") }}
-        {{ form.address(class="form-control" ~ (" is-invalid" if form.address.errors else ""), rows=3, style="border-radius: 0.75rem; padding: 0.75rem 1rem; resize: none;") }}
-        {% for e in form.address.errors %}<div class="invalid-feedback d-block mt-1">{{ e }}</div>{% endfor %}
-        <small class="text-muted d-block mt-1">Used for shipping and correspondence</small>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="d-flex gap-2 pt-2" style="border-top: 1px solid var(--dt-border);">
-        <button class="btn btn-primary" type="submit">
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          Save Changes
-        </button>
-        <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-primary">
-          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-          Change Password
-        </a>
+      {{ field(form.address, hint="Used for shipping won cards and for correspondence.", autocomplete="street-address", rows=3) }}
+      <div class="panel-actions">
+        <button class="btn btn-primary" type="submit">Save changes</button>
       </div>
     </form>
 
-    <!-- ========== WALLET (linked only by signing a message with it) ========== -->
-    <section class="p-5 mt-4" style="border-radius: 1.5rem; background: var(--dt-bg-1); border: 1px solid var(--dt-border);" id="wallet-root"
+    <section class="panel" id="wallet-root"
              data-challenge-url="{{ url_for("auth.wallet_challenge") }}" data-verify-url="{{ url_for("auth.wallet_verify") }}">
-      <h2 class="h5 mb-3" style="color: var(--dt-text-primary);">Wallet</h2>
+      <h2 class="panel-title">{{ icon('wallet', 18) }}Wallet</h2>
       {% if current_user.has_verified_wallet %}
         <p class="mb-1">Linked wallet: <code class="text-break" id="linked-wallet">{{ current_user.wallet_address }}</code></p>
         <p class="small text-muted mb-3" id="wallet-state">Verified on {{ current_user.wallet_verified_at|datetimeformat("%d %b %Y") }}: you proved you control it by signing a message with it.</p>
@@ -145,12 +72,12 @@
         {% if current_user.wallet_address %}
         <form method="post" action="{{ url_for("auth.wallet_remove") }}" data-confirm="Remove this wallet from your account?">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="btn btn-outline-secondary">Remove wallet</button>
+          <button type="submit" class="btn btn-secondary">Remove wallet</button>
         </form>
         {% endif %}
       </div>
       <p class="small mt-3 mb-2" id="wallet-error" role="status" aria-live="polite"></p>
-      <p class="small mb-0"><strong>Never share your private key or seed phrase.</strong> MintLot never asks for them.</p>
+      <p class="settings-warning">{{ icon('shield-check', 16) }}<span><strong>Never share your private key or seed phrase.</strong> MintLot never asks for them.</span></p>
     </section>
   </div>
 </div>
