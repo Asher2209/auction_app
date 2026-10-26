@@ -692,12 +692,21 @@ def test_sql_injection_corpus_on_public_and_admin_search(app, users, cats, paylo
     assert User.query.count() == users_before
 
 
+
+def test_a_nul_byte_in_a_query_or_form_is_refused_not_a_server_error(app, users):
+    c = anon(app)
+    assert c.get("/auctions/", query_string={"q": "a\x00b"}).status_code == 400
+    assert c.get("/auctions/?q=a%00b").status_code == 400
+    assert c.post("/auth/login", data={"email": "x\x00@t.test", "password": "p"}).status_code == 400
+    assert c.get("/auctions/", query_string={"q": "card"}).status_code == 200
+
 @pytest.mark.parametrize("payload", SQLI)
 def test_sql_injection_corpus_on_login_and_forms(app, users, payload):
     c = anon(app)
-    assert bad_login(c, email=payload, password=payload).status_code in (200, 429)
+    refused = (400,) if "\x00" in payload else ()  # a NUL byte is turned away before any form sees it
+    assert bad_login(c, email=payload, password=payload).status_code in (200, 429, *refused)
     r = c.post("/auth/forgot-password", data={"email": payload})
-    assert r.status_code in (200, 302, 429)
+    assert r.status_code in (200, 302, 429, *refused)
     assert User.query.count() == 3 and db.session.get(User, users["buyer"].id).check_password(PASSWORD)
 
 

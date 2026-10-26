@@ -48,6 +48,20 @@ def app(tmp_path):
         # A session left open anywhere in this process (another app, a request context) keeps its transaction and its
         # locks; on Postgres the next TRUNCATE or DROP TABLE would wait for it forever. SQLite has no such locks.
         close_all_sessions()
+        _empty_all_tables()  # and leave nothing behind for a test that builds its own app on the same database
+
+
+if not TestConfig.SQLALCHEMY_DATABASE_URI.startswith("sqlite"):
+    # A test that builds its own app ends with db.drop_all() while its own session may still be inside a transaction
+    # (a request read a user within the same app context). On Postgres that DROP TABLE would wait for the session
+    # forever, in the same process; so on a database server every drop first closes all sessions.
+    _drop_all = db.drop_all
+
+    def _drop_all_without_waiting(*args, **kwargs):
+        close_all_sessions()
+        return _drop_all(*args, **kwargs)
+
+    db.drop_all = _drop_all_without_waiting
 
 
 def _empty_all_tables():

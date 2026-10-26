@@ -1,5 +1,5 @@
 from ..extensions import db
-from . import utcnow
+from . import BIG_INT, utcnow
 
 
 class BlockchainAsset(db.Model):
@@ -26,7 +26,7 @@ class BlockchainAsset(db.Model):
 
     # Minting details (when token was created)
     mint_transaction_hash = db.Column(db.String(66), unique=True, index=True)  # Transaction hash when minted
-    mint_block_number = db.Column(db.Integer)
+    mint_block_number = db.Column(BIG_INT)
     mint_date = db.Column(db.DateTime, default=utcnow)
 
     # Status: draft / minting / minted / transferring / transferred
@@ -61,8 +61,8 @@ class BlockchainTransfer(db.Model):
 
     # Blockchain details
     transaction_hash = db.Column(db.String(66), unique=True, index=True)  # Transfer transaction
-    block_number = db.Column(db.Integer)
-    chain_id = db.Column(db.Integer)
+    block_number = db.Column(BIG_INT)
+    chain_id = db.Column(BIG_INT)
     network = db.Column(db.String(30), default="sepolia")
 
     # Status: pending / confirmed / failed

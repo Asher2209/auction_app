@@ -1,7 +1,7 @@
 """Cross-cutting security: response headers, error pages, production configuration checks, database integrity."""
 import time
 
-from flask import jsonify, render_template, request, session
+from flask import abort, jsonify, render_template, request, session
 from flask_login import current_user, logout_user
 from flask_wtf.csrf import CSRFError
 from sqlalchemy import event
@@ -67,6 +67,16 @@ def init_security(app):
         problems = production_problems(app)
         if problems:
             raise RuntimeError("Unsafe production configuration:\n  - " + "\n  - ".join(problems))
+
+    @app.before_request
+    def refuse_nul_bytes():
+        """A NUL character is never real input, and PostgreSQL cannot store or even compare text holding one: without
+        this, a search for "a\\x00b" would be a server error. Query strings and form fields only; uploads are separate."""
+        if "\x00" in request.query_string.decode("latin-1") or "%00" in request.query_string.decode("latin-1").lower():
+            abort(400)
+        if request.method in ("POST", "PUT", "PATCH") and request.mimetype in ("application/x-www-form-urlencoded", "multipart/form-data"):
+            if any("\x00" in v for v in request.form.values()):
+                abort(400)
 
     @app.before_request
     def enforce_login_lifetime():
