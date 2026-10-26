@@ -62,11 +62,11 @@ def test_first_bid_below_starting_price_rejected(auction, users):
 def test_later_bids_must_beat_current_bid(auction, users):
     bid(auction, users["buyer"], "150")
     b2 = make_user("b2@t.test")
-    for amount in ("150", "149.99", "100", "1"):
+    for amount in ("150", "159.99", "100", "1"):  # below ₹500 a bid must beat the current one by ₹10 (Config.BID_INCREMENTS)
         assert "higher than the current bid" in rejected(auction, b2, amount).message
-    bid(auction, b2, "150.01")
+    bid(auction, b2, "160")
     db.session.refresh(auction)
-    assert auction.current_bid == Decimal("150.01") and Bid.query.count() == 2
+    assert auction.current_bid == Decimal("160") and Bid.query.count() == 2
 
 
 def test_same_bidder_can_raise_own_bid(auction, users):
@@ -262,7 +262,7 @@ def test_http_bid_success_json(app, auction, users):
     r = post_bid(c, auction, "125.50")
     assert r.status_code == 200 and r.json["ok"] and r.json["current_bid"] == "125.50"
     assert r.json["bid_count"] == 1 and r.json["bidder_mask"] == "b***" and r.json["extended"] is False
-    assert r.json["min_next_bid"] == "125.51" and "buyer@t.test" not in r.get_data(as_text=True)
+    assert r.json["min_next_bid"] == "135.50" and "buyer@t.test" not in r.get_data(as_text=True)  # one ₹10 step up
 
 
 @pytest.mark.parametrize("amount,status", [("abc", 400), ("50", 400), ("-1", 400)])

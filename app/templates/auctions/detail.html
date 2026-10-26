@@ -63,6 +63,7 @@
           <div class="product-auction-bid-label" id="bid-label">{{ 'Current bid' if bid_total else 'Starting price' }}</div>
           <div class="product-auction-bid-value" id="current-bid">{{ auction.current_bid|money }}</div>
           <div class="product-auction-bid-count"><span id="bid-count">{{ bid_total }}</span> bid{{ '' if bid_total == 1 else 's' }}</div>
+          {% if state.has_reserve %}<span id="reserve-chip" class="chip {{ 'chip-verified' if state.reserve_met else 'chip-muted' }}" title="The seller set a reserve price. Below it, the card is not sold. The amount is kept private.">{{ 'Reserve met' if state.reserve_met else 'Reserve not met' }}</span>{% endif %}
         </div>
         <div class="product-auction-timer">
           <div class="product-auction-timer-label" id="countdown-label">{{ {'active': 'Ends in', 'scheduled': 'Starts in', 'closed': ''}[auction.status] }}</div>
@@ -75,6 +76,15 @@
         {% if auction.winner %}Won by {{ auction.winner.buyer.name|mask }} for {{ auction.winner.winning_amount|money }}.{% endif %}
       </div>
 
+      {% if can_bid and state.buy_now_price %}
+      <form id="buy-now-form" method="post" action="{{ url_for('auctions.buy_now', auction_id=auction.id) }}" class="buy-now-form"
+            data-confirm="Buy this card now for {{ currency }}{{ '{:,.2f}'.format(state.buy_now_price|float) }}? The auction ends and you pay this price.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-secondary btn-lg w-100" type="submit">Buy It Now &middot; {{ currency }}{{ '{:,.2f}'.format(state.buy_now_price|float) }}</button>
+        <p class="bid-note"><span>Available until the first bid.</span></p>
+      </form>
+      {% endif %}
+
       {% if can_bid %}
       <form id="bid-form" method="post" action="{{ url_for('auctions.place_bid', auction_id=auction.id) }}" class="bid-form {{ '' if auction.status == 'active' else 'd-none' }}" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -86,6 +96,17 @@
           </div>
           <button class="btn btn-primary btn-lg" type="submit" id="bid-btn">Place bid</button>
         </div>
+        <p class="bid-step">Bids go up in steps of <span id="bid-step">{{ currency }}{{ '{:,.2f}'.format(state.bid_step|float) }}</span> at this price.</p>
+        <details class="bid-max" {{ 'open' if my_max }}>
+          <summary>Bid automatically up to a maximum</summary>
+          <label class="form-label" for="max_amount">Your maximum (optional)</label>
+          <div class="bid-input">
+            <span class="bid-input-currency" aria-hidden="true">{{ currency }}</span>
+            <input class="form-control" id="max_amount" name="max_amount" inputmode="decimal" autocomplete="off" placeholder="{{ '%.2f'|format(my_max) if my_max else '' }}">
+          </div>
+          <p class="bid-note"><span>We bid for you, one step above anyone else, up to this amount. Nobody else sees it.
+            <span id="my-max-line" class="{{ '' if my_max else 'd-none' }}">Your maximum now: <strong id="my-max">{{ my_max|money if my_max else '' }}</strong>.</span></span></p>
+        </details>
         <div class="text-danger small" id="bid-error" role="alert"></div>
         <p class="bid-note">{{ icon('clock', 16) }}<span>Fair finish: a bid in the last minute extends the auction by 2 minutes, so nobody wins by sniping. Once placed, a bid is binding and cannot be withdrawn (<a href="{{ url_for('legal.terms') }}#bidding">Terms of Service</a>).</span></p>
       </form>

@@ -13,6 +13,12 @@ class CardAuctionForm(FlaskForm):
     starting_bid = DecimalField(
         "Starting bid", places=2,
         validators=[DataRequired(), NumberRange(min=1, max=10_000_000, message="Enter a bid between 1 and 10,000,000.")])
+    reserve_price = DecimalField(
+        "Reserve price (optional)", places=2, description="The lowest price you will sell for. Bidders only see whether it has been met.",
+        validators=[Optional(), NumberRange(min=1, max=10_000_000, message="Enter a price between 1 and 10,000,000.")])
+    buy_now_price = DecimalField(
+        "Buy It Now price (optional)", places=2, description="Anyone may buy at this price until the first bid.",
+        validators=[Optional(), NumberRange(min=1, max=10_000_000, message="Enter a price between 1 and 10,000,000.")])
     duration_hours = SelectField("Auction duration", coerce=int, choices=DURATIONS, default=168,
                                  validators=[DataRequired()])
     start_time = timeutil.LocalDateTimeField("Start time. Leave empty to start now", format=DT_FORMAT,

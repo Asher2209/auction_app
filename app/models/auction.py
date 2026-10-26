@@ -18,6 +18,10 @@ class Auction(db.Model):
     status = db.Column(db.String(10), nullable=False, default="scheduled")
     # set once the "ending soon" notices have gone out, so they are sent only once
     ending_notified = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
+    # The lowest price the seller will sell at: below it the auction ends without a sale. Never shown, only "met or not".
+    reserve_price = db.Column(db.Numeric(12, 2))
+    # Buy the card at once for this price, while nobody has bid yet.
+    buy_now_price = db.Column(db.Numeric(12, 2))
 
     product = db.relationship("Product", backref=db.backref("auction", uselist=False))
     highest_bidder = db.relationship("User", foreign_keys=[highest_bidder_id])
@@ -33,6 +37,7 @@ class Bid(db.Model):
     buyer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     amount = db.Column(db.Numeric(12, 2), nullable=False)
     bid_time = db.Column(db.DateTime, nullable=False, default=utcnow)
+    is_auto = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())  # placed by a maximum bid
 
     buyer = db.relationship("User")
 
@@ -48,3 +53,16 @@ class Winner(db.Model):
 
     auction = db.relationship("Auction", backref=db.backref("winner", uselist=False))
     buyer = db.relationship("User")
+
+
+class MaxBid(db.Model):
+    """The most a bidder is willing to pay (automatic bidding). Secret: only its owner ever sees it. The site bids for
+    them, one step above whoever outbids them, until this maximum is reached (services/auction_service.place_bid)."""
+    __tablename__ = "max_bids"
+    __table_args__ = (db.UniqueConstraint("auction_id", "buyer_id", name="uq_max_bid_auction_buyer"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    auction_id = db.Column(db.Integer, db.ForeignKey("auctions.id"), nullable=False, index=True)
+    buyer_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    max_amount = db.Column(db.Numeric(12, 2), nullable=False)
+    set_at = db.Column(db.DateTime, nullable=False, default=utcnow)  # earlier maximum wins a tie

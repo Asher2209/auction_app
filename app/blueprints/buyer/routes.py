@@ -3,7 +3,7 @@ from flask_login import current_user
 from sqlalchemy import func
 
 from ...extensions import db
-from ...models import Auction, Bid, Product, Watchlist, Winner
+from ...models import Auction, Bid, MaxBid, Product, Watchlist, Winner
 from ...services import blockchain_service, buyer_cards_service
 from ...services import review_service as rs
 from ...services.catalog import PUBLIC_STATUSES, bid_counts, visible_auction_or_404
@@ -36,7 +36,9 @@ def bids():
     page = (Bid.query.filter_by(buyer_id=current_user.id)
             .order_by(Bid.bid_time.desc(), Bid.id.desc())
             .paginate(page=request.args.get("page", 1, type=int), per_page=PER_PAGE, error_out=False))
-    return render_template("buyer/bids.html", page=page)
+    ids = {b.auction_id for b in page.items}
+    maxes = {m.auction_id: m.max_amount for m in MaxBid.query.filter(MaxBid.buyer_id == current_user.id, MaxBid.auction_id.in_(ids))} if ids else {}
+    return render_template("buyer/bids.html", page=page, maxes=maxes)
 
 
 @bp.route("/watchlist")

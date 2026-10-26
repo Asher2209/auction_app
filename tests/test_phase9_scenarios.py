@@ -256,9 +256,9 @@ def test_a_bid_must_beat_the_current_bid_by_the_minimum_increment(client, users,
     switch(client, "rival@t.test")
     assert bid(client, a.id, "600").get_json()["ok"]
     switch(client, "buyer@t.test")
-    for amount in ("600", "600.00", "599.99", "500"):
+    for amount in ("600", "600.00", "624.99", "500"):  # at ₹600 the step is ₹25 (Config.BID_INCREMENTS)
         assert bid(client, a.id, amount).status_code == 400, amount
-    assert bid(client, a.id, "600.01").get_json()["ok"]
+    assert bid(client, a.id, "625").get_json()["ok"]
     assert Bid.query.count() == 2
 
 
