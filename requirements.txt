@@ -12,6 +12,8 @@ email-validator>=2.1
 Pillow>=10.3
 python-dotenv>=1.0
 PyMySQL>=1.1
+# PostgreSQL, the production database (DATABASE_URL=postgresql+psycopg://...)
+psycopg[binary]>=3.2
 reportlab>=4.0
 openpyxl>=3.1
 qrcode[pil]>=7.4
@@ -20,4 +22,12 @@ pyotp>=2.9
 # "Sign in with Google" (OpenID Connect); off unless GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set
 Authlib>=1.3
 requests>=2.31
+# shared live updates and rate limits across processes; only used when REDIS_URL is set
+redis>=5.0
 web3>=7
+# production web server (Linux/macOS only; on Windows run.py serves the app for development)
+gunicorn>=23.0 ; sys_platform != 'win32'
+# error reports, only when SENTRY_DSN is set
+sentry-sdk[flask]>=2.20
+# uploaded images in an S3-compatible bucket (Cloudflare R2, AWS S3, Backblaze B2), only when STORAGE_BACKEND=s3
+boto3>=1.35

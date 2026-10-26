@@ -8,6 +8,8 @@ py-evm>=0.12.0b1
 py-solc-x>=2.0
 pytest>=8.0
 pytest-xdist>=3.6
+# an in-memory Redis for testing the Redis-backed rate limiter
+fakeredis>=2.20
 ruff>=0.15
 # render the invoice PDF and scan its QR code in the tests
 pypdf>=4.0

@@ -23,7 +23,7 @@ def upgrade():
         sa.Column('name', sa.String(length=100), nullable=False),
         sa.Column('slug', sa.String(length=100), nullable=False),
         sa.Column('description', sa.String(length=255), nullable=True),
-        sa.Column('is_active', sa.Boolean(), nullable=False, server_default='1'),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default=sa.true()),
         sa.Column('field_schema', sa.Text(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
         sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.func.now()),
@@ -50,7 +50,7 @@ def upgrade():
         sa.Column('language', sa.String(length=50), nullable=False, server_default='English'),
         sa.Column('country', sa.String(length=50), nullable=True),
         sa.Column('edition', sa.String(length=100), nullable=True),
-        sa.Column('is_graded', sa.Boolean(), nullable=False, server_default='0'),
+        sa.Column('is_graded', sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column('grading_company', sa.String(length=100), nullable=True),
         sa.Column('grade', sa.String(length=20), nullable=True),
         sa.Column('certification_number', sa.String(length=100), nullable=True),
@@ -108,20 +108,22 @@ def upgrade():
 
     # Extend collectible_verifications table with new columns (simple approach without batch operations)
     op.add_column('collectible_verifications', sa.Column('collectible_card_id', sa.Integer(), nullable=True))
-    op.add_column('collectible_verifications', sa.Column('is_graded', sa.Boolean(), nullable=False, server_default='0'))
+    op.add_column('collectible_verifications', sa.Column('is_graded', sa.Boolean(), nullable=False, server_default=sa.false()))
     op.add_column('collectible_verifications', sa.Column('admin_notes', sa.Text(), nullable=True))
     op.add_column('collectible_verifications', sa.Column('rejection_reason', sa.String(length=255), nullable=True))
     op.add_column('collectible_verifications', sa.Column('seller_response', sa.Text(), nullable=True))
     op.add_column('collectible_verifications', sa.Column('submission_count', sa.Integer(), nullable=False, server_default='1'))
 
-    # Add foreign key for collectible_card_id
-    op.create_foreign_key('fk_collectible_verifications_collectible_card_id', 'collectible_verifications',
-                          'collectible_cards', ['collectible_card_id'], ['id'])
+    # Add foreign key for collectible_card_id (batch mode: SQLite can only add a constraint by rebuilding the table)
+    with op.batch_alter_table('collectible_verifications', schema=None) as batch_op:
+        batch_op.create_foreign_key('fk_collectible_verifications_collectible_card_id', 'collectible_cards',
+                                    ['collectible_card_id'], ['id'])
 
 
 def downgrade():
     # Drop foreign key
-    op.drop_constraint('fk_collectible_verifications_collectible_card_id', 'collectible_verifications', type_='foreignkey')
+    with op.batch_alter_table('collectible_verifications', schema=None) as batch_op:
+        batch_op.drop_constraint('fk_collectible_verifications_collectible_card_id', type_='foreignkey')
 
     # Drop columns from collectible_verifications
     op.drop_column('collectible_verifications', 'submission_count')

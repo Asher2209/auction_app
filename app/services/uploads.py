@@ -5,8 +5,11 @@ import uuid
 from flask import current_app
 from PIL import Image, UnidentifiedImageError
 
+from . import storage
+
 SUBDIR = "products"
 FORMAT_EXT = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp", "GIF": "gif"}
+CONTENT_TYPES = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp", "gif": "image/gif"}
 ALLOWED_NAME_EXT = {"jpg", "jpeg", "png", "webp", "gif"}
 MAX_PIXELS = 40_000_000
 
@@ -48,12 +51,6 @@ def _validate(storage):
     return FORMAT_EXT[fmt]
 
 
-def _folder():
-    path = os.path.join(current_app.config["UPLOAD_FOLDER"], SUBDIR)
-    os.makedirs(path, exist_ok=True)
-    return path
-
-
 def save_images(files):
     """Validate every file first, then store them. Returns relative paths like 'products/<uuid>.jpg'.
 
@@ -64,22 +61,18 @@ def save_images(files):
     saved = []
     try:
         for f, ext in zip(files, exts, strict=True):
-            fname = f"{uuid.uuid4().hex}.{ext}"
-            f.save(os.path.join(_folder(), fname))
-            saved.append(f"{SUBDIR}/{fname}")
-    except OSError:
+            key = f"{SUBDIR}/{uuid.uuid4().hex}.{ext}"
+            f.stream.seek(0)
+            storage.backend().save(f.stream, key, CONTENT_TYPES[ext])
+            saved.append(key)
+    except storage.StorageError:
+        current_app.logger.exception("Storing an uploaded image failed")
         delete_files(saved)
         raise UploadError("Could not store the uploaded images. Please try again.")
     return saved
 
 
 def delete_files(rel_paths):
-    """Best-effort removal; refuses to touch anything outside the upload folder."""
-    root = os.path.realpath(current_app.config["UPLOAD_FOLDER"])
+    """Best-effort removal of stored images (on disk, only inside the upload folder)."""
     for rel in rel_paths:
-        full = os.path.realpath(os.path.join(root, rel))
-        if full.startswith(root + os.sep):
-            try:
-                os.remove(full)
-            except OSError:
-                pass
+        storage.backend().delete(rel)

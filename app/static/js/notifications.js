@@ -3,7 +3,8 @@
 // All text is written with textContent; links are only followed if they are in-site paths.
 (function () {
   if (typeof io !== "function") return;
-  const socket = io();
+  // WebSocket straight away, no polling first: then any web process can serve it (no sticky load balancing needed)
+  const socket = io({ transports: ["websocket"] });
   window.mintlotSocket = socket;
 
   const badge = document.getElementById("notif-badge");

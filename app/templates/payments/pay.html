@@ -15,7 +15,7 @@
     <div class="card"><div class="card-body">
       <div class="d-flex gap-3">
         {% set c = product.collectible_card %}
-        {% set src = c.images[0].get_image_src() if c and c.images else (url_for('static', filename='uploads/' ~ product.cover) if product.cover else none) %}
+        {% set src = c.images[0].get_image_src() if c and c.images else (upload_url(product.cover) if product.cover else none) %}
         {% if src %}<img src="{{ src }}" alt="" class="thumb">{% endif %}
         <div>
           <div class="fw-semibold">{{ product.title }}</div>

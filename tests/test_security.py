@@ -391,6 +391,7 @@ def prod(**over):
         ALLOW_TEST_EMAILS = False
         LOCAL_CHAIN = False
         APP_BASE_URL = "https://auction.example.org"
+        SQLALCHEMY_DATABASE_URI = "postgresql+psycopg://mintlot@db.example/mintlot"  # never connected to here
 
     for k, v in over.items():
         setattr(Prod, k, v)
@@ -405,6 +406,7 @@ def test_a_correct_production_config_starts():
     ({"SECRET_KEY": "dev-only-secret"}, "SECRET_KEY"), ({"SECRET_KEY": "short"}, "SECRET_KEY"), ({"SECRET_KEY": "change-me"}, "SECRET_KEY"),
     ({"SESSION_COOKIE_SECURE": False}, "SECURE_COOKIES"), ({"ALLOW_TEST_EMAILS": True}, "ALLOW_TEST_EMAILS"),
     ({"APP_BASE_URL": "http://insecure.example"}, "https://"), ({"APP_BASE_URL": "http://127.0.0.1:5000"}, "https://"),
+    ({"SQLALCHEMY_DATABASE_URI": "sqlite:///auction.db"}, "PostgreSQL"),
 ])
 def test_each_unsafe_production_setting_stops_the_app(over, phrase):
     with pytest.raises(RuntimeError) as e:
@@ -531,7 +533,8 @@ PUBLIC = {"main.index", "main.health", "auctions.browse", "auctions.detail", "au
           "auth.forgot_password", "auth.reset_password", "invoices.verify", "static",
           "legal.privacy", "legal.terms", "legal.refunds", "legal.cookies", "legal.cookie_consent",  # the legal pages and the cookie choice
           "main.shop", "main.browse_cards", "main.search_cards", "main.api_search_cards", "main.view_card",  # the public card catalogue
-          "collectibles.verify_card"}  # the public QR record
+          "collectibles.verify_card",  # the public QR record
+          "health.healthz", "health.readyz"}  # probes for the hosting platform
 FILL = {"integer": 1, "string": "x", "path": "x", "uuid": "00000000-0000-0000-0000-000000000000"}
 
 
@@ -689,12 +692,21 @@ def test_sql_injection_corpus_on_public_and_admin_search(app, users, cats, paylo
     assert User.query.count() == users_before
 
 
+
+def test_a_nul_byte_in_a_query_or_form_is_refused_not_a_server_error(app, users):
+    c = anon(app)
+    assert c.get("/auctions/", query_string={"q": "a\x00b"}).status_code == 400
+    assert c.get("/auctions/?q=a%00b").status_code == 400
+    assert c.post("/auth/login", data={"email": "x\x00@t.test", "password": "p"}).status_code == 400
+    assert c.get("/auctions/", query_string={"q": "card"}).status_code == 200
+
 @pytest.mark.parametrize("payload", SQLI)
 def test_sql_injection_corpus_on_login_and_forms(app, users, payload):
     c = anon(app)
-    assert bad_login(c, email=payload, password=payload).status_code in (200, 429)
+    refused = (400,) if "\x00" in payload else ()  # a NUL byte is turned away before any form sees it
+    assert bad_login(c, email=payload, password=payload).status_code in (200, 429, *refused)
     r = c.post("/auth/forgot-password", data={"email": payload})
-    assert r.status_code in (200, 302, 429)
+    assert r.status_code in (200, 302, 429, *refused)
     assert User.query.count() == 3 and db.session.get(User, users["buyer"].id).check_password(PASSWORD)
 
 

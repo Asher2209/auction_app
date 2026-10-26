@@ -1,13 +1,13 @@
 """Cross-cutting security: response headers, error pages, production configuration checks, database integrity."""
 import time
 
-from flask import jsonify, render_template, request, session
+from flask import abort, jsonify, render_template, request, session
 from flask_login import current_user, logout_user
 from flask_wtf.csrf import CSRFError
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
-from .ratelimit import RateLimiter
+from .ratelimit import RateLimiter, RedisRateLimiter
 
 DEFAULT_SECRET = "dev-only-secret"
 CDN_HOSTS = "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com"
@@ -46,16 +46,37 @@ def production_problems(app):
         problems.append("debug mode must be off")
     if not str(cfg.get("APP_BASE_URL", "")).startswith("https://"):
         problems.append("APP_BASE_URL must be the public https:// address of the site")
+    if str(cfg.get("SQLALCHEMY_DATABASE_URI", "")).startswith("sqlite"):
+        problems.append("DATABASE_URL must be a PostgreSQL (or MySQL) server: an SQLite file inside a container is lost "
+                        "whenever the container is replaced")
     return problems
 
 
 def init_security(app):
-    app.extensions["limiter"] = RateLimiter()
+    if app.config.get("REDIS_URL"):
+        import redis
+        app.extensions["limiter"] = RedisRateLimiter(redis.Redis.from_url(app.config["REDIS_URL"], socket_timeout=2))
+    else:
+        app.extensions["limiter"] = RateLimiter()
+    hops = app.config.get("TRUSTED_PROXY_HOPS", 0)
+    if hops:  # behind a load balancer: take the client's address and scheme from that many X-Forwarded-* hops
+        from werkzeug.middleware.proxy_fix import ProxyFix
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=hops, x_proto=hops, x_host=hops)
 
     if app.config.get("APP_ENV") == "production":
         problems = production_problems(app)
         if problems:
             raise RuntimeError("Unsafe production configuration:\n  - " + "\n  - ".join(problems))
+
+    @app.before_request
+    def refuse_nul_bytes():
+        """A NUL character is never real input, and PostgreSQL cannot store or even compare text holding one: without
+        this, a search for "a\\x00b" would be a server error. Query strings and form fields only; uploads are separate."""
+        if "\x00" in request.query_string.decode("latin-1") or "%00" in request.query_string.decode("latin-1").lower():
+            abort(400)
+        if request.method in ("POST", "PUT", "PATCH") and request.mimetype in ("application/x-www-form-urlencoded", "multipart/form-data"):
+            if any("\x00" in v for v in request.form.values()):
+                abort(400)
 
     @app.before_request
     def enforce_login_lifetime():

@@ -77,8 +77,10 @@ def upgrade():
         batch_kw = {'naming_convention': {'uq': 'uq_%(table_name)s_%(column_0_name)s'}}
     with op.batch_alter_table('collectible_verifications', schema=None, **batch_kw) as batch_op:
         batch_op.drop_constraint(unique_name, type_='unique')  # duplicates are flagged, not refused
-        batch_op.alter_column('verified_by', existing_type=sa.String(length=100), type_=sa.Integer(), existing_nullable=True)
-        batch_op.alter_column('photos_verified_by', existing_type=sa.String(length=100), type_=sa.Integer(), existing_nullable=True)
+        batch_op.alter_column('verified_by', existing_type=sa.String(length=100), type_=sa.Integer(), existing_nullable=True,
+                              postgresql_using='verified_by::integer')  # Postgres needs to be told how to convert
+        batch_op.alter_column('photos_verified_by', existing_type=sa.String(length=100), type_=sa.Integer(), existing_nullable=True,
+                              postgresql_using='photos_verified_by::integer')
         batch_op.create_foreign_key('fk_collectible_verifications_verified_by_users', 'users', ['verified_by'], ['id'])
         batch_op.create_foreign_key('fk_collectible_verifications_photos_verified_by_users', 'users', ['photos_verified_by'], ['id'])
 
@@ -157,8 +159,10 @@ def downgrade():
     with op.batch_alter_table('collectible_verifications', schema=None) as batch_op:
         batch_op.drop_constraint('fk_collectible_verifications_photos_verified_by_users', type_='foreignkey')
         batch_op.drop_constraint('fk_collectible_verifications_verified_by_users', type_='foreignkey')
-        batch_op.alter_column('photos_verified_by', existing_type=sa.Integer(), type_=sa.String(length=100), existing_nullable=True)
-        batch_op.alter_column('verified_by', existing_type=sa.Integer(), type_=sa.String(length=100), existing_nullable=True)
+        batch_op.alter_column('photos_verified_by', existing_type=sa.Integer(), type_=sa.String(length=100), existing_nullable=True,
+                              postgresql_using='photos_verified_by::varchar(100)')
+        batch_op.alter_column('verified_by', existing_type=sa.Integer(), type_=sa.String(length=100), existing_nullable=True,
+                              postgresql_using='verified_by::varchar(100)')
         batch_op.create_unique_constraint('certificate_number', ['certificate_number'])
 
     with op.batch_alter_table('card_images', schema=None) as batch_op:

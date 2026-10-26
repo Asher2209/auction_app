@@ -161,7 +161,7 @@ def test_unconfirmed_or_failed_crypto_never_shows_verified(app, users, cats, cha
 
 @pytest.mark.parametrize("title", [
     "<b>Bold</b> & <i>italic</i> </para><br/>", 'Quote " and \' and &amp; &lt;x&gt;', "Café Über ₹ 日本語 \U0001F600",
-    "x" * 300, "word " * 80, "\x00\x01 control",
+    "x" * 300, "word " * 80, "\x01\x1f control",  # (a NUL never reaches the database: requests holding one are refused)
 ])
 def test_pdf_survives_hostile_text(app, users, cats, title):  # noqa: F811
     a = make_auction(users["seller"], cats["Books"], title[:190], 100)

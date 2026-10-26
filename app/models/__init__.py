@@ -8,6 +8,11 @@ def utcnow():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
+# Chain ids and block numbers outgrow a 32-bit integer (the local test chain's id is 131277322940537). SQLite integers are
+# always 64-bit, so there it stays a plain INTEGER and no table has to be rebuilt; other databases get BIGINT.
+BIG_INT = db.BigInteger().with_variant(db.Integer(), "sqlite")
+
+
 from .user import User, UserSession  # noqa: E402
 from .catalog import Category, Product, ProductImage, Watchlist  # noqa: E402
 from .auction import Auction, Bid, Winner  # noqa: E402
@@ -19,6 +24,7 @@ from .collectible_cards import (  # noqa: E402
     CardType, CollectibleCard, CardImage, CardVerificationChecklist, CardVerificationHistory
 )
 from .blockchain_assets import BlockchainAsset, BlockchainTransfer  # noqa: E402
+from .ops import WorkerLease  # noqa: E402
 
 
 @login_manager.user_loader
@@ -34,6 +40,6 @@ __all__ = [
     "Notification", "NotificationPreference", "Review", "Feedback", "Message",
     "CollectibleVerification", "VerificationLog", "SupportedGrader",
     "CardType", "CollectibleCard", "CardImage", "CardVerificationChecklist", "CardVerificationHistory",
-    "BlockchainAsset", "BlockchainTransfer",
+    "BlockchainAsset", "BlockchainTransfer", "WorkerLease",
     "utcnow",
 ]

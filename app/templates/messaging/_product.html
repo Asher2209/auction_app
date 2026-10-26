@@ -7,7 +7,7 @@
 
 {% macro listing_panel(product, extra=none) %}
 {% set c = product.collectible_card %}
-{% set src = c.images[0].get_image_src() if c and c.images else (url_for('static', filename='uploads/' ~ product.images[0].path) if product.images else none) %}
+{% set src = c.images[0].get_image_src() if c and c.images else (upload_url(product.images[0].path) if product.images else none) %}
 <aside class="panel msg-listing">
   <span class="eyebrow">About</span>
   {% if src %}<img class="msg-listing-img" src="{{ src }}" alt="">{% endif %}

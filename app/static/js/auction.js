@@ -147,7 +147,7 @@
   }
 
   if (typeof io === "function") {
-    const socket = window.mintlotSocket || io(); // signed-in pages share one connection
+    const socket = window.mintlotSocket || io({ transports: ["websocket"] }); // signed-in pages share one connection
     const onConnect = () => {
       setLive(true);
       socket.emit("join", { auction_id: parseInt(auctionId, 10) });

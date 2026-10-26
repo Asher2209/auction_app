@@ -7,7 +7,7 @@ from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 
 from .extensions import socketio
-from .services import auction_service, blockchain_minting_service, blockchain_service
+from .services import auction_service, blockchain_minting_service, blockchain_service, leases
 from .services.catalog import visible_auctions
 from .services.notifications import user_room
 
@@ -64,17 +64,34 @@ def on_leave(data):
         pass
 
 
+LEASE = "scheduler"
+
+
+def lease_seconds(app):
+    """How long a tick's lease lasts: a few intervals, so a busy tick never loses it, and a dead holder's passes on soon."""
+    return max(15, 3 * app.config["SCHEDULER_INTERVAL_SECONDS"])
+
+
+def scheduler_tick(app, holder):
+    """One background tick, if this process holds the scheduler lease: start due auctions and close finished ones
+    (announcing each close), then confirm submitted crypto payments and card token mints against the blockchain.
+    Returns False when another process holds the lease (it does the work instead)."""
+    with app.app_context():
+        if not leases.acquire(LEASE, holder, lease_seconds(app)):
+            return False
+        for info in auction_service.run_maintenance():
+            emit_closed(info)
+        blockchain_service.verify_pending()
+        blockchain_minting_service.confirm_pending()
+        return True
+
+
 def scheduler_loop(app):
-    """Background tick: start due auctions and close finished ones (announcing each close), then confirm submitted
-    crypto payments and card token mints against the blockchain."""
-    interval = app.config["SCHEDULER_INTERVAL_SECONDS"]
+    """The scheduler inside the web process (ENABLE_SCHEDULER=1, the simple single-process setup)."""
+    interval, holder = app.config["SCHEDULER_INTERVAL_SECONDS"], leases.holder_id()
     while True:
         try:
-            with app.app_context():
-                for info in auction_service.run_maintenance():
-                    emit_closed(info)
-                blockchain_service.verify_pending()
-                blockchain_minting_service.confirm_pending()
+            scheduler_tick(app, holder)
         except Exception:  # keep ticking; a bad cycle must not kill the loop
             app.logger.exception("Auction scheduler tick failed")
         socketio.sleep(interval)

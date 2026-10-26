@@ -1,12 +1,13 @@
-"""A small in-memory sliding-window rate limiter.
+"""Sliding-window rate limiting, counted in this process (RateLimiter) or in Redis (RedisRateLimiter).
 
-Good for a single-process deployment (the project's scope). With several worker processes each one keeps
-its own counters, so the effective limit is multiplied; a shared store such as Redis would fix that.
-The limiter lives on the app (app.extensions["limiter"]) so every app instance, including each test,
-starts with a clean slate.
+In memory is right for one process. With several web processes each would keep its own counters and the real limit
+would be multiplied, so when REDIS_URL is set every process counts in Redis instead (see security.init_security).
+Both have the same four methods. The limiter lives on the app (app.extensions["limiter"]) so every app instance,
+including each test, starts with a clean slate.
 """
 import threading
 import time
+import uuid
 from collections import deque
 from functools import wraps
 
@@ -59,6 +60,68 @@ class RateLimiter:
     def clear(self, key):
         with self._lock:
             self._hits.pop(key, None)
+
+
+
+class RedisRateLimiter:
+    """The same sliding window, shared by every process: one sorted set per key, scored by hit time.
+
+    If Redis cannot be reached the limiter lets requests through and logs it: a brief outage should not lock every
+    visitor out of the site. Login attempts are still checked against the password as usual.
+    """
+    PREFIX = "mintlot:rl:"
+
+    def __init__(self, client, clock=time.time):
+        self._r = client
+        self._clock = clock
+
+    def _key(self, key):
+        return self.PREFIX + key
+
+    def _live(self, key, window, now):
+        """Drop hits older than the window; return the sorted set's name."""
+        name = self._key(key)
+        self._r.zremrangebyscore(name, "-inf", now - window)
+        return name
+
+    def _safely(self, fallback, fn):
+        try:
+            return fn()
+        except Exception:  # redis.exceptions.RedisError and connection errors alike
+            current_app.logger.exception("Rate limiter: Redis is unavailable, not limiting this request")
+            return fallback
+
+    def count(self, key, window):
+        def run():
+            now = self._clock()
+            return self._r.zcard(self._live(key, window, now))
+        return self._safely(0, run)
+
+    def hit(self, key, window):
+        def run():
+            now = self._clock()
+            name = self._key(key)
+            pipe = self._r.pipeline()
+            pipe.zremrangebyscore(name, "-inf", now - window)
+            pipe.zadd(name, {f"{now:.6f}:{uuid.uuid4().hex[:8]}": now})
+            pipe.expire(name, int(window) + 1)  # Redis forgets the key once nothing in it can matter
+            pipe.execute()
+        self._safely(None, run)
+
+    def retry_after(self, key, limit, window):
+        """Seconds until one more hit would be allowed; 0 if it is allowed now."""
+        def run():
+            now = self._clock()
+            name = self._live(key, window, now)
+            n = self._r.zcard(name)
+            if n < limit:
+                return 0
+            (_, oldest_that_matters), = self._r.zrange(name, n - limit, n - limit, withscores=True)
+            return max(1, int(oldest_that_matters + window - now) + 1)
+        return self._safely(0, run)
+
+    def clear(self, key):
+        self._safely(None, lambda: self._r.delete(self._key(key)))
 
 
 def limiter():

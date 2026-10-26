@@ -59,10 +59,17 @@
   - `blockchain_minting_service.py`: Token minting
   - `ownership_transfer_service.py`: Ownership transfer
   - `payment_service.py`: Payment processing
-- `app/utils/`: Utilities
-  - `monitoring.py`: Metrics and health checks
+  - `leases.py`: one background worker at a time, on any database
+  - `storage.py`: uploaded images on disk or in an S3-compatible bucket
+- `app/utils/`: Utilities (role and confirmed-email checks, safe redirects)
+- `app/cli.py`: `flask run-worker`, the background jobs in their own process
+- `app/observability.py`: request ids, one log line per request, optional Sentry
+- `app/blueprints/health/`: `/healthz` and `/readyz` for the hosting platform
 
-### 3. Database (SQLite)
+### 3. Database (SQLite for development, PostgreSQL in production)
+
+The schema comes only from the migrations in `migrations/versions` (`flask db upgrade`); CI builds it from empty on
+Postgres and runs the whole test suite there too.
 
 **Key Tables:**
 - `user`: User accounts and wallets
@@ -73,25 +80,21 @@
 
 ### 4. Smart Contract
 
-**Functions:**
-- `mint(platform_id, owner, card_name)`: Create token
-- `transferCard(token_id, new_owner, auction_id)`: Transfer ownership
-- `pay(auction_id, seller)`: Send payment to seller
-- `ownerOf(token_id)`: Get current owner
-- `tokensOf(owner)`: Get all tokens owned
+Two contracts in `contracts/`:
+
+- `CollectibleCardToken` (ERC-721), one token per verified card:
+  - `mint(to, platformId, verificationHash)`: the platform registers a verified card to its seller's wallet
+  - `authorizeSale(tokenId, auctionId, buyer, price)` / `cancelSale(tokenId)`: the seller allows exactly one sale
+  - `settle(auctionId, tokenId)`: the buyer pays the price and receives the token in the same transaction
+- `AuctionPayment`: `pay(auctionId, seller)`, the older payment path for listings without a card token
 
 ### 5. Monitoring & Logging
 
-**Log Files:**
-- `transactions.log`: Blockchain events
-- `blockchain_errors.log`: Error tracking
-- `app.log`: Application events
-
-**Metrics:**
-- Transaction success rates
-- RPC latency
-- Confirmation times
-- Error rates
+- Logs go to standard output (the platform collects them): one line per request with its method, path, status,
+  time taken and request id; the same id is returned in the `X-Request-ID` header.
+- Errors go to Sentry when `SENTRY_DSN` is set, without cookies, IP addresses or user details.
+- `/healthz` and `/readyz` tell the platform whether to restart the app or send it traffic.
+- There are no metrics endpoints; see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ---
 

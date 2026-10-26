@@ -121,12 +121,12 @@ class CardImage(db.Model):
         return f'<CardImage {self.image_type} - {self.path or self.url}>'
 
     def get_image_src(self):
-        """The browser URL of this image: an external URL as it is, an uploaded file under /static/uploads."""
+        """The browser URL of this image: an external URL as it is, an uploaded file wherever uploads are stored."""
         if self.url:
             return self.url
         if self.path:
-            from flask import url_for
-            return url_for("static", filename=f"uploads/{self.path}")
+            from ..services.storage import upload_url
+            return upload_url(self.path)
         return None
 
 

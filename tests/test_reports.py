@@ -433,7 +433,7 @@ def test_pdf_survives_hostile_text(world):
     w.s1.name = "<b>Evil</b> & </para> Co 日本"
     db.session.commit()
     w.sale(w.s1, "Books", "<script>alert(1)</script> \" ' &amp; x" * 3, 100, datetime(2026, 10, 3))
-    w.sale(w.s1, "Books", "y" * 400, 100, datetime(2026, 10, 3))
+    w.sale(w.s1, "Books", "y" * 200, 100, datetime(2026, 10, 3))  # the longest title a product can have
     for key in ("payments", "top-products", "completed-auctions"):
         report, params, _, data = run(key, RANGE)
         text = pdf_text(rx.render_pdf(report, data, params, NOW))
@@ -534,7 +534,7 @@ def test_bad_filters_show_a_warning_not_an_error(app, full):
     for qs in ("from=nonsense", "from=2026-10-31&to=2026-10-01", "status=%27%3B+DROP+TABLE+users%3B--", "from=1800-01-01&to=2026-10-01"):
         r = c.get(f"/admin/reports/payments?{qs}")
         assert r.status_code == 200 and "alert-warning" in r.data.decode(), qs
-    assert "alert-warning" in c.get("/admin/reports/daily-auctions?day=%00").data.decode()
+    assert c.get("/admin/reports/daily-auctions?day=%00").status_code == 400  # a NUL byte is refused before the report
     assert User.query.count() >= 3  # (and nothing was dropped)
 
 

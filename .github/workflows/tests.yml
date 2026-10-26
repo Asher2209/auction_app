@@ -40,3 +40,65 @@ jobs:
       - name: Run the test suite
         # The tests use in-memory SQLite and an in-process Ethereum chain: no services or secrets needed.
         run: uv run --no-project python -m pytest tests -q -p no:cacheprovider -n auto -rfE
+
+  postgres:
+    # The same suite on PostgreSQL 17, the production database, after building the schema from the migrations alone.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: mintlot
+          POSTGRES_PASSWORD: mintlot
+          POSTGRES_DB: mintlot
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U mintlot" --health-interval 3s --health-timeout 3s --health-retries 20
+    env:
+      PGURL: postgresql+psycopg://mintlot:mintlot@localhost:5432
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: requirements-dev.lock
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -r requirements-dev.lock
+      - name: Install the Solidity compiler used by the tests
+        run: uv run --no-project python -c "import solcx; solcx.install_solc('0.8.24')"
+      - name: Every migration runs on an empty Postgres database, and back down
+        env:
+          DATABASE_URL: ${{ env.PGURL }}/mintlot
+          ENABLE_SCHEDULER: "0"
+        run: |
+          uv run --no-project flask --app run.py db upgrade
+          uv run --no-project flask --app run.py db downgrade base
+          uv run --no-project flask --app run.py db upgrade
+          uv run --no-project flask --app run.py db check  # the schema the migrations build is exactly what the models describe
+      - name: Run the test suite on Postgres
+        env:
+          TEST_DATABASE_URL: ${{ env.PGURL }}/mintlot_test
+        run: uv run --no-project python -m pytest tests -q -p no:cacheprovider -n auto -rfE
+
+  docker:
+    # The production image builds, and a container from it answers its health check.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the image
+        run: docker build -t mintlot:ci .
+      - name: The container starts and is healthy
+        run: |
+          docker run -d --name mintlot -p 8000:8000 -e SECRET_KEY=ci-only -e ENABLE_SCHEDULER=0 \
+            -e DATABASE_URL=sqlite:////tmp/ci.db mintlot:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/healthz; then exit 0; fi
+            sleep 2
+          done
+          docker logs mintlot
+          exit 1

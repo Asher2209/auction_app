@@ -3,7 +3,7 @@ from decimal import Decimal
 from sqlalchemy.types import String, TypeDecorator
 
 from ..extensions import db
-from . import utcnow
+from . import BIG_INT, utcnow
 
 
 class ExactDecimal(TypeDecorator):
@@ -81,8 +81,8 @@ class CryptoPayment(db.Model):
     amount = db.Column(ExactDecimal(38, 18), nullable=False)
     transaction_hash = db.Column(db.String(66), unique=True)
     blockchain_network = db.Column(db.String(30), nullable=False, default="sepolia")
-    chain_id = db.Column(db.Integer)
-    block_number = db.Column(db.Integer)
+    chain_id = db.Column(BIG_INT)
+    block_number = db.Column(BIG_INT)
     confirmations = db.Column(db.Integer, default=0)
     # pending / confirmed / failed
     status = db.Column(db.String(10), nullable=False, default="pending")
