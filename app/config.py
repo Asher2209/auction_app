@@ -32,7 +32,10 @@ class Config:
     MAX_IMAGE_BYTES = 5 * 1024 * 1024  # per image
     MAX_IMAGES_PER_PRODUCT = 5
     # Bidding rules
-    MIN_BID_INCREMENT = Decimal("0.01")  # a bid must beat the current bid by at least this much
+    # How much a bid must beat the current one by, rising with the price: (from this price, the step). The first bid may
+    # equal the starting price. Automatic bids use the same steps.
+    BID_INCREMENTS = ((Decimal("0"), Decimal("10")), (Decimal("500"), Decimal("25")), (Decimal("2000"), Decimal("50")),
+                      (Decimal("5000"), Decimal("100")), (Decimal("20000"), Decimal("250")), (Decimal("100000"), Decimal("500")))
     SNIPE_WINDOW_SECONDS = 60  # a bid this close to the end...
     SNIPE_EXTENSION_SECONDS = 120  # ...extends the auction by this much
     # Background loop that starts and closes auctions (off in tests)

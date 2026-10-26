@@ -7,6 +7,7 @@ from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 
 from .extensions import socketio
+from .models import Auction
 from .services import auction_service, blockchain_minting_service, blockchain_service, leases
 from .services.catalog import visible_auctions
 from .services.notifications import user_room
@@ -16,17 +17,19 @@ def room(auction_id):
     return f"auction_{auction_id}"
 
 
+def _bid_row(bid):
+    name = bid.buyer.name
+    return {"bidder_id": bid.buyer_id, "bidder_mask": (name[:1] + "***") if name else "***",
+            "amount": f"{bid.amount:.2f}", "bid_time": auction_service.iso(bid.bid_time), "auto": bool(bid.is_auto)}
+
+
 def emit_bid(result, auction):
-    """Broadcast an accepted bid (and the new end time if anti-sniping extended it)."""
+    """Broadcast an accepted bid, and the automatic bids it set off (and the new end time if anti-sniping extended it).
+    Prices only: nobody's maximum is ever sent. The top-level bid fields describe the newest (highest) bid."""
     state = auction_service.auction_state(auction)
-    buyer = result.bid.buyer
-    state.update({
-        "bidder_id": result.bid.buyer_id,
-        "bidder_mask": (buyer.name[:1] + "***") if buyer.name else "***",
-        "amount": f"{result.bid.amount:.2f}",
-        "bid_time": auction_service.iso(result.bid.bid_time),
-        "extended": result.extended,
-    })
+    rows = [_bid_row(b) for b in (result.new_bids or [result.bid])]
+    state.update(rows[-1])
+    state.update({"new_bids": rows, "extended": result.extended})
     socketio.emit("bid_update", state, to=room(result.auction_id))
     return state
 
@@ -49,7 +52,7 @@ def on_join(data):
     except (TypeError, ValueError):
         emit("error", {"message": "Invalid auction."})
         return
-    if visible_auctions().filter_by(id=auction_id).first() is None:
+    if visible_auctions().filter(Auction.id == auction_id).first() is None:  # filter_by would match the joined Product's id
         emit("error", {"message": "Auction not found."})
         return
     join_room(room(auction_id))

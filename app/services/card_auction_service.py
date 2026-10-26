@@ -63,14 +63,38 @@ def _window(start_time, duration_hours, now):
     return start, start + duration
 
 
-def create_card_auction(product, seller, starting_bid, start_time, duration_hours, now=None):
-    """Validate everything, run the listing gate and create the auction. Raises CardAuctionError."""
+def _optional_price(raw, what):
+    if raw is None or raw == "":
+        return None
+    try:
+        amount = auction_service.parse_amount(raw)
+    except auction_service.BidError as e:
+        raise CardAuctionError(f"{what}: {e.message}")
+    if not MIN_STARTING_BID <= amount <= MAX_STARTING_BID:
+        raise CardAuctionError(f"The {what.lower()} must be between {MIN_STARTING_BID:,} and {MAX_STARTING_BID:,}.")
+    return amount
+
+
+def create_card_auction(product, seller, starting_bid, start_time, duration_hours, now=None,
+                        reserve_price=None, buy_now_price=None):
+    """Validate everything, run the listing gate and create the auction. Raises CardAuctionError.
+
+    A reserve, if set, must be at least the starting bid (or it would mean nothing); a Buy It Now price must be above
+    the starting bid and at least the reserve (or buying would sell below the price the seller insists on)."""
     now = now or utcnow()
     if product.seller_id != seller.id:
         raise CardAuctionError("This card does not belong to you.", 403)
     if product.collectible_card is None:
         raise CardAuctionError("Only trading cards are listed this way.")
     amount = _starting_bid(starting_bid)
+    reserve = _optional_price(reserve_price, "Reserve price")
+    buy_now = _optional_price(buy_now_price, "Buy It Now price")
+    if reserve is not None and reserve < amount:
+        raise CardAuctionError("The reserve price must be at least the starting bid.")
+    if buy_now is not None and buy_now <= amount:
+        raise CardAuctionError("The Buy It Now price must be above the starting bid.")
+    if buy_now is not None and reserve is not None and buy_now < reserve:
+        raise CardAuctionError("The Buy It Now price must be at least the reserve price.")
     start, end = _window(start_time, duration_hours, now)
 
     with _lock:
@@ -88,6 +112,7 @@ def create_card_auction(product, seller, starting_bid, start_time, duration_hour
         db.session.add(Auction(
             product_id=product.id, start_time=start, end_time=end, original_end_time=end,
             current_bid=amount,  # the first bid must be at least the starting bid
+            reserve_price=reserve, buy_now_price=buy_now,
             status="active" if start <= now else "scheduled"))
         notify(seller.id, "Auction created", f'Your auction for "{product.title}" has been created.',
                url=f"/seller/products/{product.id}")

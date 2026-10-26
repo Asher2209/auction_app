@@ -100,7 +100,7 @@ def detail(auction_id):
     pid = auction.product_id
     eligible = rs.can_review(current_user, auction.id)
     similar = (Auction.query.join(Product).filter(Product.category_id == auction.product.category_id, Auction.status.in_(("scheduled", "active")), Auction.id != auction.id).order_by(Auction.end_time.asc()).limit(6).all())
-    return render_template("auctions/detail.html", auction=auction, product=auction.product, bids=bids, bid_total=len(auction.bids), watching=watching, reviews=rs.visible_reviews(pid), stats=rs.stats_for_products([pid]).get(pid), seller_rating=rs.seller_stats(auction.product.seller_id), can_review=eligible, mine=rs.own_review(current_user, pid) if eligible else None, state=auction_service.auction_state(auction), can_bid=current_user.is_authenticated and current_user.role == "member" and not own, own=own, similar=similar, similar_counts=bid_counts([a.id for a in similar]), similar_stats=rs.stats_for_products([a.product_id for a in similar]),
+    return render_template("auctions/detail.html", auction=auction, product=auction.product, bids=bids, bid_total=len(auction.bids), watching=watching, reviews=rs.visible_reviews(pid), stats=rs.stats_for_products([pid]).get(pid), seller_rating=rs.seller_stats(auction.product.seller_id), can_review=eligible, mine=rs.own_review(current_user, pid) if eligible else None, state=auction_service.auction_state(auction), my_max=auction_service.own_maximum(auction, current_user), can_bid=current_user.is_authenticated and current_user.role == "member" and not own, own=own, similar=similar, similar_counts=bid_counts([a.id for a in similar]), similar_stats=rs.stats_for_products([a.product_id for a in similar]),
         transfers=ownership_transfer_service.history(auction.product.collectible_card.blockchain_asset)
         if auction.product.collectible_card and auction.product.collectible_card.blockchain_asset else [],
         tx_url=blockchain_service.explorer_url)
@@ -117,7 +117,8 @@ def state(auction_id):
 def place_bid(auction_id):
     wants_json = request.headers.get("Accept", "").startswith("application/json")
     try:
-        result = auction_service.place_bid(auction_id, current_user, request.form.get("amount"))
+        result = auction_service.place_bid(auction_id, current_user, request.form.get("amount"),
+                                           raw_max=request.form.get("max_amount"))
     except BidError as e:
         if wants_json:
             return jsonify(ok=False, error=e.message), e.status
@@ -125,7 +126,25 @@ def place_bid(auction_id):
         return redirect(url_for("auctions.detail", auction_id=auction_id))
     auction = visible_auction_or_404(auction_id)
     payload = sockets.emit_bid(result, auction)
-    if wants_json:
-        return jsonify(ok=True, **payload)
-    flash("Your bid was placed." + (" The auction was extended by 2 minutes." if result.extended else ""), "success")
+    if wants_json:  # the broadcast payload, plus the bidder's own maximum (never broadcast)
+        mine = auction_service.own_maximum(auction, current_user)
+        return jsonify(ok=True, **payload, my_max=f"{mine:.2f}" if mine is not None else None)
+    if auction.highest_bidder_id == current_user.id:
+        flash("Your bid was placed: you are the highest bidder." + (" The auction was extended by 2 minutes." if result.extended else ""), "success")
+    else:
+        flash("Your bid was placed, but another bidder's automatic bid beat it at once. You can bid again.", "warning")
     return redirect(url_for("auctions.detail", auction_id=auction_id))
+
+
+@bp.route("/<int:auction_id>/buy-now", methods=["POST"])
+@login_required
+@limited("bid", 30, 60, by="user")
+def buy_now(auction_id):
+    try:
+        info = auction_service.buy_now(auction_id, current_user)
+    except BidError as e:
+        flash(e.message, "danger")
+        return redirect(url_for("auctions.detail", auction_id=auction_id))
+    sockets.emit_closed(info)
+    flash("It's yours. Please complete your payment.", "success")
+    return redirect(url_for("payments.pay_page", auction_id=auction_id))

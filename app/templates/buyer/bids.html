@@ -5,7 +5,7 @@
 {% include "buyer/_nav.html" %}
 <div class="table-responsive">
 <table class="table table-hover align-middle">
-  <thead><tr><th>Product</th><th>My bid</th><th>Highest bid</th><th>Status</th><th>Placed</th></tr></thead>
+  <thead><tr><th>Product</th><th>My bid</th><th>My maximum</th><th>Highest bid</th><th>Status</th><th>Placed</th></tr></thead>
   <tbody>
   {% for b in page.items %}
     {% set a = b.auction %}
@@ -18,12 +18,13 @@
     {% else %}{% set label = 'Active' %}{% endif %}
     <tr>
       <td>{% if a.status != 'cancelled' %}<a href="{{ url_for('auctions.detail', auction_id=a.id) }}">{{ a.product.title }}</a>{% else %}{{ a.product.title }}{% endif %}</td>
-      <td>{{ b.amount|money }}</td><td>{{ a.current_bid|money }}</td>
+      <td>{{ b.amount|money }}{% if b.is_auto %} <span class="text-muted small">automatic</span>{% endif %}</td>
+      <td>{{ maxes[a.id]|money if a.id in maxes else '' }}</td><td>{{ a.current_bid|money }}</td>
       <td><span class="badge text-bg-{{ {'Won': 'success', 'Leading': 'success', 'Outbid': 'warning', 'Cancelled': 'dark'}.get(label, 'secondary') }}">{{ label }}</span></td>
       <td>{{ b.bid_time|local }}</td>
     </tr>
   {% else %}
-    <tr><td colspan="5" class="text-center text-muted py-4">You haven't placed any bids yet.</td></tr>
+    <tr><td colspan="6" class="text-center text-muted py-4">You haven't placed any bids yet.</td></tr>
   {% endfor %}
   </tbody>
 </table>

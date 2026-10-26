@@ -298,7 +298,8 @@ def create_card_auction(card_id):
     if form.validate_on_submit():
         try:
             auction = card_auction_service.create_card_auction(
-                product, current_user, form.starting_bid.data, form.start_time.data, form.duration_hours.data)
+                product, current_user, form.starting_bid.data, form.start_time.data, form.duration_hours.data,
+                reserve_price=form.reserve_price.data, buy_now_price=form.buy_now_price.data)
         except card_auction_service.CardAuctionError as e:
             flash(e.message, "danger")
             status = e.status

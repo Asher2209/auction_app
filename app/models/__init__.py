@@ -15,7 +15,7 @@ BIG_INT = db.BigInteger().with_variant(db.Integer(), "sqlite")
 
 from .user import User, UserSession  # noqa: E402
 from .catalog import Category, Product, ProductImage, Watchlist  # noqa: E402
-from .auction import Auction, Bid, Winner  # noqa: E402
+from .auction import Auction, Bid, MaxBid, Winner  # noqa: E402
 from .payment import Payment, CryptoPayment, Invoice  # noqa: E402
 from .misc import Notification, NotificationPreference, Review, Feedback  # noqa: E402
 from .messaging import Message  # noqa: E402
@@ -36,7 +36,7 @@ def load_user(user_id):
 
 __all__ = [
     "User", "UserSession", "Category", "Product", "ProductImage", "Watchlist",
-    "Auction", "Bid", "Winner", "Payment", "CryptoPayment", "Invoice",
+    "Auction", "Bid", "MaxBid", "Winner", "Payment", "CryptoPayment", "Invoice",
     "Notification", "NotificationPreference", "Review", "Feedback", "Message",
     "CollectibleVerification", "VerificationLog", "SupportedGrader",
     "CardType", "CollectibleCard", "CardImage", "CardVerificationChecklist", "CardVerificationHistory",

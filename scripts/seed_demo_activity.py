@@ -91,7 +91,7 @@ def seed(rng=None):
             t += timedelta(hours=rng.randint(1, 20))
             if t >= end - timedelta(minutes=5):
                 break
-            amount += Decimal(rng.choice([50, 100, 250, 500, 1000]))
+            amount += max(Decimal(rng.choice([50, 100, 250, 500, 1000])), svc.bid_increment(amount))  # at least one step
             svc.place_bid(auction.id, rng.choice(buyers), str(amount), now=t)
         info = svc.close_auction(auction.id, now=end + timedelta(seconds=1))
         if info:

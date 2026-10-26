@@ -85,6 +85,15 @@
     if (minEl) minEl.textContent = money(s.min_next_bid);
     const amt = $("amount");
     if (amt) amt.placeholder = s.min_next_bid;
+    const stepEl = $("bid-step");
+    if (stepEl && s.bid_step) stepEl.textContent = money(s.bid_step);
+    const reserve = $("reserve-chip");
+    if (reserve) {
+      reserve.textContent = s.reserve_met ? "Reserve met" : "Reserve not met";
+      reserve.className = "chip " + (s.reserve_met ? "chip-verified" : "chip-muted");
+    }
+    const buyNow = $("buy-now-form");
+    if (buyNow && !s.buy_now_price) buyNow.remove(); // gone with the first bid, for good
     renderStatus();
     tick();
   }
@@ -159,7 +168,7 @@
     socket.on("bid_update", (b) => {
       const wasLeading = me && leadingId === me;
       applyState(b, true);
-      addBidRow(b);
+      (b.new_bids || [b]).forEach(addBidRow); // a bid, then any automatic bids it set off
       if (wasLeading && b.bidder_id !== me) notice("You have been outbid.", "warning");
     });
     socket.on("auction_closed", (info) => showClosed(info));
@@ -179,7 +188,7 @@
       fetch(form.action, {
         method: "POST",
         headers: { "X-CSRFToken": csrf, Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ amount: $("amount").value }),
+        body: new URLSearchParams({ amount: $("amount").value, max_amount: ($("max_amount") || {}).value || "" }),
       })
         .then((r) => {
           if (r.redirected) { window.location = r.url; return null; } // session expired: sent to log in
@@ -189,6 +198,12 @@
           if (!data) return;
           if (data.ok) {
             $("amount").value = "";
+            if ($("max_amount")) $("max_amount").value = "";
+            if (data.my_max && $("my-max")) {
+              $("my-max").textContent = money(data.my_max);
+              $("my-max-line").classList.remove("d-none");
+            }
+            if (data.leading_bidder_id !== me) notice("Another bidder's automatic bid beat yours at once. You can bid again.", "warning");
             if (!window.io) applyState(data, true); // no socket: update from the response instead
           } else {
             err.textContent = data.error;

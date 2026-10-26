@@ -412,6 +412,12 @@
 .bid-note { display: flex; gap: 10px; align-items: flex-start; margin: 0; font-size: 0.8125rem; line-height: 1.5; color: var(--dt-text-muted); }
 .bid-note .icon { width: 16px; height: 16px; margin-top: 2px; }
 .watch-form .btn { gap: var(--dt-space-sm); }
+.buy-now-form { display: grid; gap: var(--dt-space-sm); }
+.bid-step { margin: 0; font-size: 0.8125rem; color: var(--dt-text-muted); }
+.bid-max { border: 1px solid var(--dt-border); border-radius: var(--dt-radius-sm); padding: var(--dt-space-sm) var(--dt-space-md); }
+.bid-max summary { cursor: pointer; font-size: 0.875rem; font-weight: 600; color: var(--dt-text-secondary); }
+.bid-max[open] summary { margin-bottom: var(--dt-space-sm); }
+.bid-max .bid-note { margin-top: var(--dt-space-sm); }
 
 .auction-panel-foot { display: flex; justify-content: space-between; gap: var(--dt-space-md); flex-wrap: wrap; padding-top: var(--dt-space-lg); border-top: 1px solid var(--dt-border-light); font-size: 0.8125rem; color: var(--dt-text-muted); }
 
