@@ -14,6 +14,7 @@ from pathlib import Path
 
 import fakeredis
 import pytest
+import socketio as socketio_pkg
 import sqlalchemy as sa
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
@@ -21,7 +22,7 @@ from werkzeug.datastructures import FileStorage
 
 from app import create_app, sockets
 from app.config import TestConfig
-from app.extensions import db
+from app.extensions import db, socketio
 from app.models import Auction, ProductImage, WorkerLease, utcnow
 from app.ratelimit import RateLimiter, RedisRateLimiter
 from app.services import leases, storage, uploads
@@ -185,7 +186,9 @@ def test_redis_the_app_counts_in_redis_when_redis_url_is_set(monkeypatch, tmp_pa
 
     app = create_app(WithRedis)
     assert isinstance(app.extensions["limiter"], RedisRateLimiter)
+    assert isinstance(socketio.server.manager, socketio_pkg.RedisManager)
     assert isinstance(create_app(TestConfig).extensions["limiter"], RateLimiter)
+    assert not isinstance(socketio.server.manager, socketio_pkg.RedisManager)  # the queue does not outlive its app
 
 
 # =================================== behind a proxy ===========================================================================

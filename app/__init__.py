@@ -26,6 +26,8 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     csrf.init_app(app)
     mail.init_app(app)
+    # The extension object is shared: without REDIS_URL, init_app would keep a queue an earlier app in this process set up.
+    socketio.server_options.pop("client_manager", None)
     socketio.init_app(app, async_mode="threading", message_queue=app.config.get("REDIS_URL"))  # see Config.REDIS_URL
 
     from . import cli
