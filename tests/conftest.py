@@ -1,5 +1,6 @@
 import pytest
 import sqlalchemy as sa
+from sqlalchemy.orm import close_all_sessions
 from eth_account import Account
 from eth_account.messages import encode_defunct
 from web3 import Web3
@@ -31,12 +32,29 @@ def app(tmp_path):
     app = create_app(TestConfig)
     app.config["UPLOAD_FOLDER"] = str(tmp_path)  # never write test images into the real uploads dir
     with app.app_context():
-        if not TestConfig.SQLALCHEMY_DATABASE_URI.startswith("sqlite"):
-            db.drop_all()  # a database server outlives the run: start clean even after an interrupted one
+        if TestConfig.SQLALCHEMY_DATABASE_URI.startswith("sqlite"):
+            db.create_all()
+            yield app
+            db.session.remove()
+            db.drop_all()
+            return
+        # A database server (Postgres in CI): building every table for every test would take seconds each, so the tables
+        # stay and are emptied instead. create_all only adds what is missing (a test may have dropped them), and
+        # emptying first also cleans up after an interrupted run.
         db.create_all()
+        _empty_all_tables()
         yield app
         db.session.remove()
-        db.drop_all()
+        # A session left open anywhere in this process (another app, a request context) keeps its transaction and its
+        # locks; on Postgres the next TRUNCATE or DROP TABLE would wait for it forever. SQLite has no such locks.
+        close_all_sessions()
+
+
+def _empty_all_tables():
+    close_all_sessions()
+    names = ", ".join(f'"{t.name}"' for t in db.metadata.sorted_tables)
+    with db.engine.begin() as conn:
+        conn.execute(sa.text(f"TRUNCATE {names} RESTART IDENTITY CASCADE"))
 
 
 @pytest.fixture
